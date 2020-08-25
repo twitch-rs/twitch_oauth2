@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["twitch_oauth2"] = [{"text":"impl&lt;EF, TT&gt; Serialize for TwitchTokenResponse&lt;EF, TT&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;TT: TokenType,<br>&nbsp;&nbsp;&nbsp;&nbsp;EF: ExtraTokenFields,<br>&nbsp;&nbsp;&nbsp;&nbsp;TT: TokenType,<br>&nbsp;&nbsp;&nbsp;&nbsp;EF: ExtraTokenFields,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl Serialize for TwitchTokenErrorResponse","synthetic":false,"types":[]},{"text":"impl Serialize for Scope","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["twitch_oauth2"] = [{"text":"impl Error for Error","synthetic":false,"types":[]},{"text":"impl&lt;RE:&nbsp;Error + Send + Sync + 'static&gt; Error for TokenError&lt;RE&gt;","synthetic":false,"types":[]},{"text":"impl&lt;RE:&nbsp;Error&gt; Error for ValidationError&lt;RE&gt;","synthetic":false,"types":[]},{"text":"impl&lt;RE:&nbsp;Error + Send + Sync + 'static&gt; Error for RevokeTokenError&lt;RE&gt;","synthetic":false,"types":[]},{"text":"impl&lt;RE:&nbsp;Error + Send + Sync + 'static&gt; Error for RefreshTokenError&lt;RE&gt;","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
