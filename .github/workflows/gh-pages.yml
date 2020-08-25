@@ -1,7 +1,6 @@
 name: github pages
 env:
   CI_TWITCH_OAUTH2_FEATURES: "all"
-  CI_TWITCH_API2_FEATURES: "twitch_oauth2/all all"
 on:
   push:
     branches:
@@ -27,11 +26,6 @@ jobs:
         with:
           command: doc
           args: --no-deps --manifest-path=oauth2/Cargo.toml --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}"
-      - name: build twitch_api2 docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps --manifest-path=twitchapi/Cargo.toml --features "${{ env.CI_TWITCH_API2_FEATURES }}"
       - name: move index.html
         run: cp ./index.html ./target/doc/index.html
       - name: Deploy
