@@ -9,7 +9,7 @@ Twitch OAuth2 | OAuth2 for Twitch endpoints
 
 See [documentation](https://docs.rs/twitch_oauth2) for more info.
 
-You can see current unpublished docs here:  [![local-docs]](https://emilgardis.github.io/twitch_api2/twitch_api2)
+You can see current unpublished docs here:  [![local-docs]](https://emilgardis.github.io/twitch_oauth2/twitch_oauth2)
 
 See [examples](./examples) for examples.
 
