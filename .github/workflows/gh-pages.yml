@@ -1,6 +1,7 @@
 name: github pages
 env:
   CI_TWITCH_OAUTH2_FEATURES: "all"
+  RUSTDOCFLAGS: "-Z unstable-options --html-in-header=docs/pre-content.html"
 on:
   push:
     branches:
@@ -21,6 +22,10 @@ jobs:
         with:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: mention 40 character commit rev in doc
+        run: sed -i "s/{{commit}}/$(git rev-parse HEAD)/g" docs/pre-content.html
+      - name: mention short commit rev in doc
+        run: sed -i "s/{{commit_short}}/$(git rev-parse --short HEAD)/g" docs/pre-content.html
       - name: build twitch_oauth2 docs
         uses: actions-rs/cargo@v1
         with:
