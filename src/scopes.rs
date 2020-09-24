@@ -2,156 +2,107 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Scopes for twitch.
-///
-/// <https://dev.twitch.tv/docs/authentication/#scopes>
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[non_exhaustive]
-pub enum Scope {
-    /// View analytics data for your extensions.
-    #[serde(rename = "analytics:read:extensions")]
-    AnalyticsReadExtensions,
-    /// Manage a user object.
-    #[serde(rename = "user:edit")]
-    UserEdit,
-    /// Read authorized user's email address.
-    #[serde(rename = "user:read:email")]
-    UserReadEmail,
-    /// Read authorized user’s stream key.
-    ///
-    /// # Note:
-    /// This scope seems to not work, even though it is documented.
-    #[serde(rename = "user:read:stream_key")]
-    UserReadStreamKey,
-    /// Create and edit clips as a specific user.
-    #[serde(rename = "clips:edit")]
-    ClipsEdit,
-    /// View bits information for your channel.
-    #[serde(rename = "bits:read")]
-    BitsRead,
-    /// View analytics data for your games.
-    #[serde(rename = "analytics:read:games")]
-    AnalyticsReadGames,
-    /// Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)
-    #[serde(rename = "user:edit:broadcast")]
-    UserEditBroadcast,
-    /// View your broadcasting configuration, including extension configurations.
-    #[serde(rename = "user:read:broadcast")]
-    UserReadBroadcast,
-    /// View live Stream Chat and Rooms messages
-    #[serde(rename = "chat:read")]
-    ChatRead,
-    /// Send live Stream Chat and Rooms messages
-    #[serde(rename = "chat:edit")]
-    ChatEdit,
-    /// Perform moderation actions in a channel
-    #[serde(rename = "channel:moderate")]
-    ChannelModerate,
-    /// Get a list of all subscribers to your channel and check if a user is subscribed to your channel
-    #[serde(rename = "channel:read:subscriptions")]
-    ChannelReadSubscriptions,
-    // FIXME: Documentation.
-    ///
-    #[serde(rename = "channel:read:hype_train")]
-    ChannelReadHypeTrain,
-    /// View your whisper messages.
-    #[serde(rename = "whispers:read")]
-    WhispersRead,
-    /// Send whisper messages.
-    #[serde(rename = "whispers:edit")]
-    WhispersEdit,
-    /// View your channel's moderation data including Moderators, Bans, Timeouts and Automod settings
-    #[serde(rename = "moderation:read")]
-    ModerationRead,
-    /// View your channel points custom reward redemptions
-    #[serde(rename = "channel:read:redemptions")]
-    ChannelReadRedemptions,
-    /// Start a commercial on authorized channels
-    #[serde(rename = "channel:edit:commercial")]
-    ChannelEditCommercial,
-    /// Other scope that is not implemented.
-    Other(String),
+macro_rules! scope_impls {
+    ($($i:ident,$rename:literal,$doc:literal);* $(;)? ) => {
+        #[doc = "Scopes for twitch."]
+        #[doc = ""]
+        #[doc = "<https://dev.twitch.tv/docs/authentication/#scopes>"]
+        #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+        #[non_exhaustive]
+        pub enum Scope {
+            $(
+                #[doc = $doc]
+                #[doc = "\n\n"]
+                #[doc = "`"]
+                #[doc = $rename]
+                #[doc = "`"]
+                #[serde(rename = $rename)]
+                $i,
+            )*
+            #[doc = "Other scope that is not implemented."]
+            Other(String),
+        }
+
+        impl std::fmt::Display for Scope {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(match self {
+                    Scope::Other(s) => s.as_str(),
+                    $(
+                        Scope::$i => $rename,
+                    )*
+                })
+            }
+        }
+
+        impl Scope {
+            #[doc = "Get a vec of all defined twitch [Scopes][Scope]"]
+            pub fn all() -> Vec<Scope> {
+                vec![
+                    $(Scope::$i,)*
+                ]
+            }
+
+            #[doc = "Make a scope from string"]
+            pub fn parse(s: &str) -> Scope {
+                match s {
+                    $($rename => {Scope::$i})*,
+                    other => Scope::Other(other.to_string())
+                }
+            }
+        }
+
+    };
 }
 
-impl Scope {
-    /// Get [Scope] as [oauth2::Scope]
-    pub fn as_oauth_scope(&self) -> oauth2::Scope {
-        use self::Scope::*;
-        let s = match self {
-            AnalyticsReadExtensions => "analytics:read:extensions".to_string(),
-            UserEdit => "user:edit".to_string(),
-            UserReadEmail => "user:read:email".to_string(),
-            UserReadStreamKey => "user:read:stream_key".to_string(),
-            ClipsEdit => "clips:edit".to_string(),
-            BitsRead => "bits:read".to_string(),
-            AnalyticsReadGames => "analytics:read:games".to_string(),
-            UserEditBroadcast => "user:edit:broadcast".to_string(),
-            UserReadBroadcast => "user:read:broadcast".to_string(),
-            ChatRead => "chat:read".to_string(),
-            ChatEdit => "chat:edit".to_string(),
-            ChannelModerate => "channel:moderate".to_string(),
-            ChannelReadSubscriptions => "channel:read:subscriptions".to_string(),
-            ChannelReadHypeTrain => "channel:read:hype_train".to_string(),
-            WhispersRead => "whispers:read".to_string(),
-            WhispersEdit => "whispers:edit".to_string(),
-            ModerationRead => "moderation:read".to_string(),
-            ChannelReadRedemptions => "channel:read:redemptions".to_string(),
-            ChannelEditCommercial => "channel:edit:commercial".to_string(),
-            Other(s) => s.clone(),
-        };
-        oauth2::Scope::new(s)
-    }
+scope_impls!(
+    AnalyticsReadExtensions, "analytics:read:extensions", "View analytics data for your extensions.";
+    AnalyticsReadGames, "analytics:read:games", "View analytics data for your games.";
+    BitsRead, "bits:read", "View bits information for your channel.";
+    ChannelEditCommercial, "channel:edit:commercial", "Start a commercial on authorized channels";
+    ChannelManageBroadcast, "channel:manage:broadcast", "Manage your channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
+    ChannelManageExtension, "channel:manage:extension", "Manage your channel’s extension configuration, including activating extensions.";
+    ChannelModerate, "channel:moderate", "Perform moderation actions in a channel";
+    ChannelReadHypeTrain, "channel:read:hype_train", "Read hype trains";
+    ChannelReadRedemptions, "channel:read:redemptions", "View your channel points custom reward redemptions";
+    ChannelReadSubscriptions, "channel:read:subscriptions", "Get a list of all subscribers to your channel and check if a user is subscribed to your channel";
+    ChatEdit, "chat:edit", "Send live Stream Chat and Rooms messages";
+    ChatRead, "chat:read", "View live Stream Chat and Rooms messages";
+    ClipsEdit, "clips:edit", "Create and edit clips as a specific user.";
+    ModerationRead, "moderation:read", "View your channel's moderation data including Moderators, Bans, Timeouts and Automod settings";
+    UserEdit, "user:edit", "Manage a user object.";
+    UserEditBroadcast, "user:edit:broadcast", "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
+    UserEditFollows, "user:edit:follows", "Edit your follows.";
+    UserReadBroadcast, "user:read:broadcast", "View your broadcasting configuration, including extension configurations.";
+    UserReadEmail, "user:read:email", "Read authorized user's email address.";
+    UserReadStreamKey, "user:read:stream_key", "Read authorized user’s stream key.";
+    WhispersEdit, "whispers:edit", "Send whisper messages.";
+    WhispersRead, "whispers:read", "View your whisper messages.";
+);
 
-    /// Get a vec of all defined twitch [Scopes][Scope]
-    pub fn all() -> Vec<Scope> {
-        vec![
-            Scope::AnalyticsReadExtensions,
-            Scope::UserEdit,
-            Scope::UserReadEmail,
-            //Scope::UserReadStreamKey, // Broken?
-            Scope::ClipsEdit,
-            Scope::BitsRead,
-            Scope::AnalyticsReadGames,
-            Scope::UserEditBroadcast,
-            Scope::UserReadBroadcast,
-            Scope::ChatRead,
-            Scope::ChatEdit,
-            Scope::ChannelModerate,
-            Scope::ChannelReadSubscriptions,
-            Scope::ChannelReadHypeTrain,
-            Scope::WhispersRead,
-            Scope::WhispersEdit,
-            Scope::ModerationRead,
-            Scope::ChannelReadRedemptions,
-            Scope::ChannelEditCommercial,
-        ]
-    }
+impl Scope {
+    /// Get [Scope] as an oauth2 Scope
+    pub fn as_oauth_scope(&self) -> oauth2::Scope { oauth2::Scope::new(self.to_string()) }
 }
 
 impl From<oauth2::Scope> for Scope {
-    fn from(scope: oauth2::Scope) -> Self {
-        use self::Scope::*;
-        match scope.as_str() {
-            "analytics:read:extensions" => AnalyticsReadExtensions,
-            "user:edit" => UserEdit,
-            "user:read:email" => UserReadEmail,
-            "user:read:stream_key" => Scope::UserReadStreamKey,
-            "clips:edit" => ClipsEdit,
-            "bits:read" => BitsRead,
-            "analytics:read:games" => AnalyticsReadGames,
-            "user:edit:broadcast" => UserEditBroadcast,
-            "user:read:broadcast" => UserReadBroadcast,
-            "chat:read" => ChatRead,
-            "chat:edit" => ChatEdit,
-            "channel:moderate" => ChannelModerate,
-            "channel:read:subscriptions" => ChannelReadSubscriptions,
-            "channel:read:hype_train" => ChannelReadHypeTrain,
-            "whispers:read" => WhispersRead,
-            "whispers:edit" => WhispersEdit,
-            "moderation:read" => ModerationRead,
-            "channel:read:redemptions" => ChannelReadRedemptions,
-            "channel:edit::commercial" => ChannelEditCommercial,
-            s => Other(s.to_string()),
+    fn from(scope: oauth2::Scope) -> Self { Scope::parse(scope.as_str()) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn custom_scope() {
+        assert_eq!(
+            Scope::Other(String::from("custom:scope")),
+            Scope::parse("custom:scope")
+        )
+    }
+
+    #[test]
+    fn roundabout() {
+        for scope in Scope::all() {
+            assert_eq!(scope, Scope::parse(&scope.to_string()))
         }
     }
 }
