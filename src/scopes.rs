@@ -9,6 +9,8 @@ macro_rules! scope_impls {
         #[doc = "<https://dev.twitch.tv/docs/authentication/#scopes>"]
         #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
         #[non_exhaustive]
+        #[serde(from = "String")]
+        #[serde(into = "String")]
         pub enum Scope {
             $(
                 #[doc = $doc]
@@ -16,7 +18,7 @@ macro_rules! scope_impls {
                 #[doc = "`"]
                 #[doc = $rename]
                 #[doc = "`"]
-                #[serde(rename = $rename)]
+                #[serde(rename = $rename)] // Is this even needed?
                 $i,
             )*
             #[doc = "Other scope that is not implemented."]
@@ -35,7 +37,9 @@ macro_rules! scope_impls {
         }
 
         impl Scope {
-            #[doc = "Get a vec of all defined twitch [Scopes][Scope]"]
+            #[doc = "Get a vec of all defined twitch [Scopes][Scope]."]
+            #[doc = "\n\n"]
+            #[doc = "Please not that this may not work for you, as some auth flows and \"apis\" don't accept all scopes"]
             pub fn all() -> Vec<Scope> {
                 vec![
                     $(Scope::$i,)*
@@ -88,14 +92,22 @@ impl From<oauth2::Scope> for Scope {
     fn from(scope: oauth2::Scope) -> Self { Scope::parse(scope.as_str()) }
 }
 
+impl From<String> for Scope {
+    fn from(s: String) -> Self { Scope::parse(&s) }
+}
+
+impl From<Scope> for String {
+    fn from(s: Scope) -> Self { s.to_string() }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn custom_scope() {
         assert_eq!(
-            Scope::Other(String::from("custom:scope")),
-            Scope::parse("custom:scope")
+            Scope::Other(String::from("custom_scope")),
+            Scope::parse("custom_scope")
         )
     }
 
