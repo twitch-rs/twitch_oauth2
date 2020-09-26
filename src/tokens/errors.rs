@@ -17,7 +17,7 @@ pub enum TokenError<RE: std::error::Error + Send + Sync + 'static> {
 
 /// Errors for [validate_token][crate::validate_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
-pub enum ValidationError<RE: std::error::Error> {
+pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
     /// deserializations failed
     DeserializeError(#[from] serde_json::Error),
     /// token is not authorized for use
@@ -25,7 +25,7 @@ pub enum ValidationError<RE: std::error::Error> {
     /// twitch returned an unexpected status: {0}
     TwitchError(TwitchTokenErrorResponse),
     /// failed to request validation: {0}
-    Request(RE),
+    Request(#[source] RE),
 }
 
 /// Errors for [revoke_token][crate::revoke_token]
@@ -35,7 +35,7 @@ pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// 400 Bad Request: {0}
     BadRequest(String),
     /// failed to do revokation: {0}
-    RequestError(RE),
+    RequestError(#[source] RE),
     /// got unexpected return: {0:?}
     Other(OAuth2HttpResponse),
 }
@@ -45,7 +45,7 @@ pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
-    RequestError(RequestTokenError<RE, TwitchTokenErrorResponse>),
+    RequestError(#[source] RequestTokenError<RE, TwitchTokenErrorResponse>),
     /// could not parse url
     ParseError(#[from] oauth2::url::ParseError),
     /// no refresh token found
