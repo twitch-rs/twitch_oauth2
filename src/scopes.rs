@@ -62,6 +62,7 @@ scope_impls!(
     AnalyticsReadExtensions, "analytics:read:extensions", "View analytics data for your extensions.";
     AnalyticsReadGames, "analytics:read:games", "View analytics data for your games.";
     BitsRead, "bits:read", "View bits information for your channel.";
+    ChannelSubscriptions, "channel_subscriptions", "\\[DEPRECATED\\] Read all subscribers to your channel.";
     ChannelEditCommercial, "channel:edit:commercial", "Start a commercial on authorized channels";
     ChannelManageBroadcast, "channel:manage:broadcast", "Manage your channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
     ChannelManageExtension, "channel:manage:extension", "Manage your channel’s extension configuration, including activating extensions.";
