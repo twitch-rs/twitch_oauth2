@@ -5,11 +5,14 @@
 **/.env
 **/*.iml
 **/.idea/
-**/.vscode
+**/.vscode/*.*
 **/logfile*
 **/*.old
+**/*.log
 coverage_reports/
 /cargo-timing*.html
 **/.cargo
 **/.*
 !.github/
+!.vscode/
+!.vscode/settings.json
