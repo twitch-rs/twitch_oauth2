@@ -19,7 +19,7 @@ use std::future::Future;
 /// Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]
 #[async_trait::async_trait(?Send)]
 pub trait TwitchToken {
-    /// Get the client-id. Twitch requires this in all helix api calls
+    /// Client ID associated with the token. Twitch requires this in all helix API calls
     fn client_id(&self) -> &ClientId;
     /// Get the [AccessToken] for authenticating
     fn token(&self) -> &AccessToken;
@@ -91,7 +91,7 @@ impl<T: TwitchToken> TwitchToken for Box<T> {
 /// See <https://dev.twitch.tv/docs/authentication#validating-requests>
 #[derive(Debug, Clone, Deserialize)]
 pub struct ValidatedToken {
-    /// Client ID associated with the token. Twitch requires this in all helix api calls
+    /// Client ID associated with the token. Twitch requires this in all helix API calls
     pub client_id: ClientId,
     /// Username associated with the token
     pub login: Option<String>,
