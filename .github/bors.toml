@@ -1,0 +1,4 @@
+block_labels = ["needs-decision"]
+status = ["CI"]
+delete_merged_branches = true
+required_approvals = 1

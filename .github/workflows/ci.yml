@@ -6,7 +6,7 @@ on:
     branches: [master]
     types: [opened, reopened, synchronize]
   push:
-    branches: [master]
+    branches: [master, staging, trying]
 jobs:
   ci:
     name: CI
