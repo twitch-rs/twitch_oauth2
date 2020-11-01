@@ -39,14 +39,14 @@ macro_rules! scope_impls {
         impl Scope {
             #[doc = "Get a vec of all defined twitch [Scopes][Scope]."]
             #[doc = "\n\n"]
-            #[doc = "Please not that this may not work for you, as some auth flows and \"apis\" don't accept all scopes"]
+            #[doc = "Please note that this may not work for you, as some auth flows and \"apis\" don't accept all scopes"]
             pub fn all() -> Vec<Scope> {
                 vec![
                     $(Scope::$i,)*
                 ]
             }
 
-            #[doc = "Make a scope from string"]
+            #[doc = "Make a scope from a string"]
             pub fn parse(s: &str) -> Scope {
                 match s {
                     $($rename => {Scope::$i})*,
