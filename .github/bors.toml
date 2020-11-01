@@ -11,4 +11,3 @@ status = [
     "Cargo Deny (advisories)",
 ]
 delete_merged_branches = true
-required_approvals = 1
