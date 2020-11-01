@@ -1,4 +1,14 @@
 block_labels = ["needs-decision"]
-status = ["CI"]
+status = [
+    "Tests (ubuntu-latest, 1.45.2)",
+    "Tests (ubuntu-latest, nightly)",
+    "Tests (windows-latest, 1.45.2)",
+    "Tests (windows-latest, nightly)",
+    "Rustfmt",
+    "Docs",
+    "Clippy",
+    "Cargo Deny (licenses)",
+    "Cargo Deny (advisories)",
+]
 delete_merged_branches = true
 required_approvals = 1
