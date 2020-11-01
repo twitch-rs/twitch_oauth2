@@ -16,9 +16,7 @@ See [examples](./examples) for examples.
 This is a library to interface with [Twitch Authentication](https://dev.twitch.tv/docs/authentication).
 
 
-
-
-Also see <https://github.com/Emilgardis/twitch_api2>
+See also <https://github.com/Emilgardis/twitch_api2>
 
 <h5> License </h5>
 
