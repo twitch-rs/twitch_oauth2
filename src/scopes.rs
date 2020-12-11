@@ -65,6 +65,7 @@ scope_impls!(
     ChannelSubscriptions, "channel_subscriptions", "\\[DEPRECATED\\] Read all subscribers to your channel.";
     ChannelEditCommercial, "channel:edit:commercial", "Start a commercial on authorized channels";
     ChannelManageBroadcast, "channel:manage:broadcast", "Manage your channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
+    ChannelManageRedemptions, "channel:manage:redemptions", "Manage Channel Points custom rewards and their redemptions on a channel.";
     ChannelManageExtension, "channel:manage:extension", "Manage your channel’s extension configuration, including activating extensions.";
     ChannelModerate, "channel:moderate", "Perform moderation actions in a channel";
     ChannelReadHypeTrain, "channel:read:hype_train", "Read hype trains";
