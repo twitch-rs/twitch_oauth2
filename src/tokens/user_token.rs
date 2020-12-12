@@ -68,19 +68,16 @@ impl UserToken {
 
 #[async_trait::async_trait(?Send)]
 impl TwitchToken for UserToken {
-    fn client_id(&self) -> &ClientId {
-        &self.client_id
-    }
+    fn client_id(&self) -> &ClientId { &self.client_id }
 
-    fn token(&self) -> &AccessToken {
-        &self.access_token
-    }
+    fn token(&self) -> &AccessToken { &self.access_token }
 
-    fn login(&self) -> Option<&str> {
-        self.login.as_deref()
-    }
+    fn login(&self) -> Option<&str> { self.login.as_deref() }
 
-    async fn refresh_token<RE, C, F>(&mut self, http_client: C) -> Result<(), RefreshTokenError<RE>>
+    async fn refresh_token<RE, C, F>(
+        &mut self,
+        http_client: C,
+    ) -> Result<(), RefreshTokenError<RE>>
     where
         RE: std::error::Error + Send + Sync + 'static,
         C: FnOnce(HttpRequest) -> F,
@@ -97,15 +94,13 @@ impl TwitchToken for UserToken {
             self.access_token = access_token;
             self.expires = expires;
             self.refresh_token = refresh_token;
+            Ok(())
+        } else {
+            return Err(RefreshTokenError::NoClientSecretFound);
         }
-        Ok(())
     }
 
-    fn expires(&self) -> Option<std::time::Instant> {
-        None
-    }
+    fn expires(&self) -> Option<std::time::Instant> { None }
 
-    fn scopes(&self) -> Option<&[Scope]> {
-        Some(self.scopes.as_slice())
-    }
+    fn scopes(&self) -> Option<&[Scope]> { Some(self.scopes.as_slice()) }
 }
