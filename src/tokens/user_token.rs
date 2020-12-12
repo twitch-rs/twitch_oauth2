@@ -25,8 +25,7 @@ impl UserToken {
         client_id: impl Into<ClientId>,
         login: Option<String>,
         scopes: Option<Vec<Scope>>,
-    ) -> UserToken
-    {
+    ) -> UserToken {
         UserToken {
             access_token: access_token.into(),
             client_id: client_id.into(),

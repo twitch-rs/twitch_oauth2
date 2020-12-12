@@ -61,8 +61,7 @@ impl AppAccessToken {
         client_secret: impl Into<ClientSecret>,
         login: Option<String>,
         scopes: Option<Vec<Scope>>,
-    ) -> AppAccessToken
-    {
+    ) -> AppAccessToken {
         AppAccessToken {
             access_token,
             refresh_token: None,
