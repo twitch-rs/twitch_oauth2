@@ -48,6 +48,10 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     RequestError(#[source] RequestTokenError<RE, TwitchTokenErrorResponse>),
     /// could not parse url
     ParseError(#[from] oauth2::url::ParseError),
+    /// no client secret found
+    ///
+    /// A client secret is needed to request a refreshed token.
+    NoClientSecretFound,
     /// no refresh token found
     NoRefreshToken,
 }

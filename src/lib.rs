@@ -19,7 +19,7 @@
 //! # let reqwest_http_client = twitch_oauth2::dummy_http_client; // This is only here to fool doc tests
 //!     let token = AccessToken::new("sometokenherewhichisvalidornot".to_string());
 //!
-//!     match UserToken::from_existing(reqwest_http_client, token, None).await {
+//!     match UserToken::from_existing(reqwest_http_client, token, None, None).await {
 //!         Ok(t) => println!("user_token: {}", t.token().secret()),
 //!         Err(e) => panic!("got error: {}", e),
 //!     }

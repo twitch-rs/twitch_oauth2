@@ -13,6 +13,10 @@ async fn main() {
             .ok()
             .or_else(|| args.next())
             .map(twitch_oauth2::RefreshToken::new),
+        std::env::var("TWITCH_CLIENT_SECRET")
+            .ok()
+            .or_else(|| args.next())
+            .map(twitch_oauth2::ClientSecret::new),
     )
     .await
     .unwrap();
