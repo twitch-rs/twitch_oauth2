@@ -69,6 +69,7 @@ scope_impls!(
     ChannelModerate, "channel:moderate", "Perform moderation actions in a channel";
     ChannelReadHypeTrain, "channel:read:hype_train", "Read hype trains";
     ChannelReadRedemptions, "channel:read:redemptions", "View your channel points custom reward redemptions";
+    ChannelManageRedemptions, "channel:manage:redemptions", "Manage Channel Points custom rewards and their redemptions on a channel.";
     ChannelReadSubscriptions, "channel:read:subscriptions", "Get a list of all subscribers to your channel and check if a user is subscribed to your channel";
     ChatEdit, "chat:edit", "Send live Stream Chat and Rooms messages";
     ChatRead, "chat:read", "View live Stream Chat and Rooms messages";
