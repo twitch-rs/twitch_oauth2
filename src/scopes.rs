@@ -1,6 +1,7 @@
 //! Module for all possible scopes in twitch.
 
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 macro_rules! scope_impls {
     ($($i:ident,$rename:literal,$doc:literal);* $(;)? ) => {
@@ -22,13 +23,13 @@ macro_rules! scope_impls {
                 $i,
             )*
             #[doc = "Other scope that is not implemented."]
-            Other(String),
+            Other(Cow<'static, str>),
         }
 
         impl std::fmt::Display for Scope {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.write_str(match self {
-                    Scope::Other(s) => s.as_str(),
+                    Scope::Other(s) => &s,
                     $(
                         Scope::$i => $rename,
                     )*
@@ -46,11 +47,13 @@ macro_rules! scope_impls {
                 ]
             }
 
-            #[doc = "Make a scope from a string"]
-            pub fn parse(s: &str) -> Scope {
-                match s {
+            #[doc = "Make a scope from a cow string"]
+            pub fn parse<C>(s: C) -> Scope where C: Into<Cow<'static, str>> {
+                use std::borrow::Borrow;
+                let s = s.into();
+                match s.borrow() {
                     $($rename => {Scope::$i})*,
-                    other => Scope::Other(other.to_string())
+                    _ => Scope::Other(s)
                 }
             }
         }
@@ -91,11 +94,11 @@ impl Scope {
 }
 
 impl From<oauth2::Scope> for Scope {
-    fn from(scope: oauth2::Scope) -> Self { Scope::parse(scope.as_str()) }
+    fn from(scope: oauth2::Scope) -> Self { Scope::parse(scope.to_string()) }
 }
 
 impl From<String> for Scope {
-    fn from(s: String) -> Self { Scope::parse(&s) }
+    fn from(s: String) -> Self { Scope::parse(s) }
 }
 
 impl From<Scope> for String {
@@ -108,7 +111,7 @@ mod tests {
     #[test]
     fn custom_scope() {
         assert_eq!(
-            Scope::Other(String::from("custom_scope")),
+            Scope::Other(Cow::from("custom_scope")),
             Scope::parse("custom_scope")
         )
     }
@@ -116,7 +119,7 @@ mod tests {
     #[test]
     fn roundabout() {
         for scope in Scope::all() {
-            assert_eq!(scope, Scope::parse(&scope.to_string()))
+            assert_eq!(scope, Scope::parse(scope.to_string()))
         }
     }
 }
