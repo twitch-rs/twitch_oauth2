@@ -4,6 +4,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/49a083ceda6768cc52a1f8f1714bb7f942f24c01...Unreleased)
+
 ### Added
 
 * Made crate runtime agnostic with custom clients.
@@ -19,4 +21,4 @@
 
 ## End of Changelog 
 
-Changelog starts on v0.5.0
+Changelog starts on Unreleased
