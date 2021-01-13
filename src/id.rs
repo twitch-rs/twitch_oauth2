@@ -100,4 +100,7 @@ pub type TwitchClient = Client<
     TwitchTokenErrorResponse,
     TwitchTokenResponse<oauth2::EmptyExtraTokenFields, BasicTokenType>,
     BasicTokenType,
+    //FIXME: This struct should represent twitch's inspection endpoint, but there is none currently.
+    // See [`TwitchToken::validate_token`](crate::TwitchToken::validate_token) instead
+    oauth2::StandardTokenInspectionResponse<oauth2::EmptyExtraTokenFields, BasicTokenType>,
 >;
