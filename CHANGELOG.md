@@ -9,7 +9,7 @@
 ### Added
 
 * Made crate runtime agnostic with custom clients.
-* Updated deps
+* Updated deps.
 * Added old `channel_subscriptions` scope
 * Add an extra (optional) client secret field to `UserToken::from_existing` (thanks [@Dinnerbone](https://github.com/Dinnerbone))
 * Added `channel:manage:redemptions` scope

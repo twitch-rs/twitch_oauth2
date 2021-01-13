@@ -13,18 +13,18 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default = []
-reqwest_client = ["oauth2/reqwest-010"]
+reqwest_client = ["oauth2/reqwest"]
 surf_client = ["surf","http-types", "http-types/hyperium_http"]
 all = ["surf_client", "reqwest_client"]
 
 [dependencies]
-oauth2 = { version = "4.0.0-alpha.2", features = [], default-features = false }
+oauth2 = { version = "4.0.0-alpha.3", features = [], default-features = false }
 thiserror = "1.0.23"
 displaydoc = "0.1.7"
-serde = "1.0.118"
+serde = "1.0.119"
 serde_json = "1.0.61"
 async-trait = "0.1.42"
-http = "0.2.2"
+http = "0.2.3"
 surf = { version = "2.1.0", optional = true }
 http-types = { version = "2.9.0", optional = true }
 
