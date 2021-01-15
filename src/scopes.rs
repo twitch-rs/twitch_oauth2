@@ -68,11 +68,13 @@ scope_impls!(
     ChannelSubscriptions, "channel_subscriptions", "\\[DEPRECATED\\] Read all subscribers to your channel.";
     ChannelEditCommercial, "channel:edit:commercial", "Start a commercial on authorized channels";
     ChannelManageBroadcast, "channel:manage:broadcast", "Manage your channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
-    ChannelManageExtension, "channel:manage:extension", "Manage your channel’s extension configuration, including activating extensions.";
+    ChannelManageExtensions, "channel:manage:extensions", "Manage your channel’s extension configuration, including activating extensions.";
     ChannelModerate, "channel:moderate", "Perform moderation actions in a channel";
     ChannelReadHypeTrain, "channel:read:hype_train", "Read hype trains";
     ChannelReadRedemptions, "channel:read:redemptions", "View your channel points custom reward redemptions";
     ChannelManageRedemptions, "channel:manage:redemptions", "Manage Channel Points custom rewards and their redemptions on a channel.";
+    ChannelManageVideos, "channel:manage:videos", "Manage a channel’s videos, including deleting videos.";
+    ChannelReadEditors, "channel:read:editors", "View a list of users with the editor role for a channel.";
     ChannelReadSubscriptions, "channel:read:subscriptions", "Get a list of all subscribers to your channel and check if a user is subscribed to your channel";
     ChatEdit, "chat:edit", "Send live Stream Chat and Rooms messages";
     ChatRead, "chat:read", "View live Stream Chat and Rooms messages";
@@ -82,8 +84,10 @@ scope_impls!(
     UserEditBroadcast, "user:edit:broadcast", "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
     UserEditFollows, "user:edit:follows", "Edit your follows.";
     UserReadBroadcast, "user:read:broadcast", "View your broadcasting configuration, including extension configurations.";
+    UserReadBlockedUsers, "user:read:blocked_users", "View the block list of a user.";
     UserReadEmail, "user:read:email", "Read authorized user's email address.";
     UserReadStreamKey, "user:read:stream_key", "Read authorized user’s stream key.";
+    UserManageBlockedUsers, "user:manage:blocked_users", "Manage the block list of a user.";
     WhispersEdit, "whispers:edit", "Send whisper messages.";
     WhispersRead, "whispers:read", "View your whisper messages.";
 );
