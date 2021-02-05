@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["twitch_oauth2"] = [{"text":"impl StructuralEq for Scope","synthetic":false,"types":[]}];
+implementors["twitch_oauth2"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.StructuralEq.html\" title=\"trait core::marker::StructuralEq\">StructuralEq</a> for <a class=\"enum\" href=\"twitch_oauth2/enum.Scope.html\" title=\"enum twitch_oauth2::Scope\">Scope</a>","synthetic":false,"types":["twitch_oauth2::scopes::Scope"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
