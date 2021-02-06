@@ -111,11 +111,9 @@ impl AppAccessToken {
         let client = TwitchClient::new(
             client_id.clone(),
             Some(client_secret.clone()),
-            AuthUrl::new("https://id.twitch.tv/oauth2/authorize".to_owned())
+            AuthUrl::new(crate::AUTH_URL.to_owned())
                 .expect("unexpected failure to parse auth url for app_access_token"),
-            Some(oauth2::TokenUrl::new(
-                "https://id.twitch.tv/oauth2/token".to_string(),
-            )?),
+            Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
         );
         let client = client.set_auth_type(oauth2::AuthType::RequestBody);
         let mut client = client.exchange_client_credentials();

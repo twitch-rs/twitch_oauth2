@@ -53,6 +53,14 @@ pub async fn dummy_http_client(_: HttpRequest) -> Result<HttpResponse, DummyErro
 #[error("this client does not do anything, only used for documentation test that only checks code integrity")]
 pub struct DummyError;
 
+/// Authorization URL for `id.twitch.tv`
+pub static AUTH_URL: &str = "https://id.twitch.tv/oauth2/authorize";
+/// Token URL for `id.twitch.tv`
+pub static TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
+/// Validation URL for `id.twitch.tv`
+pub static VALIDATE_URL: &str = "https://id.twitch.tv/oauth2/validate";
+/// Revokation URL for `id.twitch.tv`
+pub static REVOKE_URL: &str = "https://id.twitch.tv/oauth2/revoke";
 /// Validate this token.
 ///
 /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
@@ -77,8 +85,7 @@ where
             .expect("Failed to parse header for validation"),
     );
     let req = HttpRequest {
-        url: Url::parse("https://id.twitch.tv/oauth2/validate")
-            .expect("unexpectedly failed to parse validate url"),
+        url: Url::parse(crate::VALIDATE_URL).expect("unexpectedly failed to parse validate url"),
         method: Method::GET,
         headers,
         body: vec![],
@@ -120,7 +127,7 @@ where
     params.insert("client_id", client_id.as_str());
     params.insert("token", token.secret());
     let req = HttpRequest {
-        url: Url::parse_with_params("https://id.twitch.tv/oauth2/revoke", &params)
+        url: Url::parse_with_params(crate::REVOKE_URL, &params)
             .expect("unexpectedly failed to parse revoke url"),
         method: Method::POST,
         headers: HeaderMap::new(),
@@ -131,10 +138,12 @@ where
         .await
         .map_err(RevokeTokenError::RequestError)?;
     match resp.status_code {
-        StatusCode::BAD_REQUEST => Err(RevokeTokenError::BadRequest(
-            String::from_utf8(resp.body)
-                .expect("couldn't parse 400 result for revoke as utf8... wow twitch"),
-        )),
+        StatusCode::BAD_REQUEST => {
+            return Err(RevokeTokenError::TwitchError(TwitchTokenErrorResponse {
+                status: StatusCode::BAD_REQUEST,
+                message: String::from_utf8_lossy(&resp.body).into_owned(),
+            }))
+        }
         StatusCode::OK => Ok(()),
         _ => Err(RevokeTokenError::Other(resp)),
     }
@@ -166,11 +175,9 @@ where
     let client = TwitchClient::new(
         client_id.clone(),
         Some(client_secret.clone()),
-        AuthUrl::new("https://id.twitch.tv/oauth2/authorize".to_owned())
+        AuthUrl::new(crate::AUTH_URL.to_owned())
             .expect("unexpected failure to parse auth url for app_access_token"),
-        Some(oauth2::TokenUrl::new(
-            "https://id.twitch.tv/oauth2/token".to_string(),
-        )?),
+        Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
     );
     let client = client.set_auth_type(oauth2::AuthType::RequestBody);
     let client = client.exchange_refresh_token(&refresh_token);

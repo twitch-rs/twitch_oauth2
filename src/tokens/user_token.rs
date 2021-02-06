@@ -1,9 +1,13 @@
-use crate::tokens::{
-    errors::{RefreshTokenError, ValidationError},
-    Scope, TwitchToken,
-};
 use crate::ClientSecret;
-use oauth2::{AccessToken, ClientId, RefreshToken};
+use crate::{
+    id::TwitchTokenErrorResponse,
+    tokens::{
+        errors::{RefreshTokenError, UserTokenExchangeError, ValidationError},
+        Scope, TwitchToken,
+    },
+};
+
+use oauth2::{AccessToken, ClientId, RedirectUrl, RefreshToken};
 use oauth2::{HttpRequest, HttpResponse};
 use std::future::Future;
 
@@ -64,6 +68,15 @@ impl UserToken {
             validated.scopes,
         ))
     }
+
+    /// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    pub fn builder(
+        client_id: ClientId,
+        client_secret: ClientSecret,
+        redirect_url: RedirectUrl,
+    ) -> Result<UserTokenBuilder, oauth2::url::ParseError> {
+        UserTokenBuilder::new(client_id, client_secret, redirect_url)
+    }
 }
 
 #[async_trait::async_trait(?Send)]
@@ -103,4 +116,172 @@ impl TwitchToken for UserToken {
     fn expires(&self) -> Option<std::time::Instant> { None }
 
     fn scopes(&self) -> Option<&[Scope]> { Some(self.scopes.as_slice()) }
+}
+
+/// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+pub struct UserTokenBuilder {
+    pub(crate) scopes: Vec<Scope>,
+    pub(crate) client: crate::TwitchClient,
+    pub(crate) csrf: Option<oauth2::CsrfToken>,
+    pub(crate) force_verify: bool,
+    pub(crate) redirect_url: RedirectUrl,
+    client_id: ClientId,
+    client_secret: ClientSecret,
+}
+
+impl UserTokenBuilder {
+    /// Create a [`UserTokenBuilder`]
+    pub fn new(
+        client_id: ClientId,
+        client_secret: ClientSecret,
+        redirect_url: RedirectUrl,
+    ) -> Result<UserTokenBuilder, oauth2::url::ParseError> {
+        Ok(UserTokenBuilder {
+            scopes: vec![],
+            client: crate::TwitchClient::new(
+                client_id.clone(),
+                Some(client_secret.clone()),
+                oauth2::AuthUrl::new(crate::AUTH_URL.to_string())?,
+                Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
+            )
+            .set_auth_type(oauth2::AuthType::BasicAuth)
+            .set_redirect_url(redirect_url.clone()),
+            csrf: None,
+            force_verify: false,
+            redirect_url,
+            client_id,
+            client_secret,
+        })
+    }
+
+    /// Enable or disable function to make the user able to switch accounts if needed.
+    pub fn force_verify(mut self, b: bool) -> Self {
+        self.force_verify = b;
+        self
+    }
+
+    /// Generate the URL to request a code.
+    ///
+    /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    pub fn generate_url(&mut self) -> oauth2::url::Url {
+        let mut auth = self.client.authorize_url(oauth2::CsrfToken::new_random);
+
+        for scope in self.scopes.iter() {
+            auth = auth.add_scope(scope.as_oauth_scope())
+        }
+
+        auth = auth.add_extra_param(
+            "force_verify",
+            if self.force_verify { "true" } else { "false" },
+        );
+
+        let (url, csrf) = auth.url();
+        self.csrf = Some(csrf);
+        url
+    }
+
+    /// Generate the code with the help of the authorization code
+    ///
+    /// Step. 3 and 4 in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    pub async fn get_user_token<RE, C, F>(
+        self,
+        http_client: C,
+        state: Option<&str>,
+        code: oauth2::AuthorizationCode,
+    ) -> Result<UserToken, UserTokenExchangeError<RE>>
+    where
+        RE: std::error::Error + Send + Sync + 'static,
+        C: Copy + FnOnce(HttpRequest) -> F,
+        F: Future<Output = Result<HttpResponse, RE>>,
+    {
+        if let Some(csrf) = self.csrf {
+            if state.is_none() || csrf.secret() != state.expect("should not fail") {
+                return Err(UserTokenExchangeError::StateMismatch);
+            }
+        }
+
+        // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
+        use oauth2::http::{HeaderMap, Method, StatusCode};
+        use std::collections::HashMap;
+        let mut params = HashMap::new();
+        params.insert("client_id", self.client_id.as_str());
+        params.insert("client_secret", self.client_secret.secret().as_str());
+        params.insert("code", code.secret().as_str());
+        params.insert("grant_type", "authorization_code");
+        params.insert("redirect_uri", self.redirect_url.as_str());
+        let req = HttpRequest {
+            url: oauth2::url::Url::parse_with_params(crate::TOKEN_URL, &params)
+                .expect("unexpectedly failed to parse revoke url"),
+            method: Method::POST,
+            headers: HeaderMap::new(),
+            body: vec![],
+        };
+
+        let resp = http_client(req)
+            .await
+            .map_err(UserTokenExchangeError::RequestError)?;
+        match resp.status_code {
+            StatusCode::BAD_REQUEST => {
+                return Err(UserTokenExchangeError::TwitchError(
+                    TwitchTokenErrorResponse {
+                        status: StatusCode::BAD_REQUEST,
+                        message: String::from_utf8_lossy(&resp.body).into_owned(),
+                    },
+                ))
+            }
+            StatusCode::OK => (),
+            _ => todo!(),
+        };
+        let response: crate::id::TwitchTokenResponse<
+            oauth2::EmptyExtraTokenFields,
+            oauth2::basic::BasicTokenType,
+        > = serde_json::from_slice(resp.body.as_slice())?;
+        UserToken::from_existing(
+            http_client,
+            response.access_token,
+            response.refresh_token,
+            None,
+        )
+        .await
+        .map_err(Into::into)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    pub use super::*;
+    #[test]
+    fn generate_url() {
+        dbg!(UserTokenBuilder::new(
+            ClientId::new("clientid".to_string()),
+            ClientSecret::new("secret".to_string()),
+            oauth2::RedirectUrl::new("https://localhost".to_string()).unwrap(),
+        )
+        .unwrap()
+        .force_verify(true)
+        .generate_url()
+        .to_string());
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn get_token() {
+        let mut t = UserTokenBuilder::new(
+            ClientId::new("clientid".to_string()),
+            ClientSecret::new("secret".to_string()),
+            oauth2::RedirectUrl::new(r#"https://localhost"#.to_string()).unwrap(),
+        )
+        .unwrap()
+        .force_verify(true);
+        t.csrf = Some(oauth2::CsrfToken::new("random".to_string()));
+        let token = t
+            .get_user_token(
+                crate::client::surf_http_client,
+                Some("random"),
+                oauth2::AuthorizationCode::new("authcode".to_string()),
+            )
+            .await
+            .unwrap();
+        println!("token: {:?} - {}", token, token.access_token.secret());
+    }
 }
