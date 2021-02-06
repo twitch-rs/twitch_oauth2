@@ -13,7 +13,7 @@
 * Added old `channel_subscriptions` scope
 * Add an extra (optional) client secret field to `UserToken::from_existing` (thanks [Dinnerbone](https://github.com/Dinnerbone))
 * Added `channel:manage:redemptions`, `channel:read:editors`, `channel:manage:videos`, `user:read:blocked_users` and `user:manage:blocked_users`
-
+* Implemented [OAuth Authorization Code Flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) with `UserTokenBuilder`
 ### Changed
 
 * Made scope take `Cow<&'static str>`

@@ -3,7 +3,7 @@
 use crate::id::TwitchTokenErrorResponse;
 use oauth2::HttpResponse as OAuth2HttpResponse;
 use oauth2::RequestTokenError;
-/// General errors for talking with twitch, currently only used in [AppAccessToken::get_app_access_token][crate::tokens::AppAccessToken::get_app_access_token]
+/// General errors for talking with twitch, used in [AppAccessToken::get_app_access_token][crate::tokens::AppAccessToken::get_app_access_token]
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum TokenError<RE: std::error::Error + Send + Sync + 'static> {
@@ -33,7 +33,7 @@ pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// 400 Bad Request: {0}
-    BadRequest(String),
+    TwitchError(TwitchTokenErrorResponse),
     /// failed to do revokation: {0}
     RequestError(#[source] RE),
     /// got unexpected return: {0:?}
@@ -54,4 +54,21 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     NoClientSecretFound,
     /// no refresh token found
     NoRefreshToken,
+}
+
+/// Errors for [UserTokenBuilder::get_user_token][crate::UserToken::get_user_token]
+#[derive(thiserror::Error, Debug, displaydoc::Display)]
+pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
+    /// request for token failed. {0}
+    RequestError(#[source] RE),
+    /// could not parse url
+    ParseError(#[from] oauth2::url::ParseError),
+    /// twitch returned an unexpected status: {0}
+    TwitchError(TwitchTokenErrorResponse),
+    /// deserializations failed
+    DeserializeError(#[from] serde_json::Error),
+    /// State CSRF does not match.
+    StateMismatch,
+    /// could not get validation for token
+    ValidationError(#[from] ValidationError<RE>),
 }
