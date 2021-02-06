@@ -56,7 +56,7 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     NoRefreshToken,
 }
 
-/// Errors for [UserTokenBuilder::get_user_token][crate::UserToken::get_user_token]
+/// Errors for [UserTokenBuilder::get_user_token][crate::tokens::UserTokenBuilder::get_user_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
