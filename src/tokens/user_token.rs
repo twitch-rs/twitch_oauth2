@@ -163,7 +163,7 @@ impl UserTokenBuilder {
     /// Generate the URL to request a code.
     ///
     /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
-    pub fn generate_url(&mut self) -> oauth2::url::Url {
+    pub fn generate_url(&mut self) -> (oauth2::url::Url, oauth2::CsrfToken) {
         let mut auth = self.client.authorize_url(oauth2::CsrfToken::new_random);
 
         for scope in self.scopes.iter() {
@@ -176,9 +176,15 @@ impl UserTokenBuilder {
         );
 
         let (url, csrf) = auth.url();
-        self.csrf = Some(csrf);
-        url
+        self.csrf = Some(csrf.clone());
+        (url, csrf)
     }
+
+    /// Set the CSRF token.
+    ///
+    /// Hidden because you should preferably not use this.
+    #[doc(hidden)]
+    pub fn set_csrf(&mut self, csrf: oauth2::CsrfToken) { self.csrf = Some(csrf); }
 
     /// Generate the code with the help of the authorization code
     ///
@@ -198,6 +204,8 @@ impl UserTokenBuilder {
             if state.is_none() || csrf.secret() != state.expect("should not fail") {
                 return Err(UserTokenExchangeError::StateMismatch);
             }
+        } else {
+            return Err(UserTokenExchangeError::StateMismatch);
         }
 
         // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
@@ -260,6 +268,7 @@ mod tests {
         .unwrap()
         .force_verify(true)
         .generate_url()
+        .0
         .to_string());
     }
 
