@@ -192,8 +192,9 @@ impl UserTokenBuilder {
     pub async fn get_user_token<RE, C, F>(
         self,
         http_client: C,
-        state: Option<&str>,
-        code: oauth2::AuthorizationCode,
+        state: &str,
+        // TODO: Should be either str or AuthorizationCode
+        code: &str,
     ) -> Result<UserToken, UserTokenExchangeError<RE>>
     where
         RE: std::error::Error + Send + Sync + 'static,
@@ -201,7 +202,7 @@ impl UserTokenBuilder {
         F: Future<Output = Result<HttpResponse, RE>>,
     {
         if let Some(csrf) = self.csrf {
-            if state.is_none() || csrf.secret() != state.expect("should not fail") {
+            if csrf.secret() != state {
                 return Err(UserTokenExchangeError::StateMismatch);
             }
         } else {
@@ -214,7 +215,7 @@ impl UserTokenBuilder {
         let mut params = HashMap::new();
         params.insert("client_id", self.client_id.as_str());
         params.insert("client_secret", self.client_secret.secret().as_str());
-        params.insert("code", code.secret().as_str());
+        params.insert("code", code);
         params.insert("grant_type", "authorization_code");
         params.insert("redirect_uri", self.redirect_url.as_str());
         let req = HttpRequest {
@@ -278,17 +279,13 @@ mod tests {
         let mut t = UserTokenBuilder::new(
             ClientId::new("clientid".to_string()),
             ClientSecret::new("secret".to_string()),
-            oauth2::RedirectUrl::new(r#"https://localhost"#.to_string()).unwrap(),
+            crate::RedirectUrl::new(r#"https://localhost"#.to_string()).unwrap(),
         )
         .unwrap()
         .force_verify(true);
         t.csrf = Some(oauth2::CsrfToken::new("random".to_string()));
         let token = t
-            .get_user_token(
-                crate::client::surf_http_client,
-                Some("random"),
-                oauth2::AuthorizationCode::new("authcode".to_string()),
-            )
+            .get_user_token(crate::client::surf_http_client, "random", "authcode")
             .await
             .unwrap();
         println!("token: {:?} - {}", token, token.access_token.secret());
