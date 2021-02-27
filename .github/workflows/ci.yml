@@ -111,3 +111,21 @@ jobs:
         with:
           command: doc
           args: --no-deps --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}"
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'release-') || startsWith(github.ref, 'release-')
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: false
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - name: Run dry run publish
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --dry-run --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}"
