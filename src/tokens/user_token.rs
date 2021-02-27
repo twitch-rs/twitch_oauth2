@@ -145,7 +145,7 @@ impl UserTokenBuilder {
                 Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
             )
             .set_auth_type(oauth2::AuthType::BasicAuth)
-            .set_redirect_url(redirect_url.clone()),
+            .set_redirect_uri(redirect_url.clone()),
             csrf: None,
             force_verify: false,
             redirect_url,
