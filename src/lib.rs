@@ -34,7 +34,9 @@ pub mod tokens;
 #[doc(hidden)]
 pub use oauth2;
 #[doc(no_inline)]
-pub use oauth2::{AccessToken, ClientId, ClientSecret, RedirectUrl, RefreshToken};
+pub use oauth2::{
+    AccessToken, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, RefreshToken,
+};
 
 use id::{TwitchClient, TwitchTokenErrorResponse};
 use oauth2::{url::Url, AuthUrl, HttpRequest, HttpResponse, TokenResponse};
