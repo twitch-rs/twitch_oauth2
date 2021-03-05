@@ -1,5 +1,6 @@
-#![allow(unknown_lints)] // remove once broken_intra_doc_links is on stable
-#![deny(missing_docs, broken_intra_doc_links)]
+#![allow(unknown_lints, renamed_and_removed_lints)]
+#![deny(missing_docs, broken_intra_doc_links)] // This will be weird until 1.52, see https://github.com/rust-lang/rust/pull/80527
+#![cfg_attr(nightly, deny(rustdoc::broken_intra_doc_links))]
 #![cfg_attr(nightly, feature(doc_cfg))]
 #![doc(html_root_url = "https://docs.rs/twitch_oauth2/0.4.1")]
 //! [![github]](https://github.com/emilgardis/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.4.1/twitch_oauth2)
@@ -164,7 +165,7 @@ pub async fn refresh_token<RE, C, F>(
 ) -> Result<
     (
         AccessToken,
-        Option<std::time::Instant>,
+        Option<std::time::Duration>,
         Option<RefreshToken>,
     ),
     RefreshTokenError<RE>,
@@ -174,8 +175,6 @@ where
     C: FnOnce(HttpRequest) -> F,
     F: Future<Output = Result<HttpResponse, RE>>,
 {
-    let now = std::time::Instant::now();
-
     let client = TwitchClient::new(
         client_id.clone(),
         Some(client_secret.clone()),
@@ -190,7 +189,7 @@ where
         .await
         .map_err(RefreshTokenError::RequestError)?;
     let refresh_token = res.refresh_token().cloned();
-    let expires = res.expires_in().map(|dur| now + dur);
+    let expires = res.expires_in();
     let access_token = res.access_token;
     Ok((access_token, expires, refresh_token))
 }

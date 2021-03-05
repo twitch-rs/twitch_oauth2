@@ -19,6 +19,7 @@
 * Made scope take `Cow<&'static str>`
 * Made fields `access_token` and `refresh_token` `pub` on `UserToken`
 * Fixed wrong scope `user:read:stream_key` -> `channel:read:stream_key`
+* BREAKING: changed `TwitchToken::expires` -> `TwitchToken::expires_in` to calculate current lifetime of token
 
 ## End of Changelog 
 

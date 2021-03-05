@@ -21,7 +21,10 @@ pub struct UserToken {
     login: Option<String>,
     /// The refresh token used to extend the life of this user token
     pub refresh_token: Option<RefreshToken>,
-    expires: Option<std::time::Instant>,
+    /// Expiration from when the response was generated.
+    expires_in: Option<std::time::Duration>,
+    /// When this struct was created, not when token was created.
+    struct_created: std::time::Instant,
     scopes: Vec<Scope>,
 }
 
@@ -34,6 +37,7 @@ impl UserToken {
         client_secret: impl Into<Option<ClientSecret>>,
         login: Option<String>,
         scopes: Option<Vec<Scope>>,
+        expires_in: Option<std::time::Duration>,
     ) -> UserToken {
         UserToken {
             access_token: access_token.into(),
@@ -41,7 +45,8 @@ impl UserToken {
             client_secret: client_secret.into(),
             login,
             refresh_token: refresh_token.into(),
-            expires: None,
+            expires_in,
+            struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_else(Vec::new),
         }
     }
@@ -66,6 +71,7 @@ impl UserToken {
             client_secret,
             validated.login,
             validated.scopes,
+            validated.expires_in,
         ))
     }
 
@@ -105,7 +111,7 @@ impl TwitchToken for UserToken {
                 return Err(RefreshTokenError::NoRefreshToken);
             };
             self.access_token = access_token;
-            self.expires = expires;
+            self.expires_in = expires;
             self.refresh_token = refresh_token;
             Ok(())
         } else {
@@ -113,7 +119,9 @@ impl TwitchToken for UserToken {
         }
     }
 
-    fn expires(&self) -> Option<std::time::Instant> { None }
+    fn expires_in(&self) -> Option<std::time::Duration> {
+        self.expires_in.map(|e| e - self.struct_created.elapsed())
+    }
 
     fn scopes(&self) -> Option<&[Scope]> { Some(self.scopes.as_slice()) }
 }

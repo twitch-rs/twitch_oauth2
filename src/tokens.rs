@@ -34,8 +34,8 @@ pub trait TwitchToken {
         RE: std::error::Error + Send + Sync + 'static,
         C: FnOnce(HttpRequest) -> F,
         F: Future<Output = Result<HttpResponse, RE>>;
-    /// Get instant when token will expire.
-    fn expires(&self) -> Option<std::time::Instant>;
+    /// Get current lifetime of token.
+    fn expires_in(&self) -> Option<std::time::Duration>;
     /// Retrieve scopes attached to the token
     fn scopes(&self) -> Option<&[Scope]>;
     /// Validate this token. Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
@@ -81,7 +81,7 @@ impl<T: TwitchToken> TwitchToken for Box<T> {
         (**self).refresh_token(http_client).await
     }
 
-    fn expires(&self) -> Option<std::time::Instant> { (**self).expires() }
+    fn expires_in(&self) -> Option<std::time::Duration> { (**self).expires_in() }
 
     fn scopes(&self) -> Option<&[Scope]> { (**self).scopes() }
 }
@@ -99,4 +99,14 @@ pub struct ValidatedToken {
     pub user_id: Option<String>,
     /// Scopes attached to the token.
     pub scopes: Option<Vec<Scope>>,
+    /// Lifetime of the token
+    #[serde(deserialize_with = "seconds_to_duration")]
+    pub expires_in: Option<std::time::Duration>,
+}
+
+fn seconds_to_duration<'a, D: serde::de::Deserializer<'a>>(
+    d: D,
+) -> Result<Option<std::time::Duration>, D::Error> {
+    let seconds = Option::<u64>::deserialize(d)?;
+    Ok(seconds.map(std::time::Duration::from_secs))
 }
