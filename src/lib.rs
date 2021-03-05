@@ -164,7 +164,7 @@ pub async fn refresh_token<RE, C, F>(
 ) -> Result<
     (
         AccessToken,
-        Option<std::time::Instant>,
+        Option<std::time::Duration>,
         Option<RefreshToken>,
     ),
     RefreshTokenError<RE>,
@@ -174,8 +174,6 @@ where
     C: FnOnce(HttpRequest) -> F,
     F: Future<Output = Result<HttpResponse, RE>>,
 {
-    let now = std::time::Instant::now();
-
     let client = TwitchClient::new(
         client_id.clone(),
         Some(client_secret.clone()),
@@ -190,7 +188,7 @@ where
         .await
         .map_err(RefreshTokenError::RequestError)?;
     let refresh_token = res.refresh_token().cloned();
-    let expires = res.expires_in().map(|dur| now + dur);
+    let expires = res.expires_in();
     let access_token = res.access_token;
     Ok((access_token, expires, refresh_token))
 }

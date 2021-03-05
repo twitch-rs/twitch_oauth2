@@ -10,9 +10,14 @@ use std::future::Future;
 /// An App Access Token from the [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
 #[derive(Debug, Clone)]
 pub struct AppAccessToken {
-    access_token: AccessToken,
-    refresh_token: Option<RefreshToken>,
-    expires: Option<std::time::Instant>,
+    /// The access token used to authenticate requests with
+    pub access_token: AccessToken,
+    /// The refresh token used to extend the life of this user token
+    pub refresh_token: Option<RefreshToken>,
+    /// Expiration from when the response was generated.
+    expires_in: Option<std::time::Duration>,
+    /// When this struct was created, not when token was created.
+    struct_created: std::time::Instant,
     client_id: ClientId,
     client_secret: ClientSecret,
     login: Option<String>,
@@ -36,19 +41,22 @@ impl TwitchToken for AppAccessToken {
         C: FnOnce(HttpRequest) -> F,
         F: Future<Output = Result<HttpResponse, RE>>,
     {
-        let (access_token, expires, refresh_token) = if let Some(token) = self.refresh_token.take()
+        let (access_token, expires_in, refresh_token) = if let Some(token) =
+            self.refresh_token.take()
         {
             crate::refresh_token(http_client, token, &self.client_id, &self.client_secret).await?
         } else {
             return Err(RefreshTokenError::NoRefreshToken);
         };
         self.access_token = access_token;
-        self.expires = expires;
+        self.expires_in = expires_in;
         self.refresh_token = refresh_token;
         Ok(())
     }
 
-    fn expires(&self) -> Option<std::time::Instant> { self.expires }
+    fn expires_in(&self) -> Option<std::time::Duration> {
+        self.expires_in.map(|e| e - self.struct_created.elapsed())
+    }
 
     fn scopes(&self) -> Option<&[Scope]> { self.scopes.as_deref() }
 }
@@ -68,7 +76,8 @@ impl AppAccessToken {
             client_id: client_id.into(),
             client_secret: client_secret.into(),
             login,
-            expires: None,
+            expires_in: None,
+            struct_created: std::time::Instant::now(),
             scopes,
         }
     }
@@ -107,7 +116,6 @@ impl AppAccessToken {
         C: Fn(HttpRequest) -> F,
         F: Future<Output = Result<HttpResponse, RE>>,
     {
-        let now = std::time::Instant::now();
         let client = TwitchClient::new(
             client_id.clone(),
             Some(client_secret.clone()),
@@ -128,7 +136,8 @@ impl AppAccessToken {
         let app_access = AppAccessToken {
             access_token: response.access_token().clone(),
             refresh_token: response.refresh_token().cloned(),
-            expires: response.expires_in().map(|dur| now + dur),
+            expires_in: response.expires_in(),
+            struct_created: std::time::Instant::now(),
             client_id,
             client_secret,
             login: None,
