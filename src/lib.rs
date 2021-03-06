@@ -162,14 +162,7 @@ pub async fn refresh_token<RE, C, F>(
     refresh_token: RefreshToken,
     client_id: &ClientId,
     client_secret: &ClientSecret,
-) -> Result<
-    (
-        AccessToken,
-        Option<std::time::Duration>,
-        Option<RefreshToken>,
-    ),
-    RefreshTokenError<RE>,
->
+) -> Result<(AccessToken, std::time::Duration, Option<RefreshToken>), RefreshTokenError<RE>>
 where
     RE: std::error::Error + Send + Sync + 'static,
     C: FnOnce(HttpRequest) -> F,
@@ -189,7 +182,7 @@ where
         .await
         .map_err(RefreshTokenError::RequestError)?;
     let refresh_token = res.refresh_token().cloned();
-    let expires = res.expires_in();
+    let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
     let access_token = res.access_token;
-    Ok((access_token, expires, refresh_token))
+    Ok((access_token, expires_in, refresh_token))
 }

@@ -35,10 +35,20 @@ pub trait TwitchToken {
         C: FnOnce(HttpRequest) -> F,
         F: Future<Output = Result<HttpResponse, RE>>;
     /// Get current lifetime of token.
-    fn expires_in(&self) -> Option<std::time::Duration>;
+    fn expires_in(&self) -> std::time::Duration;
+
+    /// Returns whether or not the token is expired.
+    fn is_elapsed(&self) -> bool {
+        let exp = self.expires_in();
+        exp.as_secs() == 0 && exp.as_nanos() == 0
+    }
     /// Retrieve scopes attached to the token
-    fn scopes(&self) -> Option<&[Scope]>;
+    fn scopes(&self) -> &[Scope];
     /// Validate this token. Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
+    ///
+    /// # Note
+    ///
+    /// This will not mutate any current data in the [TwitchToken]
     async fn validate_token<RE, C, F>(
         &self,
         http_client: C,
@@ -81,9 +91,9 @@ impl<T: TwitchToken> TwitchToken for Box<T> {
         (**self).refresh_token(http_client).await
     }
 
-    fn expires_in(&self) -> Option<std::time::Duration> { (**self).expires_in() }
+    fn expires_in(&self) -> std::time::Duration { (**self).expires_in() }
 
-    fn scopes(&self) -> Option<&[Scope]> { (**self).scopes() }
+    fn scopes(&self) -> &[Scope] { (**self).scopes() }
 }
 
 /// Token validation returned from `https://id.twitch.tv/oauth2/validate`
@@ -101,12 +111,11 @@ pub struct ValidatedToken {
     pub scopes: Option<Vec<Scope>>,
     /// Lifetime of the token
     #[serde(deserialize_with = "seconds_to_duration")]
-    pub expires_in: Option<std::time::Duration>,
+    pub expires_in: std::time::Duration,
 }
 
 fn seconds_to_duration<'a, D: serde::de::Deserializer<'a>>(
     d: D,
-) -> Result<Option<std::time::Duration>, D::Error> {
-    let seconds = Option::<u64>::deserialize(d)?;
-    Ok(seconds.map(std::time::Duration::from_secs))
+) -> Result<std::time::Duration, D::Error> {
+    Ok(std::time::Duration::from_secs(u64::deserialize(d)?))
 }

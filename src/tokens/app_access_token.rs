@@ -15,13 +15,13 @@ pub struct AppAccessToken {
     /// The refresh token used to extend the life of this user token
     pub refresh_token: Option<RefreshToken>,
     /// Expiration from when the response was generated.
-    expires_in: Option<std::time::Duration>,
+    expires_in: std::time::Duration,
     /// When this struct was created, not when token was created.
     struct_created: std::time::Instant,
     client_id: ClientId,
     client_secret: ClientSecret,
     login: Option<String>,
-    scopes: Option<Vec<Scope>>,
+    scopes: Vec<Scope>,
 }
 
 #[async_trait::async_trait(?Send)]
@@ -54,31 +54,38 @@ impl TwitchToken for AppAccessToken {
         Ok(())
     }
 
-    fn expires_in(&self) -> Option<std::time::Duration> {
-        self.expires_in.map(|e| e - self.struct_created.elapsed())
+    fn expires_in(&self) -> std::time::Duration {
+        self.expires_in
+            .checked_sub(self.struct_created.elapsed())
+            .unwrap_or_default()
     }
 
-    fn scopes(&self) -> Option<&[Scope]> { self.scopes.as_deref() }
+    fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }
 }
 
 impl AppAccessToken {
     /// Assemble token without checks.
+    ///
+    /// If `expires_in` is `None`, we'll assume `token.is_elapsed() == true`
     pub fn from_existing_unchecked(
         access_token: AccessToken,
+        refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<ClientSecret>,
+        // FIXME: Remove?
         login: Option<String>,
         scopes: Option<Vec<Scope>>,
+        expires_in: Option<std::time::Duration>,
     ) -> AppAccessToken {
         AppAccessToken {
             access_token,
-            refresh_token: None,
+            refresh_token: refresh_token.into(),
             client_id: client_id.into(),
             client_secret: client_secret.into(),
             login,
-            expires_in: None,
+            expires_in: expires_in.unwrap_or_default(),
             struct_created: std::time::Instant::now(),
-            scopes,
+            scopes: scopes.unwrap_or_default(),
         }
     }
 
@@ -86,6 +93,7 @@ impl AppAccessToken {
     pub async fn from_existing<RE, C, F>(
         http_client: C,
         access_token: AccessToken,
+        refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: ClientSecret,
     ) -> Result<AppAccessToken, ValidationError<RE>>
     where
@@ -97,10 +105,12 @@ impl AppAccessToken {
         let validated = crate::validate_token(http_client, &token).await?;
         Ok(Self::from_existing_unchecked(
             token,
+            refresh_token.into(),
             validated.client_id,
             client_secret,
             None,
             validated.scopes,
+            Some(validated.expires_in),
         ))
     }
 
@@ -125,7 +135,7 @@ impl AppAccessToken {
         );
         let client = client.set_auth_type(oauth2::AuthType::RequestBody);
         let mut client = client.exchange_client_credentials();
-        for scope in scopes {
+        for scope in scopes.clone() {
             client = client.add_scope(scope.as_oauth_scope());
         }
         let response = client
@@ -133,19 +143,21 @@ impl AppAccessToken {
             .await
             .map_err(TokenError::Request)?;
 
-        let app_access = AppAccessToken {
-            access_token: response.access_token().clone(),
-            refresh_token: response.refresh_token().cloned(),
-            expires_in: response.expires_in(),
-            struct_created: std::time::Instant::now(),
+        let app_access = AppAccessToken::from_existing_unchecked(
+            response.access_token().clone(),
+            response.refresh_token().cloned(),
             client_id,
             client_secret,
-            login: None,
-            scopes: response
-                .scopes()
-                .cloned()
-                .map(|s| s.into_iter().map(|s| s.into()).collect()),
-        };
+            None,
+            Some(
+                response
+                    .scopes()
+                    .cloned()
+                    .map(|s| s.into_iter().map(|s| s.into()).collect())
+                    .unwrap_or(scopes),
+            ),
+            response.expires_in(),
+        );
 
         let _ = app_access.validate_token(http_client).await?; // Sanity check
         Ok(app_access)
