@@ -45,6 +45,10 @@ pub trait TwitchToken {
     /// Retrieve scopes attached to the token
     fn scopes(&self) -> &[Scope];
     /// Validate this token. Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
+    ///
+    /// # Note
+    ///
+    /// This will not mutate any current data in the [TwitchToken]
     async fn validate_token<RE, C, F>(
         &self,
         http_client: C,
