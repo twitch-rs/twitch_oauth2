@@ -23,7 +23,7 @@ pub struct UserToken {
     /// The refresh token used to extend the life of this user token
     pub refresh_token: Option<RefreshToken>,
     /// Expiration from when the response was generated.
-    expires_in: Option<std::time::Duration>,
+    expires_in: std::time::Duration,
     /// When this struct was created, not when token was created.
     struct_created: std::time::Instant,
     scopes: Vec<Scope>,
@@ -31,6 +31,8 @@ pub struct UserToken {
 
 impl UserToken {
     /// Assemble token without checks.
+    ///
+    /// If `expires_in` is `None`, we'll assume `token.is_elapsed() == true`
     pub fn from_existing_unchecked(
         access_token: impl Into<AccessToken>,
         refresh_token: impl Into<Option<RefreshToken>>,
@@ -46,7 +48,7 @@ impl UserToken {
             client_secret: client_secret.into(),
             login,
             refresh_token: refresh_token.into(),
-            expires_in,
+            expires_in: expires_in.unwrap_or_default(),
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
         }
@@ -72,7 +74,7 @@ impl UserToken {
             client_secret,
             validated.login.ok_or(ValidationError::NoLogin)?,
             validated.scopes,
-            validated.expires_in,
+            Some(validated.expires_in),
         ))
     }
 
@@ -120,8 +122,10 @@ impl TwitchToken for UserToken {
         }
     }
 
-    fn expires_in(&self) -> Option<std::time::Duration> {
-        self.expires_in.map(|e| e - self.struct_created.elapsed())
+    fn expires_in(&self) -> std::time::Duration {
+        self.expires_in
+            .checked_sub(self.struct_created.elapsed())
+            .unwrap_or_default()
     }
 
     fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }

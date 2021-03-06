@@ -57,6 +57,8 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     NoClientSecretFound,
     /// no refresh token found
     NoRefreshToken,
+    /// no expiration found on new token
+    NoExpiration,
 }
 
 /// Errors for [UserTokenBuilder::get_user_token][crate::tokens::UserTokenBuilder::get_user_token]
