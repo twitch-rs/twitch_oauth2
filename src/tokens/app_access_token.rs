@@ -65,18 +65,21 @@ impl AppAccessToken {
     /// Assemble token without checks.
     pub fn from_existing_unchecked(
         access_token: AccessToken,
+        refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<ClientSecret>,
+        // FIXME: Remove?
         login: Option<String>,
         scopes: Option<Vec<Scope>>,
+        expires_in: Option<std::time::Duration>,
     ) -> AppAccessToken {
         AppAccessToken {
             access_token,
-            refresh_token: None,
+            refresh_token: refresh_token.into(),
             client_id: client_id.into(),
             client_secret: client_secret.into(),
             login,
-            expires_in: None,
+            expires_in,
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
         }
@@ -86,6 +89,7 @@ impl AppAccessToken {
     pub async fn from_existing<RE, C, F>(
         http_client: C,
         access_token: AccessToken,
+        refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: ClientSecret,
     ) -> Result<AppAccessToken, ValidationError<RE>>
     where
@@ -97,10 +101,12 @@ impl AppAccessToken {
         let validated = crate::validate_token(http_client, &token).await?;
         Ok(Self::from_existing_unchecked(
             token,
+            refresh_token.into(),
             validated.client_id,
             client_secret,
             None,
             validated.scopes,
+            validated.expires_in,
         ))
     }
 
@@ -133,20 +139,21 @@ impl AppAccessToken {
             .await
             .map_err(TokenError::Request)?;
 
-        let app_access = AppAccessToken {
-            access_token: response.access_token().clone(),
-            refresh_token: response.refresh_token().cloned(),
-            expires_in: response.expires_in(),
-            struct_created: std::time::Instant::now(),
+        let app_access = AppAccessToken::from_existing_unchecked(
+            response.access_token().clone(),
+            response.refresh_token().cloned(),
             client_id,
             client_secret,
-            login: None,
-            scopes: response
-                .scopes()
-                .cloned()
-                .map(|s| s.into_iter().map(|s| s.into()).collect())
-                .unwrap_or(scopes),
-        };
+            None,
+            Some(
+                response
+                    .scopes()
+                    .cloned()
+                    .map(|s| s.into_iter().map(|s| s.into()).collect())
+                    .unwrap_or(scopes),
+            ),
+            response.expires_in(),
+        );
 
         let _ = app_access.validate_token(http_client).await?; // Sanity check
         Ok(app_access)
