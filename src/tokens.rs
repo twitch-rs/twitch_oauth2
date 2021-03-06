@@ -37,7 +37,7 @@ pub trait TwitchToken {
     /// Get current lifetime of token.
     fn expires_in(&self) -> Option<std::time::Duration>;
     /// Retrieve scopes attached to the token
-    fn scopes(&self) -> Option<&[Scope]>;
+    fn scopes(&self) -> &[Scope];
     /// Validate this token. Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
     async fn validate_token<RE, C, F>(
         &self,
@@ -83,7 +83,7 @@ impl<T: TwitchToken> TwitchToken for Box<T> {
 
     fn expires_in(&self) -> Option<std::time::Duration> { (**self).expires_in() }
 
-    fn scopes(&self) -> Option<&[Scope]> { (**self).scopes() }
+    fn scopes(&self) -> &[Scope] { (**self).scopes() }
 }
 
 /// Token validation returned from `https://id.twitch.tv/oauth2/validate`

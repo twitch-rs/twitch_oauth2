@@ -48,7 +48,7 @@ impl UserToken {
             refresh_token: refresh_token.into(),
             expires_in,
             struct_created: std::time::Instant::now(),
-            scopes: scopes.unwrap_or_else(Vec::new),
+            scopes: scopes.unwrap_or_default(),
         }
     }
 
@@ -124,7 +124,7 @@ impl TwitchToken for UserToken {
         self.expires_in.map(|e| e - self.struct_created.elapsed())
     }
 
-    fn scopes(&self) -> Option<&[Scope]> { Some(self.scopes.as_slice()) }
+    fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }
 }
 
 /// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
@@ -170,9 +170,7 @@ impl UserTokenBuilder {
     }
 
     /// Add a single scope to request
-    pub fn add_scope(&mut self, scope: Scope) {
-        self.scopes.push(scope);
-    }
+    pub fn add_scope(&mut self, scope: Scope) { self.scopes.push(scope); }
 
     /// Enable or disable function to make the user able to switch accounts if needed.
     pub fn force_verify(mut self, b: bool) -> Self {

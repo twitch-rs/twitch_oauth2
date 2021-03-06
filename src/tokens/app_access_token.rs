@@ -21,7 +21,7 @@ pub struct AppAccessToken {
     client_id: ClientId,
     client_secret: ClientSecret,
     login: Option<String>,
-    scopes: Option<Vec<Scope>>,
+    scopes: Vec<Scope>,
 }
 
 #[async_trait::async_trait(?Send)]
@@ -58,7 +58,7 @@ impl TwitchToken for AppAccessToken {
         self.expires_in.map(|e| e - self.struct_created.elapsed())
     }
 
-    fn scopes(&self) -> Option<&[Scope]> { self.scopes.as_deref() }
+    fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }
 }
 
 impl AppAccessToken {
@@ -78,7 +78,7 @@ impl AppAccessToken {
             login,
             expires_in: None,
             struct_created: std::time::Instant::now(),
-            scopes,
+            scopes: scopes.unwrap_or_default(),
         }
     }
 
@@ -125,7 +125,7 @@ impl AppAccessToken {
         );
         let client = client.set_auth_type(oauth2::AuthType::RequestBody);
         let mut client = client.exchange_client_credentials();
-        for scope in scopes {
+        for scope in scopes.clone() {
             client = client.add_scope(scope.as_oauth_scope());
         }
         let response = client
@@ -144,7 +144,8 @@ impl AppAccessToken {
             scopes: response
                 .scopes()
                 .cloned()
-                .map(|s| s.into_iter().map(|s| s.into()).collect()),
+                .map(|s| s.into_iter().map(|s| s.into()).collect())
+                .unwrap_or(scopes),
         };
 
         let _ = app_access.validate_token(http_client).await?; // Sanity check
