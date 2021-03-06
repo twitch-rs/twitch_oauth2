@@ -18,7 +18,8 @@ pub struct UserToken {
     pub access_token: AccessToken,
     client_id: ClientId,
     client_secret: Option<ClientSecret>,
-    login: Option<String>,
+    /// Username of user associated with this token
+    pub login: String,
     /// The refresh token used to extend the life of this user token
     pub refresh_token: Option<RefreshToken>,
     /// Expiration from when the response was generated.
@@ -35,7 +36,7 @@ impl UserToken {
         refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<Option<ClientSecret>>,
-        login: Option<String>,
+        login: String,
         scopes: Option<Vec<Scope>>,
         expires_in: Option<std::time::Duration>,
     ) -> UserToken {
@@ -69,7 +70,7 @@ impl UserToken {
             refresh_token.into(),
             validated.client_id,
             client_secret,
-            validated.login,
+            validated.login.ok_or(ValidationError::NoLogin)?,
             validated.scopes,
             validated.expires_in,
         ))
@@ -91,7 +92,7 @@ impl TwitchToken for UserToken {
 
     fn token(&self) -> &AccessToken { &self.access_token }
 
-    fn login(&self) -> Option<&str> { self.login.as_deref() }
+    fn login(&self) -> Option<&str> { Some(&self.login) }
 
     async fn refresh_token<RE, C, F>(
         &mut self,
@@ -160,6 +161,17 @@ impl UserTokenBuilder {
             client_id,
             client_secret,
         })
+    }
+
+    /// Add scopes to the request
+    pub fn set_scopes(mut self, scopes: Vec<Scope>) -> Self {
+        self.scopes = scopes;
+        self
+    }
+
+    /// Add a single scope to request
+    pub fn add_scope(&mut self, scope: Scope) {
+        self.scopes.push(scope);
     }
 
     /// Enable or disable function to make the user able to switch accounts if needed.
