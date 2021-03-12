@@ -20,6 +20,8 @@ pub struct UserToken {
     client_secret: Option<ClientSecret>,
     /// Username of user associated with this token
     pub login: String,
+    /// User ID of the user associated with this token
+    pub user_id: String,
     /// The refresh token used to extend the life of this user token
     pub refresh_token: Option<RefreshToken>,
     /// Expiration from when the response was generated.
@@ -33,12 +35,14 @@ impl UserToken {
     /// Assemble token without checks.
     ///
     /// If `expires_in` is `None`, we'll assume `token.is_elapsed() == true`
+    #[allow(clippy::too_many_arguments)]
     pub fn from_existing_unchecked(
         access_token: impl Into<AccessToken>,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<Option<ClientSecret>>,
         login: String,
+        user_id: String,
         scopes: Option<Vec<Scope>>,
         expires_in: Option<std::time::Duration>,
     ) -> UserToken {
@@ -47,6 +51,7 @@ impl UserToken {
             client_id: client_id.into(),
             client_secret: client_secret.into(),
             login,
+            user_id,
             refresh_token: refresh_token.into(),
             expires_in: expires_in.unwrap_or_default(),
             struct_created: std::time::Instant::now(),
@@ -73,6 +78,7 @@ impl UserToken {
             validated.client_id,
             client_secret,
             validated.login.ok_or(ValidationError::NoLogin)?,
+            validated.user_id.ok_or(ValidationError::NoLogin)?,
             validated.scopes,
             Some(validated.expires_in),
         ))
