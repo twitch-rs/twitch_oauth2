@@ -27,7 +27,7 @@ pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
     /// failed to request validation: {0}
     Request(#[source] RE),
     // TODO: This should be in it's own error enum specifically for UserToken validation
-    /// validation did not return a login name when it was expected
+    /// validation did not return a login when it was expected
     NoLogin,
 }
 
