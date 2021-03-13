@@ -88,6 +88,7 @@ scope_impls!(
     UserReadBlockedUsers, "user:read:blocked_users", "View the block list of a user.";
     UserReadBroadcast, "user:read:broadcast", "View a user’s broadcasting configuration, including Extension configurations.";
     UserReadEmail, "user:read:email", "Read an authorized user’s email address.";
+    UserReadSubscriptions, "user:read:subscriptions", "Get the details of user's subscription to a channel.";
     WhispersEdit, "whispers:edit", "Send whisper messages.";
     WhispersRead, "whispers:read", "View your whisper messages.";
 );
