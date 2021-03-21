@@ -16,9 +16,23 @@ use oauth2::{HttpRequest, HttpResponse};
 use serde::Deserialize;
 use std::future::Future;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+/// Types of bearer tokens
+pub enum BearerTokenType {
+    /// Token for making requests in the context of an authenticated user.
+    UserToken,
+    /// Token for server-to-server requests.
+    ///
+    /// In some contexts (i.e [EventSub](https://dev.twitch.tv/docs/eventsub)) an App Access Token can be used in the context of users that have authenticated
+    /// the specific Client ID
+    AppAccessToken,
+}
+
 /// Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]
 #[async_trait::async_trait(?Send)]
 pub trait TwitchToken {
+    /// Get the type of token.
+    fn token_type() -> BearerTokenType;
     /// Client ID associated with the token. Twitch requires this in all helix API calls
     fn client_id(&self) -> &ClientId;
     /// Get the [AccessToken] for authenticating
@@ -73,6 +87,8 @@ pub trait TwitchToken {
 
 #[async_trait::async_trait(?Send)]
 impl<T: TwitchToken> TwitchToken for Box<T> {
+    fn token_type() -> BearerTokenType { T::token_type() }
+
     fn client_id(&self) -> &ClientId { (**self).client_id() }
 
     fn token(&self) -> &AccessToken { (**self).token() }

@@ -12,7 +12,11 @@ use oauth2::{HttpRequest, HttpResponse};
 use std::future::Future;
 
 /// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-implicit-code-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-authorization-code-flow)
-#[derive(Debug, Clone)]
+///
+/// Used for requests that need an authenticated user. See also [`AppAccessToken`](super::AppAccessToken)
+///
+/// See [`UserToken::builder`](UserTokenBuilder::new) for authenticating the user using the `OAuth authorization code flow`.
+#[derive(Clone)]
 pub struct UserToken {
     /// The access token used to authenticate requests with
     pub access_token: AccessToken,
@@ -29,6 +33,22 @@ pub struct UserToken {
     /// When this struct was created, not when token was created.
     struct_created: std::time::Instant,
     scopes: Vec<Scope>,
+    never_expiring: bool,
+}
+
+impl std::fmt::Debug for UserToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UserToken")
+            .field("access_token", &self.access_token)
+            .field("client_id", &self.client_id)
+            .field("client_secret", &self.client_secret)
+            .field("login", &self.login)
+            .field("user_id", &self.user_id)
+            .field("refresh_token", &self.refresh_token)
+            .field("expires_in", &self.expires_in())
+            .field("scopes", &self.scopes)
+            .finish()
+    }
 }
 
 impl UserToken {
@@ -56,6 +76,7 @@ impl UserToken {
             expires_in: expires_in.unwrap_or_default(),
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
+            never_expiring: false,
         }
     }
 
@@ -84,6 +105,42 @@ impl UserToken {
         ))
     }
 
+    #[doc(hidden)]
+    /// Assemble unexpiring token and validate it. Only use this if you have an old client ID that does not give expiring OAuth2 tokens. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
+    ///
+    /// This makes [`TwitchToken::expires_in`] return a bogus duration of `std::time::Duration::MAX`
+    pub async fn from_existing_unexpiring<RE, C, F>(
+        http_client: C,
+        access_token: AccessToken,
+        refresh_token: impl Into<Option<RefreshToken>>,
+        client_secret: impl Into<Option<ClientSecret>>,
+    ) -> Result<UserToken, ValidationError<RE>>
+    where
+        RE: std::error::Error + Send + Sync + 'static,
+        C: FnOnce(HttpRequest) -> F,
+        F: Future<Output = Result<HttpResponse, RE>>,
+    {
+        let validated = crate::validate_token(http_client, &access_token).await?;
+        let mut token = Self::from_existing_unchecked(
+            access_token,
+            refresh_token.into(),
+            validated.client_id,
+            client_secret,
+            validated.login.ok_or(ValidationError::NoLogin)?,
+            validated.user_id.ok_or(ValidationError::NoLogin)?,
+            validated.scopes,
+            Some(validated.expires_in),
+        );
+        token.never_expiring = true;
+        Ok(token)
+    }
+
+    #[doc(hidden)]
+    /// Returns true if this token is never expiring. Needs to be assembled manually, we never assume a token is never expiring. See [`UserToken::from_existing_unexpiring`]
+    ///
+    /// Hidden because it's not expected to be used.
+    pub fn never_expires(&self) -> bool { self.never_expiring }
+
     /// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
     pub fn builder(
         client_id: ClientId,
@@ -96,6 +153,8 @@ impl UserToken {
 
 #[async_trait::async_trait(?Send)]
 impl TwitchToken for UserToken {
+    fn token_type() -> super::BearerTokenType { super::BearerTokenType::UserToken }
+
     fn client_id(&self) -> &ClientId { &self.client_id }
 
     fn token(&self) -> &AccessToken { &self.access_token }
@@ -129,9 +188,15 @@ impl TwitchToken for UserToken {
     }
 
     fn expires_in(&self) -> std::time::Duration {
-        self.expires_in
-            .checked_sub(self.struct_created.elapsed())
-            .unwrap_or_default()
+        if !self.never_expiring {
+            self.expires_in
+                .checked_sub(self.struct_created.elapsed())
+                .unwrap_or_default()
+        } else {
+            // We don't return an option here because it's not expected to use this if the token is known to be unexpiring.
+            // TODO: Use Duration::MAX
+            std::time::Duration::new(u64::MAX, 1_000_000_000 - 1)
+        }
     }
 
     fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }

@@ -14,7 +14,7 @@
 * Add an extra (optional) client secret field to `UserToken::from_existing` (thanks [Dinnerbone](https://github.com/Dinnerbone))
 * Added `channel:manage:redemptions`, `channel:read:editors`, `channel:manage:videos`, `user:read:blocked_users`,  `user:manage:blocked_users` and `user:read:subscriptions`
 * Implemented [OAuth Authorization Code Flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) with `UserTokenBuilder`
-* Added a check to verify if the token is expired or not
+* Added a check to verify if the token is expired or not. Also added a way to suggest that an user token is never expiring, making `is_expiring` return a max duration.
 ### Changed
 
 * Made scope take `Cow<&'static str>`
