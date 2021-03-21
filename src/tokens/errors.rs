@@ -8,7 +8,7 @@ use oauth2::RequestTokenError;
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum TokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
-    Request(RequestTokenError<RE, TwitchTokenErrorResponse>),
+    Request(#[source] RequestTokenError<RE, TwitchTokenErrorResponse>),
     /// could not parse url
     ParseError(#[from] oauth2::url::ParseError),
     /// could not get validation for token
@@ -52,8 +52,8 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// could not parse url
     ParseError(#[from] oauth2::url::ParseError),
     /// no client secret found
-    ///
-    /// A client secret is needed to request a refreshed token.
+    // TODO: Include this in doc
+    // A client secret is needed to request a refreshed token.
     NoClientSecretFound,
     /// no refresh token found
     NoRefreshToken,
