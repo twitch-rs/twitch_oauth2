@@ -1,5 +1,5 @@
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error
     let mut args = std::env::args().skip(1);
     let token = twitch_oauth2::UserToken::from_existing(
@@ -18,7 +18,7 @@ async fn main() {
             .or_else(|| args.next())
             .map(twitch_oauth2::ClientSecret::new),
     )
-    .await
-    .unwrap();
+    .await?;
     println!("{:?}", token);
+    Ok(())
 }

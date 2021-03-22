@@ -8,7 +8,12 @@ use oauth2::{HttpRequest, HttpResponse};
 use std::future::Future;
 
 /// An App Access Token from the [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
-#[derive(Debug, Clone)]
+///
+/// Used for server-to-server requests. Use [`UserToken`](super::UserToken) for requests that need to be in the context of an authenticated user.
+///
+/// In some contexts (i.e [EventSub](https://dev.twitch.tv/docs/eventsub)) an App Access Token can be used in the context of users that have authenticated
+/// the specific Client ID
+#[derive(Clone)]
 pub struct AppAccessToken {
     /// The access token used to authenticate requests with
     pub access_token: AccessToken,
@@ -20,12 +25,28 @@ pub struct AppAccessToken {
     struct_created: std::time::Instant,
     client_id: ClientId,
     client_secret: ClientSecret,
+    // FIXME: This should be removed
     login: Option<String>,
     scopes: Vec<Scope>,
 }
 
+impl std::fmt::Debug for AppAccessToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UserToken")
+            .field("access_token", &self.access_token)
+            .field("refresh_token", &self.refresh_token)
+            .field("client_id", &self.client_id)
+            .field("client_secret", &self.client_secret)
+            .field("expires_in", &self.expires_in())
+            .field("scopes", &self.scopes)
+            .finish()
+    }
+}
+
 #[async_trait::async_trait(?Send)]
 impl TwitchToken for AppAccessToken {
+    fn token_type() -> super::BearerTokenType { super::BearerTokenType::AppAccessToken }
+
     fn client_id(&self) -> &ClientId { &self.client_id }
 
     fn token(&self) -> &AccessToken { &self.access_token }
