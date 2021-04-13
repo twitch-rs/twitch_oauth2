@@ -151,7 +151,7 @@ impl UserToken {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl TwitchToken for UserToken {
     fn token_type() -> super::BearerTokenType { super::BearerTokenType::UserToken }
 
@@ -166,9 +166,10 @@ impl TwitchToken for UserToken {
         http_client: C,
     ) -> Result<(), RefreshTokenError<RE>>
     where
+        Self: Sized,
         RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: FnOnce(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
         if let Some(client_secret) = self.client_secret.clone() {
             let (access_token, expires, refresh_token) = if let Some(token) =

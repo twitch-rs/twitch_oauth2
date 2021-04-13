@@ -43,7 +43,7 @@ impl std::fmt::Debug for AppAccessToken {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl TwitchToken for AppAccessToken {
     fn token_type() -> super::BearerTokenType { super::BearerTokenType::AppAccessToken }
 
@@ -59,8 +59,8 @@ impl TwitchToken for AppAccessToken {
     ) -> Result<(), RefreshTokenError<RE>>
     where
         RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: FnOnce(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
         let (access_token, expires_in, refresh_token) = if let Some(token) =
             self.refresh_token.take()
@@ -144,8 +144,8 @@ impl AppAccessToken {
     ) -> Result<AppAccessToken, TokenError<RE>>
     where
         RE: std::error::Error + Send + Sync + 'static,
-        C: Fn(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: Fn(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
         let client = TwitchClient::new(
             client_id.clone(),
