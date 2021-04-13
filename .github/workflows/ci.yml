@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        rust: [1.48, nightly]
+        rust: [1.49, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout

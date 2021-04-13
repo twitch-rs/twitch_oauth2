@@ -29,7 +29,7 @@ pub enum BearerTokenType {
 }
 
 /// Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 pub trait TwitchToken {
     /// Get the type of token.
     fn token_type() -> BearerTokenType;
@@ -45,9 +45,10 @@ pub trait TwitchToken {
         http_client: C,
     ) -> Result<(), RefreshTokenError<RE>>
     where
+        Self: Sized,
         RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>;
+        C: FnOnce(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send;
     /// Get current lifetime of token.
     fn expires_in(&self) -> std::time::Duration;
 
@@ -68,25 +69,29 @@ pub trait TwitchToken {
         http_client: C,
     ) -> Result<ValidatedToken, ValidationError<RE>>
     where
+        Self: Sized,
         RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: FnOnce(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
-        validate_token(http_client, &self.token()).await
+        let token = &self.token();
+        validate_token(http_client, &token).await
     }
     /// Revoke the token. See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
     async fn revoke_token<RE, C, F>(self, http_client: C) -> Result<(), RevokeTokenError<RE>>
     where
         Self: Sized,
         RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>, {
-        crate::revoke_token(http_client, self.token(), self.client_id()).await
+        C: FnOnce(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send, {
+        let token = self.token();
+        let client_id = self.client_id();
+        crate::revoke_token(http_client, &token, &client_id).await
     }
 }
 
-#[async_trait::async_trait(?Send)]
-impl<T: TwitchToken> TwitchToken for Box<T> {
+#[async_trait::async_trait]
+impl<T: TwitchToken + Send> TwitchToken for Box<T> {
     fn token_type() -> BearerTokenType { T::token_type() }
 
     fn client_id(&self) -> &ClientId { (**self).client_id() }
@@ -100,9 +105,10 @@ impl<T: TwitchToken> TwitchToken for Box<T> {
         http_client: C,
     ) -> Result<(), RefreshTokenError<RE>>
     where
+        Self: Sized,
         RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: FnOnce(HttpRequest) -> F + Send,
+        F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
         (**self).refresh_token(http_client).await
     }
