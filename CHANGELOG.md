@@ -17,6 +17,7 @@
 * Added a check to verify if the token is expired or not. Also added a way to suggest that an user token is never expiring, making `is_expiring` return a max duration.
 ### Changed
 
+* MSRV: 1.49 
 * Made scope take `Cow<&'static str>`
 * Made fields `access_token` and `refresh_token` `pub` on `UserToken` and `AppAccessToken`
 * Fixed wrong scope `user:read:stream_key` -> `channel:read:stream_key`
