@@ -172,7 +172,7 @@ where
         client_id.clone(),
         Some(client_secret.clone()),
         AuthUrl::new(crate::AUTH_URL.to_owned())
-            .expect("unexpected failure to parse auth url for app_access_token"),
+            .expect("unexpected failure to parse auth url for refreshing token"),
         Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
     );
     let client = client.set_auth_type(oauth2::AuthType::RequestBody);
