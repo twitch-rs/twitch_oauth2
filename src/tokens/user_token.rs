@@ -120,36 +120,6 @@ impl UserToken {
     }
 
     #[doc(hidden)]
-    /// Assemble unexpiring token and validate it. Only use this if you have an old client ID that does not give expiring OAuth2 tokens. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
-    ///
-    /// This makes [`TwitchToken::expires_in`] return a bogus duration of `std::time::Duration::MAX`
-    pub async fn from_existing_unexpiring<RE, C, F>(
-        http_client: C,
-        access_token: AccessToken,
-        refresh_token: impl Into<Option<RefreshToken>>,
-        client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<RE>>
-    where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
-    {
-        let validated = crate::validate_token(http_client, &access_token).await?;
-        let mut token = Self::from_existing_unchecked(
-            access_token,
-            refresh_token.into(),
-            validated.client_id,
-            client_secret,
-            validated.login.ok_or(ValidationError::NoLogin)?,
-            validated.user_id.ok_or(ValidationError::NoLogin)?,
-            validated.scopes,
-            Some(validated.expires_in),
-        );
-        token.never_expiring = true;
-        Ok(token)
-    }
-
-    #[doc(hidden)]
     /// Returns true if this token is never expiring. Needs to be assembled manually, we never assume a token is never expiring. See [`UserToken::from_existing_unexpiring`]
     ///
     /// Hidden because it's not expected to be used.
