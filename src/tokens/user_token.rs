@@ -33,7 +33,10 @@ pub struct UserToken {
     /// When this struct was created, not when token was created.
     struct_created: std::time::Instant,
     scopes: Vec<Scope>,
-    never_expiring: bool,
+    /// Token will never expire
+    ///
+    /// This is only true for old client IDs, like <https://twitchapps.com/tmi> and others
+    pub never_expiring: bool,
 }
 
 impl std::fmt::Debug for UserToken {
@@ -54,7 +57,7 @@ impl std::fmt::Debug for UserToken {
 impl UserToken {
     /// Assemble token without checks.
     ///
-    /// If `expires_in` is `None`, we'll assume `token.is_elapsed() == true`
+    /// If `expires_in` is `None`, we'll assume `token.is_elapsed` is always false
     #[allow(clippy::too_many_arguments)]
     pub fn from_existing_unchecked(
         access_token: impl Into<AccessToken>,
@@ -73,14 +76,19 @@ impl UserToken {
             login,
             user_id,
             refresh_token: refresh_token.into(),
-            expires_in: expires_in.unwrap_or_default(),
+            expires_in: expires_in.unwrap_or_else(|| {
+                // TODO: Use Duration::MAX
+                std::time::Duration::new(u64::MAX, 1_000_000_000 - 1)
+            }),
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
-            never_expiring: false,
+            never_expiring: expires_in.is_none(),
         }
     }
 
     /// Assemble token and validate it. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
+    ///
+    /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
     pub async fn from_existing<RE, C, F>(
         http_client: C,
         access_token: AccessToken,
@@ -101,38 +109,14 @@ impl UserToken {
             validated.login.ok_or(ValidationError::NoLogin)?,
             validated.user_id.ok_or(ValidationError::NoLogin)?,
             validated.scopes,
-            Some(validated.expires_in),
+            Some(validated.expires_in).filter(|d| {
+                // FIXME: https://github.com/rust-lang/rust/pull/84084
+                // FIXME: nanos are not returned
+                // if duration is zero, the token will never expire. if the token was expired, twitch would return NotAuthorized
+                // TODO: There could be a situation where this fails, if the token is just about to expire, say 500ms, does twitch round up to 1 or down to 0?
+                !(d.as_secs() == 0 && d.as_nanos() == 0)
+            }),
         ))
-    }
-
-    #[doc(hidden)]
-    /// Assemble unexpiring token and validate it. Only use this if you have an old client ID that does not give expiring OAuth2 tokens. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
-    ///
-    /// This makes [`TwitchToken::expires_in`] return a bogus duration of `std::time::Duration::MAX`
-    pub async fn from_existing_unexpiring<RE, C, F>(
-        http_client: C,
-        access_token: AccessToken,
-        refresh_token: impl Into<Option<RefreshToken>>,
-        client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<RE>>
-    where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
-    {
-        let validated = crate::validate_token(http_client, &access_token).await?;
-        let mut token = Self::from_existing_unchecked(
-            access_token,
-            refresh_token.into(),
-            validated.client_id,
-            client_secret,
-            validated.login.ok_or(ValidationError::NoLogin)?,
-            validated.user_id.ok_or(ValidationError::NoLogin)?,
-            validated.scopes,
-            Some(validated.expires_in),
-        );
-        token.never_expiring = true;
-        Ok(token)
     }
 
     #[doc(hidden)]
