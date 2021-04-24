@@ -53,6 +53,8 @@ impl TwitchToken for AppAccessToken {
 
     fn login(&self) -> Option<&str> { self.login.as_deref() }
 
+    fn user_id(&self) -> Option<&str> { None }
+
     async fn refresh_token<RE, C, F>(
         &mut self,
         http_client: C,

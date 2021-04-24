@@ -39,6 +39,8 @@ pub trait TwitchToken {
     fn token(&self) -> &AccessToken;
     /// Get the username associated to this token
     fn login(&self) -> Option<&str>;
+    /// Get the user id associated to this token
+    fn user_id(&self) -> Option<&str>;
     /// Refresh this token, changing the token to a newer one
     async fn refresh_token<RE, C, F>(
         &mut self,
@@ -99,6 +101,8 @@ impl<T: TwitchToken + Send> TwitchToken for Box<T> {
     fn token(&self) -> &AccessToken { (**self).token() }
 
     fn login(&self) -> Option<&str> { (**self).login() }
+
+    fn user_id(&self) -> Option<&str> { (**self).user_id() }
 
     async fn refresh_token<RE, C, F>(
         &mut self,

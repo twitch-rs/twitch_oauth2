@@ -161,6 +161,8 @@ impl TwitchToken for UserToken {
 
     fn login(&self) -> Option<&str> { Some(&self.login) }
 
+    fn user_id(&self) -> Option<&str> { Some(&self.user_id) }
+
     async fn refresh_token<RE, C, F>(
         &mut self,
         http_client: C,
