@@ -10,16 +10,15 @@
 
 * Made crate runtime agnostic with custom clients.
 * Updated deps.
-* Added old `channel_subscriptions` scope
 * Add an extra (optional) client secret field to `UserToken::from_existing` (thanks [Dinnerbone](https://github.com/Dinnerbone))
-* Added `channel:manage:redemptions`, `channel:read:editors`, `channel:manage:videos`, `user:read:blocked_users`,  `user:manage:blocked_users` and `user:read:subscriptions`
+* Added `channel:manage:redemptions`, `channel:read:editors`, `channel:manage:videos`, `user:read:blocked_users`,  `user:manage:blocked_users`, `user:read:subscriptions` and `user:read:follows`
 * Implemented [OAuth Authorization Code Flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) with `UserTokenBuilder`
-* Added a check to verify if the token is expired or not. Also added a way to suggest that an user token is never expiring, making `is_expiring` return a max duration.
+* Added a way to suggest or infer that an user token is never expiring, making `is_elapsed` return false and `expires_in` a bogus (max) duration.
 ### Changed
 
 * MSRV: 1.49 
 * Made scope take `Cow<&'static str>`
-* Made fields `access_token` and `refresh_token` `pub` on `UserToken` and `AppAccessToken`
+* Made fields `access_token`, `refresh_token`, `user_id` and `login` `pub` on `UserToken` and `AppAccessToken` (where applicable)
 * Fixed wrong scope `user:read:stream_key` -> `channel:read:stream_key`
 * BREAKING: changed `TwitchToken::expires` -> `TwitchToken::expires_in` to calculate current lifetime of token
 
