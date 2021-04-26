@@ -77,3 +77,21 @@ pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     /// could not get validation for token
     ValidationError(#[from] ValidationError<RE>),
 }
+
+/// Errors for [ImplicitUserTokenBuilder::get_user_token][crate::tokens::ImplicitUserTokenBuilder::get_user_token]
+#[derive(thiserror::Error, Debug, displaydoc::Display)]
+pub enum ImplicitUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
+    /// could not parse url
+    ParseError(#[from] oauth2::url::ParseError),
+    /// twitch returned an error: {error:?} - {description:?}
+    TwitchError {
+        /// Error type
+        error: Option<String>,
+        /// Description of error
+        description: Option<String>,
+    },
+    /// State CSRF does not match.
+    StateMismatch,
+    /// could not get validation for token
+    ValidationError(#[from] ValidationError<RE>),
+}

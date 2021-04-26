@@ -5,7 +5,7 @@ pub mod errors;
 mod user_token;
 
 pub use app_access_token::AppAccessToken;
-pub use user_token::{UserToken, UserTokenBuilder};
+pub use user_token::{ImplicitUserTokenBuilder, UserToken, UserTokenBuilder};
 
 use crate::{scopes::Scope, validate_token};
 

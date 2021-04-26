@@ -14,7 +14,7 @@ build = "build.rs"
 [features]
 default = []
 reqwest_client = ["oauth2/reqwest"]
-surf_client = ["surf","http-types", "http-types/hyperium_http"]
+surf_client = ["surf", "http-types", "http-types/hyperium_http"]
 all = ["surf_client", "reqwest_client"]
 
 [dependencies]
@@ -32,6 +32,7 @@ http-types = { version = "2.9.0", optional = true }
 tokio = { version = "1.5.0", features = ["rt-multi-thread", "macros", "test-util"] }
 dotenv = "0.15.0"
 anyhow = "1.0.40"
+reqwest = { version = "0.11.3" }
 
 [build-dependencies]
 version_check = "0.9.3"
