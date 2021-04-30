@@ -32,32 +32,37 @@ mod surf_client {
     ///  Asynchronous HTTP client using [Surf][surf::Client]
     #[cfg_attr(nightly, doc(cfg(feature = "surf_client")))]
     pub async fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
-        let client = surf::Client::new();
-        let method: http_types::Method = request.method.into();
-        let mut req = surf::Request::new(method, request.url);
+        #[cfg(not(doc))]
+        {
+            let client = surf::Client::new(); // If this fails to compile, please use feature `surf_client_curl` or specify surf with a client in Cargo.toml
+            let method: http_types::Method = request.method.into();
+            let mut req = surf::Request::new(method, request.url);
 
-        for (name, value) in &request.headers {
-            let value = surf::http::headers::HeaderValue::from_bytes(value.as_bytes().to_vec())
-                .map_err(Error::Surf)?;
-            req.append_header(name.as_str(), value);
-        }
+            for (name, value) in &request.headers {
+                let value = surf::http::headers::HeaderValue::from_bytes(value.as_bytes().to_vec())
+                    .map_err(Error::Surf)?;
+                req.append_header(name.as_str(), value);
+            }
 
-        req.body_bytes(&request.body);
+            req.body_bytes(&request.body);
 
-        let mut response = client.send(req).await.map_err(Error::Surf)?;
-        let headers = response
-            .iter()
-            .map(|(k, v)| {
-                Ok((
-                    oauth2::http::header::HeaderName::from_bytes(k.as_str().as_bytes())?,
-                    oauth2::http::HeaderValue::from_str(v.as_str())?,
-                ))
+            let mut response = client.send(req).await.map_err(Error::Surf)?;
+            let headers = response
+                .iter()
+                .map(|(k, v)| {
+                    Ok((
+                        oauth2::http::header::HeaderName::from_bytes(k.as_str().as_bytes())?,
+                        oauth2::http::HeaderValue::from_str(v.as_str())?,
+                    ))
+                })
+                .collect::<Result<_, Error>>()?;
+            Ok(HttpResponse {
+                body: response.body_bytes().await.map_err(Error::Surf)?,
+                status_code: response.status().into(),
+                headers,
             })
-            .collect::<Result<_, Error>>()?;
-        Ok(HttpResponse {
-            body: response.body_bytes().await.map_err(Error::Surf)?,
-            status_code: response.status().into(),
-            headers,
-        })
+        }
+        #[cfg(doc)]
+        unimplemented!("A client for surf is not provided in documentation generation due to needing a specified surf client, like `curl-client`")
     }
 }
