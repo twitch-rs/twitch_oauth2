@@ -580,7 +580,7 @@ mod tests {
     #[ignore]
     async fn get_implicit_token() {
         let mut t = ImplicitUserTokenBuilder::new(
-            ClientId::new("kzgaoxsw1faoezx2udpwmffayywib4".to_string()),
+            ClientId::new("clientid".to_string()),
             crate::RedirectUrl::new(r#"http://localhost/twitch/register"#.to_string()).unwrap(),
         )
         .unwrap()
