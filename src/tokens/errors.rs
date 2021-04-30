@@ -68,7 +68,7 @@ pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     RequestError(#[source] RE),
     /// could not parse url
     ParseError(#[from] oauth2::url::ParseError),
-    /// twitch returned an unexpected status: {0}
+    /// twitch returned an unexpected error: {0}
     TwitchError(TwitchTokenErrorResponse),
     /// deserializations failed
     DeserializeError(#[from] serde_json::Error),
