@@ -37,6 +37,7 @@ dotenv = "0.15.0"
 anyhow = "1.0.40"
 reqwest = { version = "0.11.3" }
 surf = { version = "2.1.0" }
+rpassword = "5.0.1"
 
 [build-dependencies]
 version_check = "0.9.3"
@@ -45,6 +46,11 @@ version_check = "0.9.3"
 name = "user_token"
 path = "examples/user_token.rs"
 required-features = ["surf_client"]
+
+[[example]]
+name = "auth_flow"
+path = "examples/auth_flow.rs"
+required-features = ["reqwest_client"]
 
 [package.metadata.docs.rs]
 features = ["all"]

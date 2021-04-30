@@ -135,6 +135,9 @@ impl UserToken {
     ) -> Result<UserTokenBuilder, oauth2::url::ParseError> {
         UserTokenBuilder::new(client_id, client_secret, redirect_url)
     }
+
+    /// Set the client secret
+    pub fn set_secret(&mut self, secret: Option<ClientSecret>) { self.client_secret = secret }
 }
 
 #[async_trait::async_trait]
@@ -314,16 +317,21 @@ impl UserTokenBuilder {
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
         match resp.status_code {
-            StatusCode::BAD_REQUEST => {
+            StatusCode::OK => (),
+            c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
+                return Err(UserTokenExchangeError::TwitchError(serde_json::from_slice(
+                    resp.body.as_slice(),
+                )?));
+            }
+            c => {
                 return Err(UserTokenExchangeError::TwitchError(
                     TwitchTokenErrorResponse {
-                        status: StatusCode::BAD_REQUEST,
-                        message: String::from_utf8_lossy(&resp.body).into_owned(),
+                        status: c,
+                        // This is not returned as I'm unsure what could be contained
+                        message: "<censored>".to_string(),
                     },
-                ))
+                ));
             }
-            StatusCode::OK => (),
-            _ => todo!(),
         };
         let response: crate::id::TwitchTokenResponse<
             oauth2::EmptyExtraTokenFields,
@@ -333,7 +341,7 @@ impl UserTokenBuilder {
             http_client,
             response.access_token,
             response.refresh_token,
-            None,
+            self.client_secret,
         )
         .await
         .map_err(Into::into)
