@@ -209,6 +209,13 @@ pub struct UserTokenBuilder {
 
 impl UserTokenBuilder {
     /// Create a [`UserTokenBuilder`]
+    ///
+    /// # Notes
+    ///
+    /// The `url` crate converts empty paths into "/" (such as `https://example.com` into `https://example.com/`),
+    /// which means that you'll need to add "https://example.com/" to your redirect URIs (note the "trailing" slash) if you want to use an empty path.
+    ///
+    /// To avoid this, use a path such as `https://example.com/twitch/register` or similar instead, where the `url` crate would not add a trailing `/`.
     pub fn new(
         client_id: ClientId,
         client_secret: ClientSecret,
@@ -360,6 +367,13 @@ pub struct ImplicitUserTokenBuilder {
 
 impl ImplicitUserTokenBuilder {
     /// Create a [`ImplicitUserTokenBuilder`]
+    ///
+    /// # Notes
+    ///
+    /// The `url` crate converts empty paths into "/" (such as `https://example.com` into `https://example.com/`),
+    /// which means that you'll need to add "https://example.com/" to your redirect URIs (note the "trailing" slash) if you want to use an empty path.
+    ///
+    /// To avoid this, use a path such as `https://example.com/twitch/register` or similar instead, where the `url` crate would not add a trailing `/`.
     pub fn new(
         client_id: ClientId,
         redirect_url: RedirectUrl,
