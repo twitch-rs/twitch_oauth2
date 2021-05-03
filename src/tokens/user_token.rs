@@ -122,7 +122,7 @@ impl UserToken {
     }
 
     #[doc(hidden)]
-    /// Returns true if this token is never expiring. Needs to be assembled manually, we never assume a token is never expiring. See [`UserToken::from_existing_unexpiring`]
+    /// Returns true if this token is never expiring.
     ///
     /// Hidden because it's not expected to be used.
     pub fn never_expires(&self) -> bool { self.never_expiring }
@@ -282,7 +282,9 @@ impl UserTokenBuilder {
 
     /// Generate the code with the help of the authorization code
     ///
-    /// Step. 3 and 4 in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    ///
+    /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `<redirect_url or first defined url in dev console>?error=<error type>&error_description=<description of error>`
     pub async fn get_user_token<RE, C, F>(
         self,
         http_client: C,
@@ -435,7 +437,7 @@ impl ImplicitUserTokenBuilder {
     ///
     /// You can skip this method and instead use the token in the hash directly with [`UserToken::from_existing()`], but it's provided here for convenience.
     ///
-    /// Step. 3 and 4 in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow)
+    /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow)
     ///
     /// # Example
     ///

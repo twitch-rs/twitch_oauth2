@@ -36,6 +36,15 @@ pub trait TwitchToken {
     /// Client ID associated with the token. Twitch requires this in all helix API calls
     fn client_id(&self) -> &ClientId;
     /// Get the [AccessToken] for authenticating
+    ///
+    /// # Examples
+    /// ```rust, no_run
+    /// # use twitch_oauth2::UserToken;
+    /// # fn t() -> UserToken {todo!()}
+    /// # let user_token = t();
+    /// use twitch_oauth2::TwitchToken;
+    /// println!("token: {}", user_token.token().secret().as_str());
+    /// ```
     fn token(&self) -> &AccessToken;
     /// Get the username associated to this token
     fn login(&self) -> Option<&str>;
@@ -55,6 +64,19 @@ pub trait TwitchToken {
     fn expires_in(&self) -> std::time::Duration;
 
     /// Returns whether or not the token is expired.
+    ///
+    /// ```rust, no_run
+    /// # use twitch_oauth2::UserToken;
+    /// # fn t() -> UserToken {todo!()}
+    /// # #[tokio::main]
+    /// # async fn run() -> Result<(), Box<std::error::Error + 'static>>{
+    /// # let mut user_token = t();
+    /// use twitch_oauth2::{UserToken, TwitchToken, client::reqwest_http_client};
+    /// if user_token.is_elapsed() {
+    ///     user_token.refresh_token(reqwest_http_client).await?;
+    /// }
+    /// # Ok(()) }
+    /// # fn main() {run();}
     fn is_elapsed(&self) -> bool {
         let exp = self.expires_in();
         exp.as_secs() == 0 && exp.as_nanos() == 0
@@ -79,6 +101,7 @@ pub trait TwitchToken {
         let token = &self.token();
         validate_token(http_client, &token).await
     }
+
     /// Revoke the token. See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
     async fn revoke_token<RE, C, F>(self, http_client: C) -> Result<(), RevokeTokenError<RE>>
     where
