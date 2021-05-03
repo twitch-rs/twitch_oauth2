@@ -116,7 +116,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}" -p twitch_oauth2 -p oauth2
+          args: --no-deps --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}"
   release:
     name: Release
     runs-on: ubuntu-latest
