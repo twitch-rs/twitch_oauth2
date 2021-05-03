@@ -37,7 +37,8 @@ pub trait TwitchToken {
     fn client_id(&self) -> &ClientId;
     /// Get the [AccessToken] for authenticating
     ///
-    /// # Examples
+    /// # Example
+    ///
     /// ```rust, no_run
     /// # use twitch_oauth2::UserToken;
     /// # fn t() -> UserToken {todo!()}
