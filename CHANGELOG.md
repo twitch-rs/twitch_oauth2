@@ -4,7 +4,11 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/49a083ceda6768cc52a1f8f1714bb7f942f24c01...Unreleased)
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/0.5.0...Unreleased)
+
+## [v0.5.0] - 2021-05-08
+
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/49a083ceda6768cc52a1f8f1714bb7f942f24c01...v0.5.0)
 
 ### Added
 
@@ -24,4 +28,4 @@
 
 ## End of Changelog 
 
-Changelog starts on Unreleased
+Changelog starts on v0.5.0
