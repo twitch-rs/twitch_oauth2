@@ -68,11 +68,15 @@ scope_impls!(
     ChannelEditCommercial, "channel:edit:commercial", "Run commercials on a channel.";
     ChannelManageBroadcast, "channel:manage:broadcast", "Manage a channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
     ChannelManageExtensions, "channel:manage:extensions", "Manage a channel’s Extension configuration, including activating Extensions.";
+    ChannelManagePolls, "channel:manage:polls", "Manage a channel’s polls.";
+    ChannelManagePredictions, "channel:manage:predictions", "Manage of channel’s Channel Points Predictions";
     ChannelManageRedemptions, "channel:manage:redemptions", "Manage Channel Points custom rewards and their redemptions on a channel.";
     ChannelManageVideos, "channel:manage:videos", "Manage a channel’s videos, including deleting videos.";
     ChannelModerate, "channel:moderate", "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
     ChannelReadEditors, "channel:read:editors", "View a list of users with the editor role for a channel.";
     ChannelReadHypeTrain, "channel:read:hype_train", "View Hype Train information for a channel.";
+    ChannelReadPolls, "channel:read:polls", "View a channel’s polls.";
+    ChannelReadPredictions, "channel:read:predictions", "View a channel’s Channel Points Predictions.";
     ChannelReadRedemptions, "channel:read:redemptions", "View Channel Points custom rewards and their redemptions on a channel.";
     ChannelReadStreamKey, "channel:read:stream_key", "View an authorized user’s stream key.";
     ChannelReadSubscriptions, "channel:read:subscriptions", "View a list of all subscribers to a channel and check if a user is subscribed to a channel.";
