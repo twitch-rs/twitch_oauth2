@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 macro_rules! scope_impls {
-    ($($i:ident,$rename:literal,$doc:literal);* $(;)? ) => {
+    ($($i:ident,scope: $rename:literal, doc: $doc:literal);* $(;)? ) => {
         #[doc = "Scopes for twitch."]
         #[doc = ""]
         #[doc = "<https://dev.twitch.tv/docs/authentication/#scopes>"]
@@ -62,40 +62,40 @@ macro_rules! scope_impls {
 }
 
 scope_impls!(
-    AnalyticsReadExtensions, "analytics:read:extensions", "View analytics data for the Twitch Extensions owned by the authenticated account.";
-    AnalyticsReadGames, "analytics:read:games", "View analytics data for the games owned by the authenticated account.";
-    BitsRead, "bits:read", "View Bits information for a channel.";
-    ChannelEditCommercial, "channel:edit:commercial", "Run commercials on a channel.";
-    ChannelManageBroadcast, "channel:manage:broadcast", "Manage a channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
-    ChannelManageExtensions, "channel:manage:extensions", "Manage a channel’s Extension configuration, including activating Extensions.";
-    ChannelManagePolls, "channel:manage:polls", "Manage a channel’s polls.";
-    ChannelManagePredictions, "channel:manage:predictions", "Manage of channel’s Channel Points Predictions";
-    ChannelManageRedemptions, "channel:manage:redemptions", "Manage Channel Points custom rewards and their redemptions on a channel.";
-    ChannelManageVideos, "channel:manage:videos", "Manage a channel’s videos, including deleting videos.";
-    ChannelModerate, "channel:moderate", "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
-    ChannelReadEditors, "channel:read:editors", "View a list of users with the editor role for a channel.";
-    ChannelReadHypeTrain, "channel:read:hype_train", "View Hype Train information for a channel.";
-    ChannelReadPolls, "channel:read:polls", "View a channel’s polls.";
-    ChannelReadPredictions, "channel:read:predictions", "View a channel’s Channel Points Predictions.";
-    ChannelReadRedemptions, "channel:read:redemptions", "View Channel Points custom rewards and their redemptions on a channel.";
-    ChannelReadStreamKey, "channel:read:stream_key", "View an authorized user’s stream key.";
-    ChannelReadSubscriptions, "channel:read:subscriptions", "View a list of all subscribers to a channel and check if a user is subscribed to a channel.";
-    ChannelSubscriptions, "channel_subscriptions", "\\[DEPRECATED\\] Read all subscribers to your channel.";
-    ChatEdit, "chat:edit", "Send live stream chat and rooms messages.";
-    ChatRead, "chat:read", "View live stream chat and rooms messages.";
-    ClipsEdit, "clips:edit", "Manage Clips for a channel.";
-    ModerationRead, "moderation:read", "View a channel’s moderation data including Moderators, Bans, Timeouts, and Automod settings.";
-    UserEdit, "user:edit", "Manage a user object.";
-    UserEditBroadcast, "user:edit:broadcast", "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
-    UserEditFollows, "user:edit:follows", "Edit a user’s follows.";
-    UserManageBlockedUsers, "user:manage:blocked_users", "Manage the block list of a user.";
-    UserReadBlockedUsers, "user:read:blocked_users", "View the block list of a user.";
-    UserReadBroadcast, "user:read:broadcast", "View a user’s broadcasting configuration, including Extension configurations.";
-    UserReadFollows, "user:read:follows", "View the list of channels a user follows.";
-    UserReadEmail, "user:read:email", "Read an authorized user’s email address.";
-    UserReadSubscriptions, "user:read:subscriptions", "View if an authorized user is subscribed to specific channels.";
-    WhispersEdit, "whispers:edit", "Send whisper messages.";
-    WhispersRead, "whispers:read", "View your whisper messages.";
+    AnalyticsReadExtensions,  scope: "analytics:read:extensions",  doc: "View analytics data for the Twitch Extensions owned by the authenticated account.";
+    AnalyticsReadGames,       scope: "analytics:read:games",       doc: "View analytics data for the games owned by the authenticated account.";
+    BitsRead,                 scope: "bits:read",                  doc: "View Bits information for a channel.";
+    ChannelEditCommercial,    scope: "channel:edit:commercial",    doc: "Run commercials on a channel.";
+    ChannelManageBroadcast,   scope: "channel:manage:broadcast",   doc: "Manage a channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
+    ChannelManageExtensions,  scope: "channel:manage:extensions",  doc: "Manage a channel’s Extension configuration, including activating Extensions.";
+    ChannelManagePolls,       scope: "channel:manage:polls",       doc: "Manage a channel’s polls.";
+    ChannelManagePredictions, scope: "channel:manage:predictions", doc: "Manage of channel’s Channel Points Predictions";
+    ChannelManageRedemptions, scope: "channel:manage:redemptions", doc: "Manage Channel Points custom rewards and their redemptions on a channel.";
+    ChannelManageVideos,      scope: "channel:manage:videos",      doc: "Manage a channel’s videos, including deleting videos.";
+    ChannelModerate,          scope: "channel:moderate",           doc: "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
+    ChannelReadEditors,       scope: "channel:read:editors",       doc: "View a list of users with the editor role for a channel.";
+    ChannelReadHypeTrain,     scope: "channel:read:hype_train",    doc: "View Hype Train information for a channel.";
+    ChannelReadPolls,         scope: "channel:read:polls",         doc: "View a channel’s polls.";
+    ChannelReadPredictions,   scope: "channel:read:predictions",   doc: "View a channel’s Channel Points Predictions.";
+    ChannelReadRedemptions,   scope: "channel:read:redemptions",   doc: "View Channel Points custom rewards and their redemptions on a channel.";
+    ChannelReadStreamKey,     scope: "channel:read:stream_key",    doc: "View an authorized user’s stream key.";
+    ChannelReadSubscriptions, scope: "channel:read:subscriptions", doc: "View a list of all subscribers to a channel and check if a user is subscribed to a channel.";
+    ChannelSubscriptions,     scope: "channel_subscriptions",      doc: "\\[DEPRECATED\\] Read all subscribers to your channel.";
+    ChatEdit,                 scope: "chat:edit",                  doc: "Send live stream chat and rooms messages.";
+    ChatRead,                 scope: "chat:read",                  doc: "View live stream chat and rooms messages.";
+    ClipsEdit,                scope: "clips:edit",                 doc: "Manage Clips for a channel.";
+    ModerationRead,           scope: "moderation:read",            doc: "View a channel’s moderation data including Moderators, Bans, Timeouts, and Automod settings.";
+    UserEdit,                 scope: "user:edit",                  doc: "Manage a user object.";
+    UserEditBroadcast,        scope: "user:edit:broadcast",        doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
+    UserEditFollows,          scope: "user:edit:follows",          doc: "Edit a user’s follows.";
+    UserManageBlockedUsers,   scope: "user:manage:blocked_users",  doc: "Manage the block list of a user.";
+    UserReadBlockedUsers,     scope: "user:read:blocked_users",    doc: "View the block list of a user.";
+    UserReadBroadcast,        scope: "user:read:broadcast",        doc: "View a user’s broadcasting configuration, including Extension configurations.";
+    UserReadFollows,          scope: "user:read:follows",          doc: "View the list of channels a user follows.";
+    UserReadEmail,            scope: "user:read:email",            doc: "Read an authorized user’s email address.";
+    UserReadSubscriptions,    scope: "user:read:subscriptions",    doc: "View if an authorized user is subscribed to specific channels.";
+    WhispersEdit,             scope: "whispers:edit",              doc: "Send whisper messages.";
+    WhispersRead,             scope: "whispers:read",              doc: "View your whisper messages.";
 );
 
 impl Scope {
