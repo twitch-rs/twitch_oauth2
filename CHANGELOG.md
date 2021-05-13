@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/0.5.0...Unreleased)
 
+# Added
+
+* Added new scopes `channel:manage:polls`, `channel:manage:predictions`, `channel:read:polls`, `channel:read:predictions`, and `moderator:manage:automod`,
+
 ## [v0.5.0] - 2021-05-08
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/49a083ceda6768cc52a1f8f1714bb7f942f24c01...v0.5.0)
