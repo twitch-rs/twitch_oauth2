@@ -47,6 +47,14 @@ macro_rules! scope_impls {
                 ]
             }
 
+            #[doc = "Get a description for the token"]
+            pub fn description(&self) -> &'static str {
+                match self {
+                    $(Self::$i => $doc,)*
+                    _ => "unknown scope"
+                }
+            }
+
             #[doc = "Make a scope from a cow string"]
             pub fn parse<C>(s: C) -> Scope where C: Into<Cow<'static, str>> {
                 use std::borrow::Borrow;

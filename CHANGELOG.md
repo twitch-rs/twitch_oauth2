@@ -9,6 +9,7 @@
 # Added
 
 * Added new scopes `channel:manage:polls`, `channel:manage:predictions`, `channel:read:polls`, `channel:read:predictions`, and `moderator:manage:automod`,
+* Added function `Scope::description` to get the description of the scope
 
 ## [v0.5.0] - 2021-05-08
 
