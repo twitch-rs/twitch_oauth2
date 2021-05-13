@@ -85,14 +85,15 @@ scope_impls!(
     ChatRead,                 scope: "chat:read",                  doc: "View live stream chat and rooms messages.";
     ClipsEdit,                scope: "clips:edit",                 doc: "Manage Clips for a channel.";
     ModerationRead,           scope: "moderation:read",            doc: "View a channel’s moderation data including Moderators, Bans, Timeouts, and Automod settings.";
+    ModeratorManageAutoMod,   scope: "moderator:manage:automod",   doc: "Manage messages held for review by AutoMod in channels where you are a moderator.";
     UserEdit,                 scope: "user:edit",                  doc: "Manage a user object.";
     UserEditBroadcast,        scope: "user:edit:broadcast",        doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
     UserEditFollows,          scope: "user:edit:follows",          doc: "Edit a user’s follows.";
     UserManageBlockedUsers,   scope: "user:manage:blocked_users",  doc: "Manage the block list of a user.";
     UserReadBlockedUsers,     scope: "user:read:blocked_users",    doc: "View the block list of a user.";
     UserReadBroadcast,        scope: "user:read:broadcast",        doc: "View a user’s broadcasting configuration, including Extension configurations.";
-    UserReadFollows,          scope: "user:read:follows",          doc: "View the list of channels a user follows.";
     UserReadEmail,            scope: "user:read:email",            doc: "Read an authorized user’s email address.";
+    UserReadFollows,          scope: "user:read:follows",          doc: "View the list of channels a user follows.";
     UserReadSubscriptions,    scope: "user:read:subscriptions",    doc: "View if an authorized user is subscribed to specific channels.";
     WhispersEdit,             scope: "whispers:edit",              doc: "Send whisper messages.";
     WhispersRead,             scope: "whispers:read",              doc: "View your whisper messages.";
