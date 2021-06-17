@@ -100,7 +100,7 @@ pub trait TwitchToken {
         F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
         let token = &self.token();
-        validate_token(http_client, &token).await
+        validate_token(http_client, token).await
     }
 
     /// Revoke the token. See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
@@ -112,7 +112,7 @@ pub trait TwitchToken {
         F: Future<Output = Result<HttpResponse, RE>> + Send, {
         let token = self.token();
         let client_id = self.client_id();
-        crate::revoke_token(http_client, &token, &client_id).await
+        crate::revoke_token(http_client, token, client_id).await
     }
 }
 

@@ -79,6 +79,7 @@ scope_impls!(
     ChannelManagePolls,       scope: "channel:manage:polls",       doc: "Manage a channel’s polls.";
     ChannelManagePredictions, scope: "channel:manage:predictions", doc: "Manage of channel’s Channel Points Predictions";
     ChannelManageRedemptions, scope: "channel:manage:redemptions", doc: "Manage Channel Points custom rewards and their redemptions on a channel.";
+    ChannelManageSchedule,    scope: "channel:manage:schedule",    doc: "Manage a channel’s stream schedule.";
     ChannelManageVideos,      scope: "channel:manage:videos",      doc: "Manage a channel’s videos, including deleting videos.";
     ChannelModerate,          scope: "channel:moderate",           doc: "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
     ChannelReadEditors,       scope: "channel:read:editors",       doc: "View a list of users with the editor role for a channel.";
