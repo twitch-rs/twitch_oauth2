@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.1...Unreleased)
 
+# Added
+
+* Added new scope `channel:manage:schedule`
+
 ## [v0.5.1] - 2021-05-16
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.0...v0.5.1)
