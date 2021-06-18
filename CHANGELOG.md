@@ -4,7 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.1...Unreleased)
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.2...Unreleased)
+
+## [v0.5.2] - 2021-06-18
+
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.1...v0.5.2)
+
+# Added
+
+* Added new scope `channel:manage:schedule`
 
 ## [v0.5.1] - 2021-05-16
 
