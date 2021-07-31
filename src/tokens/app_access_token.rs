@@ -1,9 +1,11 @@
-use super::errors::{TokenError, ValidationError};
+use super::errors::{AppAccessTokenError, ValidationError};
 use crate::{
-    id::TwitchClient,
+    id::{TwitchClient, TwitchTokenErrorResponse},
     tokens::{errors::RefreshTokenError, Scope, TwitchToken},
 };
-use oauth2::{AccessToken, AuthUrl, ClientId, ClientSecret, RefreshToken, TokenResponse};
+use oauth2::{
+    AccessToken, AuthUrl, ClientId, ClientSecret, RefreshToken, RequestTokenError, TokenResponse,
+};
 use oauth2::{HttpRequest, HttpResponse};
 use std::future::Future;
 
@@ -143,28 +145,55 @@ impl AppAccessToken {
         client_id: ClientId,
         client_secret: ClientSecret,
         scopes: Vec<Scope>,
-    ) -> Result<AppAccessToken, TokenError<RE>>
+    ) -> Result<AppAccessToken, AppAccessTokenError<RE>>
     where
         RE: std::error::Error + Send + Sync + 'static,
         C: Fn(HttpRequest) -> F + Send,
         F: Future<Output = Result<HttpResponse, RE>> + Send,
     {
-        let client = TwitchClient::new(
-            client_id.clone(),
-            Some(client_secret.clone()),
-            AuthUrl::new(crate::AUTH_URL.to_owned())
-                .expect("unexpected failure to parse auth url for app_access_token"),
-            Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
-        );
-        let client = client.set_auth_type(oauth2::AuthType::RequestBody);
-        let mut client = client.exchange_client_credentials();
-        for scope in scopes.clone() {
-            client = client.add_scope(scope.as_oauth_scope());
-        }
-        let response = client
-            .request_async(&http_client)
+        // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
+        use oauth2::http::{HeaderMap, Method, StatusCode};
+        use std::collections::HashMap;
+        let scope: String = scopes
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        let mut params = HashMap::new();
+        params.insert("client_id", client_id.as_str());
+        params.insert("client_secret", client_secret.secret().as_str());
+        params.insert("grant_type", "client_credentials");
+        params.insert("scope", &scope);
+        let req = HttpRequest {
+            url: oauth2::url::Url::parse_with_params(&crate::TOKEN_URL, &params)
+                .expect("unexpectedly failed to parse token url"),
+            method: Method::POST,
+            headers: HeaderMap::new(),
+            body: vec![],
+        };
+
+        let resp = http_client(req)
             .await
-            .map_err(TokenError::Request)?;
+            .map_err(|e| AppAccessTokenError::Request(RequestTokenError::Request(e)))?;
+        match resp.status_code {
+            StatusCode::OK => (),
+            c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
+                return Err(AppAccessTokenError::TwitchError(serde_json::from_slice(
+                    resp.body.as_slice(),
+                )?));
+            }
+            c => {
+                return Err(AppAccessTokenError::TwitchError(TwitchTokenErrorResponse {
+                    status: c,
+                    // This is not returned as I'm unsure what could be contained
+                    message: "<censored>".to_string(),
+                }));
+            }
+        };
+        let response: crate::id::TwitchTokenResponse<
+            oauth2::EmptyExtraTokenFields,
+            oauth2::basic::BasicTokenType,
+        > = serde_json::from_slice(resp.body.as_slice())?;
 
         let app_access = AppAccessToken::from_existing_unchecked(
             response.access_token().clone(),
@@ -182,7 +211,6 @@ impl AppAccessToken {
             response.expires_in(),
         );
 
-        let _ = app_access.validate_token(http_client).await?; // Sanity check
         Ok(app_access)
     }
 }

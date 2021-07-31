@@ -6,13 +6,17 @@ use oauth2::RequestTokenError;
 /// General errors for talking with twitch, used in [AppAccessToken::get_app_access_token][crate::tokens::AppAccessToken::get_app_access_token]
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
-pub enum TokenError<RE: std::error::Error + Send + Sync + 'static> {
+pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
     Request(#[source] RequestTokenError<RE, TwitchTokenErrorResponse>),
     /// could not parse url
     ParseError(#[from] oauth2::url::ParseError),
+    /// twitch returned an unexpected status: {0}
+    TwitchError(TwitchTokenErrorResponse),
     /// could not get validation for token
     ValidationError(#[from] ValidationError<RE>),
+    /// deserializations failed
+    DeserializeError(#[from] serde_json::Error),
 }
 
 /// Errors for [validate_token][crate::validate_token]

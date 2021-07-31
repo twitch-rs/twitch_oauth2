@@ -18,6 +18,7 @@ default = []
 reqwest_client = ["oauth2/reqwest"]
 surf_client_curl = ["surf_client", "surf/curl-client"]
 surf_client = ["surf", "http-types", "http-types/hyperium_http"]
+mock_api = []
 all = ["surf_client_curl", "reqwest_client"]
 
 [dependencies]
@@ -30,6 +31,7 @@ async-trait = "0.1.50"
 http = "0.2.4"
 surf = { version = "2.2.0", optional = true, default-features = false }
 http-types = { version = "2.11.1", optional = true }
+once_cell = "1.8.0"
 
 [dev-dependencies]
 tokio = { version = "1.7.0", features = ["rt-multi-thread", "macros", "test-util"] }
@@ -51,6 +53,12 @@ required-features = ["surf_client"]
 name = "auth_flow"
 path = "examples/auth_flow.rs"
 required-features = ["reqwest_client"]
+
+
+[[example]]
+name = "mock"
+path = "examples/mock.rs"
+required-features = ["reqwest_client", "mock_api"]
 
 [package.metadata.docs.rs]
 features = ["all"]

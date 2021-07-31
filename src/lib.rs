@@ -58,14 +58,64 @@ pub async fn dummy_http_client(_: HttpRequest) -> Result<HttpResponse, DummyErro
 #[error("this client does not do anything, only used for documentation test that only checks code integrity")]
 pub struct DummyError;
 
-/// Authorization URL for `id.twitch.tv`
-pub static AUTH_URL: &str = "https://id.twitch.tv/oauth2/authorize";
-/// Token URL for `id.twitch.tv`
-pub static TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
-/// Validation URL for `id.twitch.tv`
-pub static VALIDATE_URL: &str = "https://id.twitch.tv/oauth2/validate";
-/// Revokation URL for `id.twitch.tv`
-pub static REVOKE_URL: &str = "https://id.twitch.tv/oauth2/revoke";
+/// Generate a url with a default if `mock_api` feature is disabled, or env var is not defined or is invalid utf8
+macro_rules! mock_env {
+    ($var:literal, $default:expr $(,)?) => {
+        once_cell::sync::Lazy::new(move || {
+            #[cfg(feature = "mock_api")]
+            if let Ok(url) = std::env::var($var) {
+                return url;
+            };
+            $default.to_string()
+        })
+    };
+}
+
+/// Defines the root path to twitch auth endpoints
+static TWITCH_OAUTH2_URL: once_cell::sync::Lazy<String> =
+    mock_env!("TWITCH_OAUTH2_URL", "https://id.twitch.tv/oauth2/");
+
+/// Authorization URL (`/authorize`) for `id.twitch.tv`
+///
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_AUTH_URL` to override the full url.
+///
+/// # Examples
+///
+/// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
+pub static AUTH_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_AUTH_URL", {
+    TWITCH_OAUTH2_URL.to_string() + "authorize"
+},);
+/// Token URL (`/token`) for `id.twitch.tv`
+///
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_TOKEN_URL` to override the full url.
+///
+/// # Examples
+///
+/// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
+pub static TOKEN_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_TOKEN_URL", {
+    TWITCH_OAUTH2_URL.to_string() + "token"
+},);
+/// Validation URL (`/validate`) for `id.twitch.tv`
+///
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_VALIDATE_URL` to override the full url.
+///
+/// # Examples
+///
+/// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
+pub static VALIDATE_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_VALIDATE_URL", {
+    TWITCH_OAUTH2_URL.to_string() + "validate"
+},);
+/// Revokation URL (`/revoke`) for `id.twitch.tv`
+///
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_REVOKE_URL` to override the full url.
+///
+/// # Examples
+///
+/// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
+pub static REVOKE_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_REVOKE_URL", {
+    TWITCH_OAUTH2_URL.to_string() + "revoke"
+},);
+
 /// Validate this token.
 ///
 /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
@@ -90,7 +140,7 @@ where
             .expect("Failed to parse header for validation"),
     );
     let req = HttpRequest {
-        url: Url::parse(crate::VALIDATE_URL).expect("unexpectedly failed to parse validate url"),
+        url: Url::parse(&crate::VALIDATE_URL).expect("unexpectedly failed to parse validate url"),
         method: Method::GET,
         headers,
         body: vec![],
@@ -132,7 +182,7 @@ where
     params.insert("client_id", client_id.as_str());
     params.insert("token", token.secret());
     let req = HttpRequest {
-        url: Url::parse_with_params(crate::REVOKE_URL, &params)
+        url: Url::parse_with_params(&crate::REVOKE_URL, &params)
             .expect("unexpectedly failed to parse revoke url"),
         method: Method::POST,
         headers: HeaderMap::new(),

@@ -315,8 +315,8 @@ impl UserTokenBuilder {
         params.insert("grant_type", "authorization_code");
         params.insert("redirect_uri", self.redirect_url.as_str());
         let req = HttpRequest {
-            url: oauth2::url::Url::parse_with_params(crate::TOKEN_URL, &params)
-                .expect("unexpectedly failed to parse revoke url"),
+            url: oauth2::url::Url::parse_with_params(&crate::TOKEN_URL, &params)
+                .expect("unexpectedly failed to parse token url"),
             method: Method::POST,
             headers: HeaderMap::new(),
             body: vec![],
