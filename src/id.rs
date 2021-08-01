@@ -2,47 +2,49 @@
 
 use serde::{Deserialize, Serialize};
 
-use oauth2::helpers;
-use oauth2::{basic::BasicTokenType, Client, ExtraTokenFields, TokenType};
-
 use crate::AccessToken;
 use std::time::Duration;
 /// Twitch's representation of the oauth flow.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TwitchTokenResponse<EF, TT>
-where
-    TT: TokenType,
-    EF: ExtraTokenFields, {
+pub struct TwitchTokenResponse {
     /// Access token
     pub access_token: AccessToken,
-    /// Token type
-    #[serde(bound = "TT: TokenType")]
-    #[serde(deserialize_with = "helpers::deserialize_untagged_enum_case_insensitive")]
-    pub token_type: TT,
     /// Time (in seconds) until token expires
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_in: Option<u64>,
     /// Token that can be used to refresh
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub refresh_token: Option<oauth2::RefreshToken>,
+    pub refresh_token: Option<crate::RefreshToken>,
     /// Scopes attached to token
-    #[serde(rename = "scope")]
+    #[serde(rename = "scope", deserialize_with = "scope::deserialize")]
     #[serde(default)]
-    pub scopes: Option<Vec<oauth2::Scope>>,
-    /// Extras
-    #[serde(bound = "EF: ExtraTokenFields")]
-    #[serde(flatten)]
-    pub extra_fields: EF,
+    pub scopes: Option<Vec<crate::Scope>>,
 }
 
 /// Twitch's representation of the oauth flow for errors
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, thiserror::Error)]
 pub struct TwitchTokenErrorResponse {
     /// Status code of error
     #[serde(with = "status_code")]
     pub status: http::StatusCode,
     /// Message attached to error
     pub message: String,
+    /// Description of the error message.
+    pub error: Option<String>,
+}
+
+impl std::fmt::Display for TwitchTokenErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{error} - {message}",
+            error = self
+                .error
+                .as_deref()
+                .unwrap_or_else(|| self.status.canonical_reason().unwrap_or("Error")),
+            message = self.message
+        )
+    }
 }
 
 #[doc(hidden)]
@@ -71,38 +73,35 @@ pub mod status_code {
     }
 }
 
-impl std::fmt::Display for TwitchTokenErrorResponse {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.status.as_u16(), self.message)
+#[doc(hidden)]
+pub mod scope {
+    use serde::{de::Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(de: D) -> Result<Option<Vec<crate::Scope>>, D::Error>
+    where D: Deserializer<'de> {
+        let scopes: Option<Vec<crate::Scope>> = Deserialize::deserialize(de)?;
+        if let Some(scopes) = scopes {
+            match scopes {
+                scopes if scopes.is_empty() || scopes.len() > 1 => Ok(Some(scopes)),
+                scopes if scopes.len() == 1 && scopes.get(0).unwrap().as_str() == "" => Ok(None),
+                _ => Ok(Some(scopes)),
+            }
+        } else {
+            Ok(None)
+        }
     }
 }
 
-impl<EF, TT> oauth2::TokenResponse<TT> for TwitchTokenResponse<EF, TT>
-where
-    TT: TokenType,
-    EF: ExtraTokenFields,
-{
-    fn access_token(&self) -> &AccessToken { &self.access_token }
+impl TwitchTokenResponse {
+    /// Get the access token from this response
+    pub fn access_token(&self) -> &crate::AccessTokenRef { &self.access_token }
 
-    fn token_type(&self) -> &TT { &self.token_type }
+    /// Get the expires in from this response
+    pub fn expires_in(&self) -> Option<Duration> { self.expires_in.map(Duration::from_secs) }
 
-    fn expires_in(&self) -> Option<Duration> { self.expires_in.map(Duration::from_secs) }
+    /// Get the refresh token from this response
+    pub fn refresh_token(&self) -> Option<&crate::RefreshTokenRef> { self.refresh_token.as_deref() }
 
-    fn refresh_token(&self) -> Option<&oauth2::RefreshToken> { self.refresh_token.as_ref() }
-
-    fn scopes(&self) -> Option<&Vec<oauth2::Scope>> { self.scopes.as_ref() }
+    /// Get the scopes from this response
+    pub fn scopes(&self) -> Option<&[crate::Scope]> { self.scopes.as_deref() }
 }
-
-impl oauth2::ErrorResponse for TwitchTokenErrorResponse {}
-
-/// Client for Twitch OAuth2
-pub type TwitchClient = Client<
-    TwitchTokenErrorResponse,
-    TwitchTokenResponse<oauth2::EmptyExtraTokenFields, BasicTokenType>,
-    BasicTokenType,
-    //FIXME: This struct should represent twitch's inspection endpoint, but there is none currently.
-    // See [`TwitchToken::validate_token`](crate::TwitchToken::validate_token) instead
-    oauth2::StandardTokenIntrospectionResponse<oauth2::EmptyExtraTokenFields, BasicTokenType>,
-    oauth2::revocation::StandardRevocableToken,
-    oauth2::basic::BasicRevocationErrorResponse,
->;

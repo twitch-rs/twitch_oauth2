@@ -1,11 +1,9 @@
-use super::errors::{TokenError, ValidationError};
+use super::errors::{AppAccessTokenError, ValidationError};
 use crate::{
-    id::TwitchClient,
+    client::Client,
     tokens::{errors::RefreshTokenError, Scope, TwitchToken},
+    types::{AccessToken, ClientId, ClientSecret, RefreshToken},
 };
-use oauth2::{AccessToken, AuthUrl, ClientId, ClientSecret, RefreshToken, TokenResponse};
-use oauth2::{HttpRequest, HttpResponse};
-use std::future::Future;
 
 /// An App Access Token from the [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
 ///
@@ -25,14 +23,12 @@ pub struct AppAccessToken {
     struct_created: std::time::Instant,
     client_id: ClientId,
     client_secret: ClientSecret,
-    // FIXME: This should be removed
-    login: Option<String>,
     scopes: Vec<Scope>,
 }
 
 impl std::fmt::Debug for AppAccessToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("UserToken")
+        f.debug_struct("AppAccessToken")
             .field("access_token", &self.access_token)
             .field("refresh_token", &self.refresh_token)
             .field("client_id", &self.client_id)
@@ -51,23 +47,21 @@ impl TwitchToken for AppAccessToken {
 
     fn token(&self) -> &AccessToken { &self.access_token }
 
-    fn login(&self) -> Option<&str> { self.login.as_deref() }
+    fn login(&self) -> Option<&str> { None }
 
     fn user_id(&self) -> Option<&str> { None }
 
-    async fn refresh_token<RE, C, F>(
+    async fn refresh_token<'a, C>(
         &mut self,
-        http_client: C,
-    ) -> Result<(), RefreshTokenError<RE>>
+        http_client: &'a C,
+    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
     where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send,
+        C: Client<'a>,
     {
         let (access_token, expires_in, refresh_token) = if let Some(token) =
             self.refresh_token.take()
         {
-            crate::refresh_token(http_client, token, &self.client_id, &self.client_secret).await?
+            crate::refresh_token(http_client, &token, &self.client_id, &self.client_secret).await?
         } else {
             return Err(RefreshTokenError::NoRefreshToken);
         };
@@ -95,8 +89,6 @@ impl AppAccessToken {
         refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<ClientSecret>,
-        // FIXME: Remove?
-        login: Option<String>,
         scopes: Option<Vec<Scope>>,
         expires_in: Option<std::time::Duration>,
     ) -> AppAccessToken {
@@ -105,7 +97,6 @@ impl AppAccessToken {
             refresh_token: refresh_token.into(),
             client_id: client_id.into(),
             client_secret: client_secret.into(),
-            login,
             expires_in: expires_in.unwrap_or_default(),
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
@@ -113,16 +104,14 @@ impl AppAccessToken {
     }
 
     /// Assemble token and validate it. Retrieves [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
-    pub async fn from_existing<RE, C, F>(
-        http_client: C,
+    pub async fn from_existing<'a, RE, C>(
+        http_client: &'a C,
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: ClientSecret,
-    ) -> Result<AppAccessToken, ValidationError<RE>>
+    ) -> Result<AppAccessToken, ValidationError<<C as Client<'a>>::Error>>
     where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: Client<'a>,
     {
         let token = access_token;
         let validated = crate::validate_token(http_client, &token).await?;
@@ -131,58 +120,59 @@ impl AppAccessToken {
             refresh_token.into(),
             validated.client_id,
             client_secret,
-            None,
             validated.scopes,
             Some(validated.expires_in),
         ))
     }
 
     /// Generate app access token via [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
-    pub async fn get_app_access_token<RE, C, F>(
-        http_client: C,
+    pub async fn get_app_access_token<'a, C>(
+        http_client: &'a C,
         client_id: ClientId,
         client_secret: ClientSecret,
         scopes: Vec<Scope>,
-    ) -> Result<AppAccessToken, TokenError<RE>>
+    ) -> Result<AppAccessToken, AppAccessTokenError<<C as Client<'a>>::Error>>
     where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: Fn(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send,
+        C: Client<'a>,
     {
-        let client = TwitchClient::new(
-            client_id.clone(),
-            Some(client_secret.clone()),
-            AuthUrl::new(crate::AUTH_URL.to_owned())
-                .expect("unexpected failure to parse auth url for app_access_token"),
-            Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
-        );
-        let client = client.set_auth_type(oauth2::AuthType::RequestBody);
-        let mut client = client.exchange_client_credentials();
-        for scope in scopes.clone() {
-            client = client.add_scope(scope.as_oauth_scope());
-        }
-        let response = client
-            .request_async(&http_client)
-            .await
-            .map_err(TokenError::Request)?;
+        // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let scope: String = scopes
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        let mut params = HashMap::new();
+        params.insert("client_id", client_id.as_str());
+        params.insert("client_secret", client_secret.secret());
+        params.insert("grant_type", "client_credentials");
+        params.insert("scope", &scope);
 
+        let req = crate::construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        );
+
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(AppAccessTokenError::Request)?;
+
+        let response: crate::id::TwitchTokenResponse = crate::parse_response(&resp)?;
+        let expires_in = response.expires_in();
         let app_access = AppAccessToken::from_existing_unchecked(
-            response.access_token().clone(),
-            response.refresh_token().cloned(),
+            response.access_token,
+            response.refresh_token,
             client_id,
             client_secret,
-            None,
-            Some(
-                response
-                    .scopes()
-                    .cloned()
-                    .map(|s| s.into_iter().map(|s| s.into()).collect())
-                    .unwrap_or(scopes),
-            ),
-            response.expires_in(),
+            response.scopes,
+            expires_in,
         );
 
-        let _ = app_access.validate_token(http_client).await?; // Sanity check
         Ok(app_access)
     }
 }

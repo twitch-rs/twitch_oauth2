@@ -64,6 +64,14 @@ macro_rules! scope_impls {
                     _ => Scope::Other(s)
                 }
             }
+
+            /// Get the scope as a borrowed string.
+            pub fn as_str(&self) -> &str {
+                match self {
+                    $(Scope::$i => $rename,)*
+                    Self::Other(c) =>  c.as_ref()
+                }
+            }
         }
 
     };
@@ -108,13 +116,8 @@ scope_impls!(
     WhispersRead,             scope: "whispers:read",              doc: "View your whisper messages.";
 );
 
-impl Scope {
-    /// Get [Scope] as an oauth2 Scope
-    pub fn as_oauth_scope(&self) -> oauth2::Scope { oauth2::Scope::new(self.to_string()) }
-}
-
-impl From<oauth2::Scope> for Scope {
-    fn from(scope: oauth2::Scope) -> Self { Scope::parse(scope.to_string()) }
+impl std::borrow::Borrow<str> for Scope {
+    fn borrow(&self) -> &str { self.as_str() }
 }
 
 impl From<String> for Scope {
