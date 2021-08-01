@@ -1,16 +1,12 @@
 //! Errors
 
 use crate::id::TwitchTokenErrorResponse;
-use oauth2::HttpResponse as OAuth2HttpResponse;
-use oauth2::RequestTokenError;
 /// General errors for talking with twitch, used in [AppAccessToken::get_app_access_token][crate::tokens::AppAccessToken::get_app_access_token]
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
-    Request(#[source] RequestTokenError<RE, TwitchTokenErrorResponse>),
-    /// could not parse url
-    ParseError(#[from] oauth2::url::ParseError),
+    Request(#[source] RE),
     /// twitch returned an unexpected status: {0}
     TwitchError(TwitchTokenErrorResponse),
     /// could not get validation for token
@@ -39,12 +35,10 @@ pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
-    /// 400 Bad Request: {0}
+    /// twitch returned an unexpected error: {0}
     TwitchError(TwitchTokenErrorResponse),
     /// failed to do revokation: {0}
     RequestError(#[source] RE),
-    /// got unexpected return: {0:?}
-    Other(OAuth2HttpResponse),
 }
 
 /// Errors for [TwitchToken::refresh_token][crate::TwitchToken::refresh_token]
@@ -52,9 +46,11 @@ pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
-    RequestError(#[source] RequestTokenError<RE, TwitchTokenErrorResponse>),
-    /// could not parse url
-    ParseError(#[from] oauth2::url::ParseError),
+    RequestError(#[source] RE),
+    /// twitch returned an unexpected error: {0}
+    TwitchError(TwitchTokenErrorResponse),
+    /// deserializations failed
+    DeserializeError(#[from] serde_json::Error),
     /// no client secret found
     // TODO: Include this in doc
     // A client secret is needed to request a refreshed token.
@@ -70,8 +66,6 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
 pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed. {0}
     RequestError(#[source] RE),
-    /// could not parse url
-    ParseError(#[from] oauth2::url::ParseError),
     /// twitch returned an unexpected error: {0}
     TwitchError(TwitchTokenErrorResponse),
     /// deserializations failed
@@ -85,8 +79,7 @@ pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
 /// Errors for [ImplicitUserTokenBuilder::get_user_token][crate::tokens::ImplicitUserTokenBuilder::get_user_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum ImplicitUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
-    /// could not parse url
-    ParseError(#[from] oauth2::url::ParseError),
+    // FIXME: should be TwitchTokenErrorResponse
     /// twitch returned an error: {error:?} - {description:?}
     TwitchError {
         /// Error type

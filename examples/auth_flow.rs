@@ -19,9 +19,9 @@ async fn main() -> anyhow::Result<()> {
         std::env::var("TWITCH_REDIRECT_URL")
             .ok()
             .or_else(|| args.next())
-            .map(twitch_oauth2::RedirectUrl::new)
+            .map(|r| twitch_oauth2::url::Url::parse(&r))
             .context("Please set env: TWITCH_REDIRECT_URL or pass as third argument")??,
-    )?
+    )
     .force_verify(true);
 
     let (url, _) = builder.generate_url();
@@ -32,15 +32,20 @@ async fn main() -> anyhow::Result<()> {
         "Paste in the resulting adress after authenticating (input hidden): ",
     )?;
 
-    let u = twitch_oauth2::oauth2::url::Url::parse(&input)
-        .context("when parsing the input as a URL")?;
+    let u = twitch_oauth2::url::Url::parse(&input).context("when parsing the input as a URL")?;
 
     let map: std::collections::HashMap<_, _> = u.query_pairs().collect();
 
     match (map.get("state"), map.get("code")) {
         (Some(state), Some(code)) => {
             let token = builder
-                .get_user_token(twitch_oauth2::client::reqwest_http_client, state, code)
+                .get_user_token(
+                    &reqwest::Client::builder()
+                        .redirect(reqwest::redirect::Policy::none())
+                        .build()?,
+                    state,
+                    code,
+                )
                 .await?;
             println!("Got token: {:?}", token);
         }

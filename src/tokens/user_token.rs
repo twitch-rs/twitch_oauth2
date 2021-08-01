@@ -1,3 +1,4 @@
+use crate::client::Client;
 use crate::ClientSecret;
 use crate::{
     id::TwitchTokenErrorResponse,
@@ -7,11 +8,8 @@ use crate::{
     },
 };
 
-use oauth2::{AccessToken, ClientId, RedirectUrl, RefreshToken};
-use oauth2::{HttpRequest, HttpResponse};
-use std::future::Future;
-
 use super::errors::ImplicitUserTokenExchangeError;
+use crate::types::{AccessToken, ClientId, RefreshToken};
 
 /// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-implicit-code-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-authorization-code-flow)
 ///
@@ -91,16 +89,14 @@ impl UserToken {
     /// Assemble token and validate it. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
     ///
     /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
-    pub async fn from_existing<RE, C, F>(
-        http_client: C,
+    pub async fn from_existing<'a, C>(
+        http_client: &'a C,
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<RE>>
+    ) -> Result<UserToken, ValidationError<<C as Client<'a>>::Error>>
     where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: Client<'a>,
     {
         let validated = crate::validate_token(http_client, &access_token).await?;
         Ok(Self::from_existing_unchecked(
@@ -131,8 +127,9 @@ impl UserToken {
     pub fn builder(
         client_id: ClientId,
         client_secret: ClientSecret,
-        redirect_url: RedirectUrl,
-    ) -> Result<UserTokenBuilder, oauth2::url::ParseError> {
+        // FIXME: Braid or string or this?
+        redirect_url: url::Url,
+    ) -> UserTokenBuilder {
         UserTokenBuilder::new(client_id, client_secret, redirect_url)
     }
 
@@ -152,21 +149,19 @@ impl TwitchToken for UserToken {
 
     fn user_id(&self) -> Option<&str> { Some(&self.user_id) }
 
-    async fn refresh_token<RE, C, F>(
+    async fn refresh_token<'a, C>(
         &mut self,
-        http_client: C,
-    ) -> Result<(), RefreshTokenError<RE>>
+        http_client: &'a C,
+    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
     where
         Self: Sized,
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send,
+        C: Client<'a>,
     {
         if let Some(client_secret) = self.client_secret.clone() {
             let (access_token, expires, refresh_token) = if let Some(token) =
                 self.refresh_token.take()
             {
-                crate::refresh_token(http_client, token, &self.client_id, &client_secret).await?
+                crate::refresh_token(http_client, &token, &self.client_id, &client_secret).await?
             } else {
                 return Err(RefreshTokenError::NoRefreshToken);
             };
@@ -199,10 +194,9 @@ impl TwitchToken for UserToken {
 /// See [`ImplicitUserTokenBuilder`] for the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow) (does not require Client Secret)
 pub struct UserTokenBuilder {
     pub(crate) scopes: Vec<Scope>,
-    pub(crate) client: crate::TwitchClient,
-    pub(crate) csrf: Option<oauth2::CsrfToken>,
+    pub(crate) csrf: Option<crate::types::CsrfToken>,
     pub(crate) force_verify: bool,
-    pub(crate) redirect_url: RedirectUrl,
+    pub(crate) redirect_url: url::Url,
     client_id: ClientId,
     client_secret: ClientSecret,
 }
@@ -219,24 +213,16 @@ impl UserTokenBuilder {
     pub fn new(
         client_id: ClientId,
         client_secret: ClientSecret,
-        redirect_url: RedirectUrl,
-    ) -> Result<UserTokenBuilder, oauth2::url::ParseError> {
-        Ok(UserTokenBuilder {
+        redirect_url: url::Url,
+    ) -> UserTokenBuilder {
+        UserTokenBuilder {
             scopes: vec![],
-            client: crate::TwitchClient::new(
-                client_id.clone(),
-                Some(client_secret.clone()),
-                oauth2::AuthUrl::new(crate::AUTH_URL.to_string())?,
-                Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
-            )
-            .set_auth_type(oauth2::AuthType::BasicAuth)
-            .set_redirect_uri(redirect_url.clone()),
             csrf: None,
             force_verify: false,
             redirect_url,
             client_id,
             client_secret,
-        })
+        }
     }
 
     /// Add scopes to the request
@@ -257,20 +243,29 @@ impl UserTokenBuilder {
     /// Generate the URL to request a code.
     ///
     /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
-    pub fn generate_url(&mut self) -> (oauth2::url::Url, oauth2::CsrfToken) {
-        let mut auth = self.client.authorize_url(oauth2::CsrfToken::new_random);
+    pub fn generate_url(&mut self) -> (url::Url, crate::types::CsrfToken) {
+        let csrf = crate::types::CsrfToken::new_random();
+        self.csrf = Some(csrf.clone());
+        let mut url = crate::AUTH_URL.clone();
 
-        for scope in self.scopes.iter() {
-            auth = auth.add_scope(scope.as_oauth_scope())
+        let auth = vec![
+            ("response_type", "code"),
+            ("client_id", self.client_id.as_str()),
+            ("redirect_uri", self.redirect_url.as_str()),
+            ("state", csrf.as_str()),
+        ];
+
+        url.query_pairs_mut().extend_pairs(auth);
+
+        if !self.scopes.is_empty() {
+            url.query_pairs_mut()
+                .append_pair("scope", &self.scopes.as_slice().join(" "));
         }
 
-        auth = auth.add_extra_param(
-            "force_verify",
-            if self.force_verify { "true" } else { "false" },
-        );
+        if self.force_verify {
+            url.query_pairs_mut().append_pair("force_verify", "true");
+        };
 
-        let (url, csrf) = auth.url();
-        self.csrf = Some(csrf.clone());
         (url, csrf)
     }
 
@@ -278,24 +273,22 @@ impl UserTokenBuilder {
     ///
     /// Hidden because you should preferably not use this.
     #[doc(hidden)]
-    pub fn set_csrf(&mut self, csrf: oauth2::CsrfToken) { self.csrf = Some(csrf); }
+    pub fn set_csrf(&mut self, csrf: crate::types::CsrfToken) { self.csrf = Some(csrf); }
 
     /// Generate the code with the help of the authorization code
     ///
     /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
     ///
     /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `<redirect_url or first defined url in dev console>?error=<error type>&error_description=<description of error>`
-    pub async fn get_user_token<RE, C, F>(
+    pub async fn get_user_token<'a, C>(
         self,
-        http_client: C,
+        http_client: &'a C,
         state: &str,
         // TODO: Should be either str or AuthorizationCode
         code: &str,
-    ) -> Result<UserToken, UserTokenExchangeError<RE>>
+    ) -> Result<UserToken, UserTokenExchangeError<<C as Client<'a>>::Error>>
     where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: Copy + FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: Client<'a>,
     {
         if let Some(csrf) = self.csrf {
             if csrf.secret() != state {
@@ -306,30 +299,32 @@ impl UserTokenBuilder {
         }
 
         // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
-        use oauth2::http::{HeaderMap, Method, StatusCode};
+        use http::{HeaderMap, Method, StatusCode};
         use std::collections::HashMap;
         let mut params = HashMap::new();
         params.insert("client_id", self.client_id.as_str());
-        params.insert("client_secret", self.client_secret.secret().as_str());
+        params.insert("client_secret", self.client_secret.secret());
         params.insert("code", code);
         params.insert("grant_type", "authorization_code");
         params.insert("redirect_uri", self.redirect_url.as_str());
-        let req = HttpRequest {
-            url: oauth2::url::Url::parse_with_params(&crate::TOKEN_URL, &params)
-                .expect("unexpectedly failed to parse token url"),
-            method: Method::POST,
-            headers: HeaderMap::new(),
-            body: vec![],
-        };
 
-        let resp = http_client(req)
+        let req = crate::construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        );
+
+        let resp = http_client
+            .req(req)
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
-        match resp.status_code {
+        match resp.status() {
             StatusCode::OK => (),
             c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
                 return Err(UserTokenExchangeError::TwitchError(serde_json::from_slice(
-                    resp.body.as_slice(),
+                    resp.body().as_slice(),
                 )?));
             }
             c => {
@@ -342,10 +337,8 @@ impl UserTokenBuilder {
                 ));
             }
         };
-        let response: crate::id::TwitchTokenResponse<
-            oauth2::EmptyExtraTokenFields,
-            oauth2::basic::BasicTokenType,
-        > = serde_json::from_slice(resp.body.as_slice())?;
+        let response: crate::id::TwitchTokenResponse =
+            serde_json::from_slice(resp.body().as_slice())?;
         UserToken::from_existing(
             http_client,
             response.access_token,
@@ -362,9 +355,10 @@ impl UserTokenBuilder {
 /// See [`UserTokenBuilder`] for the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) (requires Client Secret, generally more secure)
 pub struct ImplicitUserTokenBuilder {
     pub(crate) scopes: Vec<Scope>,
-    pub(crate) client: crate::TwitchClient,
-    pub(crate) csrf: Option<oauth2::CsrfToken>,
+    pub(crate) csrf: Option<crate::types::CsrfToken>,
+    pub(crate) redirect_url: url::Url,
     pub(crate) force_verify: bool,
+    client_id: ClientId,
 }
 
 impl ImplicitUserTokenBuilder {
@@ -376,23 +370,14 @@ impl ImplicitUserTokenBuilder {
     /// which means that you'll need to add `https://example.com/` to your redirect URIs (note the "trailing" slash) if you want to use an empty path.
     ///
     /// To avoid this, use a path such as `https://example.com/twitch/register` or similar instead, where the `url` crate would not add a trailing `/`.
-    pub fn new(
-        client_id: ClientId,
-        redirect_url: RedirectUrl,
-    ) -> Result<ImplicitUserTokenBuilder, oauth2::url::ParseError> {
-        Ok(ImplicitUserTokenBuilder {
+    pub fn new(client_id: ClientId, redirect_url: url::Url) -> ImplicitUserTokenBuilder {
+        ImplicitUserTokenBuilder {
             scopes: vec![],
-            client: crate::TwitchClient::new(
-                client_id,
-                None,
-                oauth2::AuthUrl::new(crate::AUTH_URL.to_string())?,
-                Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
-            )
-            .set_auth_type(oauth2::AuthType::BasicAuth)
-            .set_redirect_uri(redirect_url),
+            redirect_url,
             csrf: None,
             force_verify: false,
-        })
+            client_id,
+        }
     }
 
     /// Add scopes to the request
@@ -413,23 +398,29 @@ impl ImplicitUserTokenBuilder {
     /// Generate the URL to request a token.
     ///
     /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#auth-implicit-code-flow)
-    pub fn generate_url(&mut self) -> (oauth2::url::Url, oauth2::CsrfToken) {
-        let mut auth = self
-            .client
-            .authorize_url(oauth2::CsrfToken::new_random)
-            .use_implicit_flow();
+    pub fn generate_url(&mut self) -> (url::Url, crate::types::CsrfToken) {
+        let csrf = crate::types::CsrfToken::new_random();
+        self.csrf = Some(csrf.clone());
+        let mut url = crate::AUTH_URL.clone();
 
-        for scope in self.scopes.iter() {
-            auth = auth.add_scope(scope.as_oauth_scope())
+        let auth = vec![
+            ("response_type", "code"),
+            ("client_id", self.client_id.as_str()),
+            ("redirect_uri", self.redirect_url.as_str()),
+            ("state", csrf.as_str()),
+        ];
+
+        url.query_pairs_mut().extend_pairs(auth);
+
+        if !self.scopes.is_empty() {
+            url.query_pairs_mut()
+                .append_pair("scope", &self.scopes.as_slice().join(" "));
         }
 
-        auth = auth.add_extra_param(
-            "force_verify",
-            if self.force_verify { "true" } else { "false" },
-        );
+        if self.force_verify {
+            url.query_pairs_mut().append_pair("force_verify", "true");
+        };
 
-        let (url, csrf) = auth.url();
-        self.csrf = Some(csrf.clone());
         (url, csrf)
     }
 
@@ -525,18 +516,16 @@ impl ImplicitUserTokenBuilder {
     /// ```
     ///
     ///
-    pub async fn get_user_token<RE, C, F>(
+    pub async fn get_user_token<'a, C>(
         self,
-        http_client: C,
+        http_client: &'a C,
         state: Option<&str>,
         access_token: Option<&str>,
         error: Option<&str>,
         error_description: Option<&str>,
-    ) -> Result<UserToken, ImplicitUserTokenExchangeError<RE>>
+    ) -> Result<UserToken, ImplicitUserTokenExchangeError<<C as Client<'a>>::Error>>
     where
-        RE: std::error::Error + Send + Sync + 'static,
-        C: Copy + FnOnce(HttpRequest) -> F,
-        F: Future<Output = Result<HttpResponse, RE>>,
+        C: Client<'a>,
     {
         if let Some(csrf) = self.csrf {
             if csrf.secret() != state.unwrap_or("") {
@@ -548,7 +537,7 @@ impl ImplicitUserTokenBuilder {
         match (access_token, error, error_description) {
             (Some(access_token), None, None) => UserToken::from_existing(
                 http_client,
-                crate::oauth2::AccessToken::new(access_token.to_string()),
+                crate::types::AccessToken::new(access_token.to_string()),
                 None,
                 None,
             )

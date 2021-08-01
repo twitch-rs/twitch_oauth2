@@ -31,23 +31,27 @@ pub mod client;
 pub mod id;
 pub mod scopes;
 pub mod tokens;
+pub mod types;
 
-#[doc(hidden)]
-pub use oauth2;
-#[doc(no_inline)]
-pub use oauth2::{
-    AccessToken, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, RefreshToken,
-};
-
-use id::{TwitchClient, TwitchTokenErrorResponse};
-use oauth2::{url::Url, AuthUrl, HttpRequest, HttpResponse, TokenResponse};
-use std::future::Future;
+use id::TwitchTokenErrorResponse;
 use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 
 #[doc(inline)]
 pub use scopes::Scope;
 #[doc(inline)]
 pub use tokens::{AppAccessToken, TwitchToken, UserToken, ValidatedToken};
+
+pub use url;
+
+pub use types::{AccessToken, ClientId, ClientSecret, RefreshToken, CsrfToken};
+
+#[doc(hidden)]
+pub use types::{AccessTokenRef, ClientIdRef, ClientSecretRef, RefreshTokenRef, CsrfTokenRef};
+
+use self::client::Client;
+
+type HttpRequest = http::Request<Vec<u8>>;
+type HttpResponse = http::Response<Vec<u8>>;
 
 #[doc(hidden)]
 pub async fn dummy_http_client(_: HttpRequest) -> Result<HttpResponse, DummyError> {
@@ -59,21 +63,25 @@ pub async fn dummy_http_client(_: HttpRequest) -> Result<HttpResponse, DummyErro
 pub struct DummyError;
 
 /// Generate a url with a default if `mock_api` feature is disabled, or env var is not defined or is invalid utf8
-macro_rules! mock_env {
+macro_rules! mock_env_url {
     ($var:literal, $default:expr $(,)?) => {
         once_cell::sync::Lazy::new(move || {
             #[cfg(feature = "mock_api")]
             if let Ok(url) = std::env::var($var) {
-                return url;
+                return url::Url::parse(&url).expect(concat!(
+                    "URL could not be made from `env:",
+                    $var,
+                    "`."
+                ));
             };
-            $default.to_string()
+            url::Url::parse(&$default).unwrap()
         })
     };
 }
 
 /// Defines the root path to twitch auth endpoints
-static TWITCH_OAUTH2_URL: once_cell::sync::Lazy<String> =
-    mock_env!("TWITCH_OAUTH2_URL", "https://id.twitch.tv/oauth2/");
+static TWITCH_OAUTH2_URL: once_cell::sync::Lazy<url::Url> =
+    mock_env_url!("TWITCH_OAUTH2_URL", "https://id.twitch.tv/oauth2/");
 
 /// Authorization URL (`/authorize`) for `id.twitch.tv`
 ///
@@ -82,7 +90,7 @@ static TWITCH_OAUTH2_URL: once_cell::sync::Lazy<String> =
 /// # Examples
 ///
 /// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
-pub static AUTH_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_AUTH_URL", {
+pub static AUTH_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAUTH2_AUTH_URL", {
     TWITCH_OAUTH2_URL.to_string() + "authorize"
 },);
 /// Token URL (`/token`) for `id.twitch.tv`
@@ -92,7 +100,7 @@ pub static AUTH_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_AU
 /// # Examples
 ///
 /// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
-pub static TOKEN_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_TOKEN_URL", {
+pub static TOKEN_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAUTH2_TOKEN_URL", {
     TWITCH_OAUTH2_URL.to_string() + "token"
 },);
 /// Validation URL (`/validate`) for `id.twitch.tv`
@@ -102,9 +110,10 @@ pub static TOKEN_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_T
 /// # Examples
 ///
 /// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
-pub static VALIDATE_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_VALIDATE_URL", {
-    TWITCH_OAUTH2_URL.to_string() + "validate"
-},);
+pub static VALIDATE_URL: once_cell::sync::Lazy<url::Url> =
+    mock_env_url!("TWITCH_OAUTH2_VALIDATE_URL", {
+        TWITCH_OAUTH2_URL.to_string() + "validate"
+    },);
 /// Revokation URL (`/revoke`) for `id.twitch.tv`
 ///
 /// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_REVOKE_URL` to override the full url.
@@ -112,24 +121,23 @@ pub static VALIDATE_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH
 /// # Examples
 ///
 /// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
-pub static REVOKE_URL: once_cell::sync::Lazy<String> = mock_env!("TWITCH_OAUTH2_REVOKE_URL", {
-    TWITCH_OAUTH2_URL.to_string() + "revoke"
-},);
+pub static REVOKE_URL: once_cell::sync::Lazy<url::Url> =
+    mock_env_url!("TWITCH_OAUTH2_REVOKE_URL", {
+        TWITCH_OAUTH2_URL.to_string() + "revoke"
+    },);
 
 /// Validate this token.
 ///
 /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
-pub async fn validate_token<RE, C, F>(
-    http_client: C,
-    token: &AccessToken,
-) -> Result<ValidatedToken, ValidationError<RE>>
+pub async fn validate_token<'a, C>(
+    client: &'a C,
+    token: &AccessTokenRef,
+) -> Result<ValidatedToken, ValidationError<<C as Client<'a>>::Error>>
 where
-    RE: std::error::Error + Send + Sync + 'static,
-    C: FnOnce(HttpRequest) -> F,
-    F: Future<Output = Result<HttpResponse, RE>>,
+    C: Client<'a>,
 {
     use http::StatusCode;
-    use oauth2::http::{header::AUTHORIZATION, HeaderMap, Method};
+    use http::{header::AUTHORIZATION, HeaderMap, Method};
 
     let auth_header = format!("OAuth {}", token.secret());
     let mut headers = HeaderMap::new();
@@ -139,22 +147,24 @@ where
             .parse()
             .expect("Failed to parse header for validation"),
     );
-    let req = HttpRequest {
-        url: Url::parse(&crate::VALIDATE_URL).expect("unexpectedly failed to parse validate url"),
-        method: Method::GET,
-        headers,
-        body: vec![],
-    };
 
-    let resp = http_client(req).await.map_err(ValidationError::Request)?;
-    match StatusCode::from_u16(resp.status_code.as_u16()) {
-        Ok(status) if status.is_success() => Ok(serde_json::from_slice(&resp.body)?),
+    let req = crate::construct_request::<&[(String, String)], _, _>(
+        &crate::VALIDATE_URL,
+        &[],
+        headers,
+        Method::GET,
+        vec![],
+    );
+
+    let resp = client.req(req).await.map_err(ValidationError::Request)?;
+    match StatusCode::from_u16(resp.status().as_u16()) {
+        Ok(status) if status.is_success() => Ok(serde_json::from_slice(resp.body())?),
         Ok(status) if status == StatusCode::UNAUTHORIZED => Err(ValidationError::NotAuthorized),
         Ok(status) => {
             // TODO: Document this with a log call
             Err(ValidationError::TwitchError(TwitchTokenErrorResponse {
                 status,
-                message: String::from_utf8_lossy(&resp.body).into_owned(),
+                message: String::from_utf8_lossy(resp.body()).into_owned(),
             }))
         }
         Err(_) => {
@@ -166,73 +176,123 @@ where
 /// Revoke the token.
 ///
 /// See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
-pub async fn revoke_token<RE, C, F>(
-    http_client: C,
+pub async fn revoke_token<'a, C>(
+    http_client: &'a C,
     token: &AccessToken,
     client_id: &ClientId,
-) -> Result<(), RevokeTokenError<RE>>
+) -> Result<(), RevokeTokenError<<C as Client<'a>>::Error>>
 where
-    RE: std::error::Error + Send + Sync + 'static,
-    C: FnOnce(HttpRequest) -> F,
-    F: Future<Output = Result<HttpResponse, RE>>,
+    C: Client<'a>,
 {
-    use oauth2::http::{HeaderMap, Method, StatusCode};
+    use http::{HeaderMap, Method, StatusCode};
     use std::collections::HashMap;
     let mut params = HashMap::new();
     params.insert("client_id", client_id.as_str());
     params.insert("token", token.secret());
-    let req = HttpRequest {
-        url: Url::parse_with_params(&crate::REVOKE_URL, &params)
-            .expect("unexpectedly failed to parse revoke url"),
-        method: Method::POST,
-        headers: HeaderMap::new(),
-        body: vec![],
-    };
 
-    let resp = http_client(req)
+    let req = construct_request(
+        &crate::REVOKE_URL,
+        &params,
+        HeaderMap::new(),
+        Method::POST,
+        vec![],
+    );
+
+    let resp = http_client
+        .req(req)
         .await
         .map_err(RevokeTokenError::RequestError)?;
-    match resp.status_code {
+    match resp.status() {
         StatusCode::BAD_REQUEST => {
             return Err(RevokeTokenError::TwitchError(TwitchTokenErrorResponse {
                 status: StatusCode::BAD_REQUEST,
-                message: String::from_utf8_lossy(&resp.body).into_owned(),
+                message: String::from_utf8_lossy(resp.body()).into_owned(),
             }))
         }
         StatusCode::OK => Ok(()),
-        _ => Err(RevokeTokenError::Other(resp)),
+        _ => unimplemented!("unexpected response, this is a bug"),
     }
 }
 
 /// Refresh the token, call if it has expired.
 ///
 /// See <https://dev.twitch.tv/docs/authentication#refreshing-access-tokens>
-pub async fn refresh_token<RE, C, F>(
-    http_client: C,
-    refresh_token: RefreshToken,
+pub async fn refresh_token<'a, C>(
+    http_client: &'a C,
+    refresh_token: &RefreshTokenRef,
     client_id: &ClientId,
     client_secret: &ClientSecret,
-) -> Result<(AccessToken, std::time::Duration, Option<RefreshToken>), RefreshTokenError<RE>>
+) -> Result<
+    (AccessToken, std::time::Duration, Option<RefreshToken>),
+    RefreshTokenError<<C as Client<'a>>::Error>,
+>
 where
-    RE: std::error::Error + Send + Sync + 'static,
-    C: FnOnce(HttpRequest) -> F,
-    F: Future<Output = Result<HttpResponse, RE>>,
+    C: Client<'a>,
 {
-    let client = TwitchClient::new(
-        client_id.clone(),
-        Some(client_secret.clone()),
-        AuthUrl::new(crate::AUTH_URL.to_owned())
-            .expect("unexpected failure to parse auth url for refreshing token"),
-        Some(oauth2::TokenUrl::new(crate::TOKEN_URL.to_string())?),
+    use http::{HeaderMap, Method, StatusCode};
+    use std::collections::HashMap;
+
+    let mut params = HashMap::new();
+    params.insert("client_id", client_id.as_str());
+    params.insert("client_secret", client_secret.secret());
+    params.insert("grant_type", "refresh_token");
+    params.insert("refresh_token", refresh_token.secret());
+
+    let req = construct_request(
+        &crate::TOKEN_URL,
+        &params,
+        HeaderMap::new(),
+        Method::POST,
+        vec![],
     );
-    let client = client.set_auth_type(oauth2::AuthType::RequestBody);
-    let client = client.exchange_refresh_token(&refresh_token);
-    let res = client
-        .request_async(http_client)
+
+    let resp = http_client
+        .req(req)
         .await
         .map_err(RefreshTokenError::RequestError)?;
-    let refresh_token = res.refresh_token().cloned();
+    match resp.status() {
+        StatusCode::OK => (),
+        c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
+            return Err(RefreshTokenError::TwitchError(serde_json::from_slice(
+                resp.body(),
+            )?));
+        }
+        c => {
+            return Err(RefreshTokenError::TwitchError(TwitchTokenErrorResponse {
+                status: c,
+                // This is not returned as I'm unsure what could be contained
+                message: "<censored>".to_string(),
+            }));
+        }
+    };
+    let res: crate::id::TwitchTokenResponse = serde_json::from_slice(resp.body())?;
+
     let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
+    let refresh_token = res.refresh_token;
     let access_token = res.access_token;
     Ok((access_token, expires_in, refresh_token))
+}
+
+/// Construct a request
+fn construct_request<I, K, V>(
+    url: &url::Url,
+    params: I,
+    headers: http::HeaderMap,
+    method: http::Method,
+    body: Vec<u8>,
+) -> HttpRequest
+where
+    I: std::iter::IntoIterator,
+    I::Item: std::borrow::Borrow<(K, V)>,
+    K: AsRef<str>,
+    V: AsRef<str>,
+{
+    let mut url = url.clone();
+    url.query_pairs_mut().extend_pairs(params);
+    let url: String = url.into();
+    let mut req = http::Request::builder().method(method).uri(url);
+    req.headers_mut()
+        .map(|h| h.extend(headers.into_iter()))
+        .unwrap();
+    req.body(body).unwrap()
 }

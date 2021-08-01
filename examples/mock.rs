@@ -3,10 +3,7 @@ use twitch_oauth2::TwitchToken;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "trace");
-    }
-    tracing_subscriber::fmt::init();
+
     let mut args = std::env::args().skip(1);
     std::env::var("TWITCH_OAUTH2_URL")
         .ok()
@@ -27,7 +24,9 @@ async fn main() -> anyhow::Result<()> {
         .expect("Please set env: MOCK_CLIENT_SECRET or pass client secret as an argument");
 
     let token = twitch_oauth2::AppAccessToken::get_app_access_token(
-        twitch_oauth2::client::reqwest2_http_client,
+        &reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?,
         client_id,
         client_secret,
         vec![],

@@ -3,4 +3,5 @@
     "rust-analyzer.checkOnSave.features": ["all"],
     "rust-analyzer.checkOnSave.enable": true,
     "rust-analyzer.cargo.features": ["all"],
+    "rust-analyzer.experimental.procAttrMacros": true
 }

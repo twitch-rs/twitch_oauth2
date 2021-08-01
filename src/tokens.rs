@@ -7,14 +7,13 @@ mod user_token;
 pub use app_access_token::AppAccessToken;
 pub use user_token::{ImplicitUserTokenBuilder, UserToken, UserTokenBuilder};
 
+use crate::client::Client;
 use crate::{scopes::Scope, validate_token};
 
 use errors::*;
 
-use oauth2::{AccessToken, ClientId};
-use oauth2::{HttpRequest, HttpResponse};
+use crate::types::{AccessToken, ClientId};
 use serde::Deserialize;
-use std::future::Future;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// Types of bearer tokens
@@ -52,15 +51,13 @@ pub trait TwitchToken {
     /// Get the user id associated to this token
     fn user_id(&self) -> Option<&str>;
     /// Refresh this token, changing the token to a newer one
-    async fn refresh_token<RE, C, F>(
+    async fn refresh_token<'a, C>(
         &mut self,
-        http_client: C,
-    ) -> Result<(), RefreshTokenError<RE>>
+        http_client: &'a C,
+    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
     where
         Self: Sized,
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send;
+        C: Client<'a>;
     /// Get current lifetime of token.
     fn expires_in(&self) -> std::time::Duration;
 
@@ -89,27 +86,27 @@ pub trait TwitchToken {
     /// # Note
     ///
     /// This will not mutate any current data in the [TwitchToken]
-    async fn validate_token<RE, C, F>(
+    async fn validate_token<'a, C>(
         &self,
-        http_client: C,
-    ) -> Result<ValidatedToken, ValidationError<RE>>
+        http_client: &'a C,
+    ) -> Result<ValidatedToken, ValidationError<<C as Client<'a>>::Error>>
     where
         Self: Sized,
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send,
+        C: Client<'a>,
     {
         let token = &self.token();
         validate_token(http_client, token).await
     }
 
     /// Revoke the token. See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
-    async fn revoke_token<RE, C, F>(self, http_client: C) -> Result<(), RevokeTokenError<RE>>
+    async fn revoke_token<'a, C>(
+        self,
+        http_client: &'a C,
+    ) -> Result<(), RevokeTokenError<<C as Client<'a>>::Error>>
     where
         Self: Sized,
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send, {
+        C: Client<'a>,
+    {
         let token = self.token();
         let client_id = self.client_id();
         crate::revoke_token(http_client, token, client_id).await
@@ -128,15 +125,13 @@ impl<T: TwitchToken + Send> TwitchToken for Box<T> {
 
     fn user_id(&self) -> Option<&str> { (**self).user_id() }
 
-    async fn refresh_token<RE, C, F>(
+    async fn refresh_token<'a, C>(
         &mut self,
-        http_client: C,
-    ) -> Result<(), RefreshTokenError<RE>>
+        http_client: &'a C,
+    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
     where
         Self: Sized,
-        RE: std::error::Error + Send + Sync + 'static,
-        C: FnOnce(HttpRequest) -> F + Send,
-        F: Future<Output = Result<HttpResponse, RE>> + Send,
+        C: Client<'a>,
     {
         (**self).refresh_token(http_client).await
     }
