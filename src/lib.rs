@@ -151,7 +151,17 @@ where
     if resp.status() == StatusCode::UNAUTHORIZED {
         return Err(ValidationError::NotAuthorized);
     }
-    crate::parse_response(&resp).map_err(Into::into)
+    match crate::parse_response(&resp) {
+        Ok(ok) => Ok(ok),
+        Err(err) => match err {
+            RequestParseError::TwitchError(TwitchTokenErrorResponse { status, .. })
+                if status == StatusCode::UNAUTHORIZED =>
+            {
+                Err(ValidationError::NotAuthorized)
+            }
+            err => Err(err.into()),
+        },
+    }
 }
 
 /// Revoke the token.
@@ -276,20 +286,36 @@ pub(crate) fn parse_token_response_raw(
     }
 }
 
-/// Parses a response, validating it and returning deserialized response
+/// Parses a response, validating it and returning json deserialized response
 pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
     resp: &HttpResponse,
 ) -> Result<T, RequestParseError> {
-    serde_json::from_slice(parse_token_response_raw(resp)?.body()).map_err(Into::into)
+    let body = parse_token_response_raw(resp)?.body();
+    if let Some(content) = resp.headers().get(http::header::CONTENT_TYPE) {
+        dbg!(&content);
+        // TODO: Remove this cfg, see issue https://github.com/twitchdev/twitch-cli/issues/81
+        #[cfg(not(feature = "mock_api"))]
+        if content != "application/json" {
+            return Err(RequestParseError::NotJson {
+                found: String::from_utf8_lossy(content.as_bytes()).into_owned(),
+            });
+        }
+    }
+    serde_json::from_slice(body).map_err(Into::into)
 }
 
-/// Errors from [`parse_token_response`]
+/// Errors from [`parse_response`]
 #[derive(Debug, thiserror::Error, displaydoc::Display)]
 pub enum RequestParseError {
     /// deserialization failed
     DeserializeError(#[from] serde_json::Error),
     /// twitch returned an error
     TwitchError(#[from] TwitchTokenErrorResponse),
+    /// returned content is not `application/json`, found `{found}`
+    NotJson {
+        /// Found `Content-Type` header
+        found: String,
+    },
     /// twitch returned an unexpected status code: {0}
     Other(StatusCode),
 }

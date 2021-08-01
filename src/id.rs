@@ -30,7 +30,7 @@ pub struct TwitchTokenErrorResponse {
     /// Message attached to error
     pub message: String,
     /// Description of the error message.
-    pub error: String,
+    pub error: Option<String>,
 }
 
 impl std::fmt::Display for TwitchTokenErrorResponse {
@@ -38,7 +38,10 @@ impl std::fmt::Display for TwitchTokenErrorResponse {
         write!(
             f,
             "{error} - {message}",
-            error = self.error,
+            error = self
+                .error
+                .as_deref()
+                .unwrap_or_else(|| self.status.canonical_reason().unwrap_or("Error")),
             message = self.message
         )
     }

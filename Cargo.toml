@@ -54,6 +54,11 @@ path = "examples/user_token.rs"
 required-features = ["surf_client"]
 
 [[example]]
+name = "app_access_token"
+path = "examples/app_access_token.rs"
+required-features = ["surf_client"]
+
+[[example]]
 name = "auth_flow"
 path = "examples/auth_flow.rs"
 required-features = ["reqwest_client"]
