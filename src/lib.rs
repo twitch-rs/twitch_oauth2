@@ -264,7 +264,7 @@ where
     Ok((access_token, expires_in, refresh_token))
 }
 
-/// Construct a request
+/// Construct a request that accepts `application/json` on default
 fn construct_request<I, K, V>(
     url: &url::Url,
     params: I,
@@ -284,6 +284,13 @@ where
     let mut req = http::Request::builder().method(method).uri(url);
     req.headers_mut()
         .map(|h| h.extend(headers.into_iter()))
+        .unwrap();
+    req.headers_mut()
+        .map(|h| {
+            if !h.contains_key(http::header::ACCEPT) {
+                h.append(http::header::ACCEPT, "application/json".parse().unwrap());
+            }
+        })
         .unwrap();
     req.body(body).unwrap()
 }

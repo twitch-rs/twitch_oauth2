@@ -145,7 +145,7 @@ impl UserToken {
     /// let token = twitch_oauth2::UserToken::mock_token(
     ///     &reqwest::Client::builder()
     ///         .redirect(reqwest::redirect::Policy::none())
-    ///         .build()?
+    ///         .build()?,
     ///     // Pass in the mock api url to mock/users, if this is none, we'll assume the host is the same as the `/auth` url, but living instead on `/mock/users`
     ///     None,
     ///     "mockclientid".into(),
