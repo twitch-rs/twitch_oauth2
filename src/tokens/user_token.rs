@@ -146,12 +146,11 @@ impl UserToken {
     ///     &reqwest::Client::builder()
     ///         .redirect(reqwest::redirect::Policy::none())
     ///         .build()?
-    ///     ),
     ///     // Pass in the mock api url to mock/users, if this is none, we'll assume the host is the same as the `/auth` url, but living instead on `/mock/users`
     ///     None,
     ///     "mockclientid".into(),
     ///     "mockclientsecret".into(),
-    ///     "user_id".into(),
+    ///     "user_id",
     ///     vec![],
     ///     ).await?;
     /// # Ok(())}

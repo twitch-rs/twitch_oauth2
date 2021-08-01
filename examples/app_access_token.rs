@@ -1,4 +1,4 @@
-use twitch_oauth2::{client, TwitchToken};
+use twitch_oauth2::TwitchToken;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

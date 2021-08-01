@@ -1,5 +1,3 @@
-use twitch_oauth2::TwitchToken;
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error

@@ -82,8 +82,6 @@ impl<'a> Client<'a> for ReqwestClient {
 use surf::Client as SurfClient;
 
 /// Possible errors from [`Client::req()`] when using the [surf](https://crates.io/crates/surf) client
-///
-/// Also returned by [`ClientDefault::default_client_with_name`]
 #[cfg(feature = "surf")]
 #[derive(Debug, displaydoc::Display, thiserror::Error)]
 pub enum SurfError {
