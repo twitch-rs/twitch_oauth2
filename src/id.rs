@@ -22,13 +22,26 @@ pub struct TwitchTokenResponse {
 }
 
 /// Twitch's representation of the oauth flow for errors
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, thiserror::Error)]
 pub struct TwitchTokenErrorResponse {
     /// Status code of error
     #[serde(with = "status_code")]
     pub status: http::StatusCode,
     /// Message attached to error
     pub message: String,
+    /// Description of the error message.
+    pub error: String,
+}
+
+impl std::fmt::Display for TwitchTokenErrorResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{error} - {message}",
+            error = self.error,
+            message = self.message
+        )
+    }
 }
 
 #[doc(hidden)]
@@ -73,12 +86,6 @@ pub mod scope {
         } else {
             Ok(None)
         }
-    }
-}
-
-impl std::fmt::Display for TwitchTokenErrorResponse {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.status.as_u16(), self.message)
     }
 }
 

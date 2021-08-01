@@ -33,6 +33,7 @@ pub mod scopes;
 pub mod tokens;
 pub mod types;
 
+use http::StatusCode;
 use id::TwitchTokenErrorResponse;
 use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 
@@ -127,7 +128,6 @@ pub async fn validate_token<'a, C>(
 where
     C: Client<'a>,
 {
-    use http::StatusCode;
     use http::{header::AUTHORIZATION, HeaderMap, Method};
 
     let auth_header = format!("OAuth {}", token.secret());
@@ -148,20 +148,10 @@ where
     );
 
     let resp = client.req(req).await.map_err(ValidationError::Request)?;
-    match StatusCode::from_u16(resp.status().as_u16()) {
-        Ok(status) if status.is_success() => Ok(serde_json::from_slice(resp.body())?),
-        Ok(status) if status == StatusCode::UNAUTHORIZED => Err(ValidationError::NotAuthorized),
-        Ok(status) => {
-            // TODO: Document this with a log call
-            Err(ValidationError::TwitchError(TwitchTokenErrorResponse {
-                status,
-                message: String::from_utf8_lossy(resp.body()).into_owned(),
-            }))
-        }
-        Err(_) => {
-            unreachable!("converting from different http versions for the statuscode failed...")
-        }
+    if resp.status() == StatusCode::UNAUTHORIZED {
+        return Err(ValidationError::NotAuthorized);
     }
+    crate::parse_response(&resp).map_err(Into::into)
 }
 
 /// Revoke the token.
@@ -175,7 +165,7 @@ pub async fn revoke_token<'a, C>(
 where
     C: Client<'a>,
 {
-    use http::{HeaderMap, Method, StatusCode};
+    use http::{HeaderMap, Method};
     use std::collections::HashMap;
     let mut params = HashMap::new();
     params.insert("client_id", client_id.as_str());
@@ -193,16 +183,9 @@ where
         .req(req)
         .await
         .map_err(RevokeTokenError::RequestError)?;
-    match resp.status() {
-        StatusCode::BAD_REQUEST => {
-            return Err(RevokeTokenError::TwitchError(TwitchTokenErrorResponse {
-                status: StatusCode::BAD_REQUEST,
-                message: String::from_utf8_lossy(resp.body()).into_owned(),
-            }))
-        }
-        StatusCode::OK => Ok(()),
-        _ => unimplemented!("unexpected response, this is a bug"),
-    }
+
+    let _ = parse_token_response_raw(&resp)?;
+    Ok(())
 }
 
 /// Refresh the token, call if it has expired.
@@ -220,7 +203,7 @@ pub async fn refresh_token<'a, C>(
 where
     C: Client<'a>,
 {
-    use http::{HeaderMap, Method, StatusCode};
+    use http::{HeaderMap, Method};
     use std::collections::HashMap;
 
     let mut params = HashMap::new();
@@ -241,22 +224,7 @@ where
         .req(req)
         .await
         .map_err(RefreshTokenError::RequestError)?;
-    match resp.status() {
-        StatusCode::OK => (),
-        c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
-            return Err(RefreshTokenError::TwitchError(serde_json::from_slice(
-                resp.body(),
-            )?));
-        }
-        c => {
-            return Err(RefreshTokenError::TwitchError(TwitchTokenErrorResponse {
-                status: c,
-                // This is not returned as I'm unsure what could be contained
-                message: "<censored>".to_string(),
-            }));
-        }
-    };
-    let res: crate::id::TwitchTokenResponse = serde_json::from_slice(resp.body())?;
+    let res: id::TwitchTokenResponse = parse_response(&resp)?;
 
     let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
     let refresh_token = res.refresh_token;
@@ -293,4 +261,35 @@ where
         })
         .unwrap();
     req.body(body).unwrap()
+}
+
+/// Parses a response, validating it and returning the response if all ok.
+pub(crate) fn parse_token_response_raw(
+    resp: &HttpResponse,
+) -> Result<&HttpResponse, RequestParseError> {
+    match serde_json::from_slice::<TwitchTokenErrorResponse>(resp.body()) {
+        Err(_) => match resp.status() {
+            StatusCode::OK => Ok(resp),
+            _ => Err(RequestParseError::Other(resp.status())),
+        },
+        Ok(twitch_err) => Err(RequestParseError::TwitchError(twitch_err)),
+    }
+}
+
+/// Parses a response, validating it and returning deserialized response
+pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
+    resp: &HttpResponse,
+) -> Result<T, RequestParseError> {
+    serde_json::from_slice(parse_token_response_raw(resp)?.body()).map_err(Into::into)
+}
+
+/// Errors from [`parse_token_response`]
+#[derive(Debug, thiserror::Error, displaydoc::Display)]
+pub enum RequestParseError {
+    /// deserialization failed
+    DeserializeError(#[from] serde_json::Error),
+    /// twitch returned an error
+    TwitchError(#[from] TwitchTokenErrorResponse),
+    /// twitch returned an unexpected status code: {0}
+    Other(StatusCode),
 }

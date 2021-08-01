@@ -1,7 +1,6 @@
 use super::errors::{AppAccessTokenError, ValidationError};
 use crate::{
     client::Client,
-    id::TwitchTokenErrorResponse,
     tokens::{errors::RefreshTokenError, Scope, TwitchToken},
     types::{AccessToken, ClientId, ClientSecret, RefreshToken},
 };
@@ -137,7 +136,7 @@ impl AppAccessToken {
         C: Client<'a>,
     {
         // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
-        use http::{HeaderMap, Method, StatusCode};
+        use http::{HeaderMap, Method};
         use std::collections::HashMap;
         let scope: String = scopes
             .iter()
@@ -162,22 +161,8 @@ impl AppAccessToken {
             .req(req)
             .await
             .map_err(AppAccessTokenError::Request)?;
-        match resp.status() {
-            StatusCode::OK => (),
-            c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
-                return Err(AppAccessTokenError::TwitchError(serde_json::from_slice(
-                    resp.body(),
-                )?));
-            }
-            c => {
-                return Err(AppAccessTokenError::TwitchError(TwitchTokenErrorResponse {
-                    status: c,
-                    // This is not returned as I'm unsure what could be contained
-                    message: "<censored>".to_string(),
-                }));
-            }
-        };
-        let response: crate::id::TwitchTokenResponse = serde_json::from_slice(resp.body())?;
+
+        let response: crate::id::TwitchTokenResponse = crate::parse_response(&resp)?;
         let expires_in = response.expires_in();
         let app_access = AppAccessToken::from_existing_unchecked(
             response.access_token,

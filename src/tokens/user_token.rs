@@ -1,12 +1,9 @@
 use crate::client::Client;
-use crate::ClientSecret;
-use crate::{
-    id::TwitchTokenErrorResponse,
-    tokens::{
-        errors::{RefreshTokenError, UserTokenExchangeError, ValidationError},
-        Scope, TwitchToken,
-    },
+use crate::tokens::{
+    errors::{RefreshTokenError, UserTokenExchangeError, ValidationError},
+    Scope, TwitchToken,
 };
+use crate::{parse_response, ClientSecret};
 
 use super::errors::ImplicitUserTokenExchangeError;
 use crate::types::{AccessToken, ClientId, RefreshToken};
@@ -192,9 +189,7 @@ impl UserToken {
             .req(req)
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
-
-        let response: crate::id::TwitchTokenResponse =
-            serde_json::from_slice(resp.body().as_slice())?;
+        let response: crate::id::TwitchTokenResponse = parse_response(&resp)?;
         let expires_in = response.expires_in();
         let auth_header = format!("bearer {}", response.access_token().secret());
         let mut user_headers = HeaderMap::new();
@@ -233,7 +228,7 @@ impl UserToken {
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
 
-        let user: serde_json::Value = serde_json::from_slice(user.body())?;
+        let user: serde_json::Value = crate::parse_response(&user)?;
 
         Ok(UserToken::from_existing_unchecked(
             response.access_token,
@@ -417,7 +412,7 @@ impl UserTokenBuilder {
         }
 
         // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
-        use http::{HeaderMap, Method, StatusCode};
+        use http::{HeaderMap, Method};
         use std::collections::HashMap;
         let mut params = HashMap::new();
         params.insert("client_id", self.client_id.as_str());
@@ -438,25 +433,8 @@ impl UserTokenBuilder {
             .req(req)
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
-        match resp.status() {
-            StatusCode::OK => (),
-            c if c == StatusCode::BAD_REQUEST || c == StatusCode::FORBIDDEN => {
-                return Err(UserTokenExchangeError::TwitchError(serde_json::from_slice(
-                    resp.body().as_slice(),
-                )?));
-            }
-            c => {
-                return Err(UserTokenExchangeError::TwitchError(
-                    TwitchTokenErrorResponse {
-                        status: c,
-                        // This is not returned as I'm unsure what could be contained
-                        message: "<censored>".to_string(),
-                    },
-                ));
-            }
-        };
-        let response: crate::id::TwitchTokenResponse =
-            serde_json::from_slice(resp.body().as_slice())?;
+
+        let response: crate::id::TwitchTokenResponse = crate::parse_response(&resp)?;
         UserToken::from_existing(
             http_client,
             response.access_token,
