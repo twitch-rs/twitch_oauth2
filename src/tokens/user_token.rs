@@ -147,8 +147,8 @@ impl UserToken {
     ///         .redirect(reqwest::redirect::Policy::none())
     ///         .build()?
     ///     ),
-    ///     // If you are using twitch_api2, prefer using twitch_api2::helix::users::GetUsersRequest::get_bare_uri()    
-    ///     url::Url::parse("http://localhost:8080/mock/users").unwrap(),
+    ///     // Pass in the mock api url to mock/users, if this is none, we'll assume the host is the same as the `/auth` url, but living instead on `/mock/users`
+    ///     None,
     ///     "mockclientid".into(),
     ///     "mockclientsecret".into(),
     ///     "user_id".into(),
@@ -160,7 +160,7 @@ impl UserToken {
     #[cfg_attr(nightly, doc(cfg(feature = "mock_api")))]
     pub async fn mock_token<'a, C>(
         http_client: &'a C,
-        mock_api_users_url: url::Url,
+        mock_api_users_url: impl Into<Option<url::Url>>,
         client_id: ClientId,
         client_secret: ClientSecret,
         user_id: impl AsRef<str>,
@@ -212,6 +212,15 @@ impl UserToken {
                 .parse()
                 .expect("Failed to parse header for validation"),
         );
+        let mock_api_users_url = if let Some(url) = mock_api_users_url.into() {
+            url
+        } else {
+            // user didn't provide a url for user api mock. We assume the mock api lives on the same place as /auth
+            let mut url = crate::TWITCH_OAUTH2_URL.clone();
+            url.set_path("mock/users");
+            url
+        };
+
         let user_req = crate::construct_request(
             &mock_api_users_url,
             &[("user_id", user_id)],
@@ -232,8 +241,12 @@ impl UserToken {
             response.refresh_token,
             client_id,
             client_secret,
-            user.pointer("/data/0/login").and_then(|l| l.as_str().map(|s| s.to_string()) ).unwrap(),
-            user.pointer("/data/0/id").and_then(|l| l.as_str().map(|s| s.to_string()) ).unwrap(),
+            user.pointer("/data/0/login")
+                .and_then(|login| login.as_str().map(|s| s.to_string()))
+                .unwrap(),
+            user.pointer("/data/0/id")
+                .and_then(|id| id.as_str().map(|s| s.to_string()))
+                .unwrap(),
             response.scopes,
             expires_in,
         ))

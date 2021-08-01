@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
         &reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .build()?,
-        url::Url::parse("http://localhost:8080/mock/users").unwrap(),
+        None,
         client_id,
         client_secret,
         user_id,
