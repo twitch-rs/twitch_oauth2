@@ -60,8 +60,13 @@ required-features = ["reqwest_client"]
 
 
 [[example]]
-name = "mock"
-path = "examples/mock.rs"
+name = "mock_app"
+path = "examples/mock_app.rs"
+required-features = ["reqwest_client", "mock_api"]
+
+[[example]]
+name = "mock_user"
+path = "examples/mock_user.rs"
 required-features = ["reqwest_client", "mock_api"]
 
 [package.metadata.docs.rs]

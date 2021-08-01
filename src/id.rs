@@ -16,7 +16,7 @@ pub struct TwitchTokenResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_token: Option<crate::RefreshToken>,
     /// Scopes attached to token
-    #[serde(rename = "scope")]
+    #[serde(rename = "scope", deserialize_with = "scope::deserialize")]
     #[serde(default)]
     pub scopes: Option<Vec<crate::Scope>>,
 }
@@ -54,6 +54,25 @@ pub mod status_code {
     pub fn serialize<S>(status: &StatusCode, ser: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         ser.serialize_u16(status.as_u16())
+    }
+}
+
+#[doc(hidden)]
+pub mod scope {
+    use serde::{de::Deserialize, Deserializer};
+
+    pub fn deserialize<'de, D>(de: D) -> Result<Option<Vec<crate::Scope>>, D::Error>
+    where D: Deserializer<'de> {
+        let scopes: Option<Vec<crate::Scope>> = Deserialize::deserialize(de)?;
+        if let Some(scopes) = scopes {
+            match scopes {
+                scopes if scopes.is_empty() || scopes.len() > 1 => Ok(Some(scopes)),
+                scopes if scopes.len() == 1 && scopes.get(0).unwrap().as_str() == "" => Ok(None),
+                _ => Ok(Some(scopes)),
+            }
+        } else {
+            Ok(None)
+        }
     }
 }
 

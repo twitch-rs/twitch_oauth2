@@ -24,8 +24,6 @@ pub struct AppAccessToken {
     struct_created: std::time::Instant,
     client_id: ClientId,
     client_secret: ClientSecret,
-    // FIXME: This should be removed
-    login: Option<String>,
     scopes: Vec<Scope>,
 }
 
@@ -50,7 +48,7 @@ impl TwitchToken for AppAccessToken {
 
     fn token(&self) -> &AccessToken { &self.access_token }
 
-    fn login(&self) -> Option<&str> { self.login.as_deref() }
+    fn login(&self) -> Option<&str> { None }
 
     fn user_id(&self) -> Option<&str> { None }
 
@@ -92,8 +90,6 @@ impl AppAccessToken {
         refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<ClientSecret>,
-        // FIXME: Remove?
-        login: Option<String>,
         scopes: Option<Vec<Scope>>,
         expires_in: Option<std::time::Duration>,
     ) -> AppAccessToken {
@@ -102,7 +98,6 @@ impl AppAccessToken {
             refresh_token: refresh_token.into(),
             client_id: client_id.into(),
             client_secret: client_secret.into(),
-            login,
             expires_in: expires_in.unwrap_or_default(),
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
@@ -126,7 +121,6 @@ impl AppAccessToken {
             refresh_token.into(),
             validated.client_id,
             client_secret,
-            None,
             validated.scopes,
             Some(validated.expires_in),
         ))
@@ -190,7 +184,6 @@ impl AppAccessToken {
             response.refresh_token,
             client_id,
             client_secret,
-            None,
             response.scopes,
             expires_in,
         );

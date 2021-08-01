@@ -133,6 +133,112 @@ impl UserToken {
         UserTokenBuilder::new(client_id, client_secret, redirect_url)
     }
 
+    /// Generate a user token from [mock-api](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md#auth-namespace)
+    ///
+    /// This will call `/mock/users?user_id={user_id}` to validate the token, since there is no `auth/validate` endpoint in mock-api.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # #[tokio::main]
+    /// # async fn run() -> Result<(), Box<dyn std::error::Error + 'static>>{
+    /// let token = twitch_oauth2::UserToken::mock_token(
+    ///     &reqwest::Client::builder()
+    ///         .redirect(reqwest::redirect::Policy::none())
+    ///         .build()?
+    ///     ),
+    ///     // If you are using twitch_api2, prefer using twitch_api2::helix::users::GetUsersRequest::get_bare_uri()    
+    ///     url::Url::parse("http://localhost:8080/mock/users").unwrap(),
+    ///     "mockclientid".into(),
+    ///     "mockclientsecret".into(),
+    ///     "user_id".into(),
+    ///     vec![],
+    ///     ).await?;
+    /// # Ok(())}
+    /// # fn main() {run();}
+    /// ```
+    #[cfg_attr(nightly, doc(cfg(feature = "mock_api")))]
+    pub async fn mock_token<'a, C>(
+        http_client: &'a C,
+        mock_api_users_url: url::Url,
+        client_id: ClientId,
+        client_secret: ClientSecret,
+        user_id: impl AsRef<str>,
+        scopes: Vec<Scope>,
+    ) -> Result<UserToken, UserTokenExchangeError<<C as Client<'a>>::Error>>
+    where
+        C: Client<'a>,
+    {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+
+        let user_id = user_id.as_ref();
+        let scope_str = scopes.as_slice().join(" ");
+        let mut params = HashMap::new();
+        params.insert("client_id", client_id.as_str());
+        params.insert("client_secret", client_secret.secret());
+        params.insert("grant_type", "user_token");
+        params.insert("scope", &scope_str);
+        params.insert("user_id", user_id);
+
+        let req = crate::construct_request(
+            &crate::AUTH_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        );
+
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(UserTokenExchangeError::RequestError)?;
+
+        let response: crate::id::TwitchTokenResponse =
+            serde_json::from_slice(resp.body().as_slice())?;
+        let expires_in = response.expires_in();
+        let auth_header = format!("bearer {}", response.access_token().secret());
+        let mut user_headers = HeaderMap::new();
+        user_headers.insert(
+            http::header::AUTHORIZATION,
+            auth_header
+                .parse()
+                .expect("Failed to parse header for validation"),
+        );
+        user_headers.insert(
+            "Client-ID",
+            client_id
+                .as_str()
+                .parse()
+                .expect("Failed to parse header for validation"),
+        );
+        let user_req = crate::construct_request(
+            &mock_api_users_url,
+            &[("user_id", user_id)],
+            user_headers,
+            Method::GET,
+            vec![],
+        );
+
+        let user = http_client
+            .req(user_req)
+            .await
+            .map_err(UserTokenExchangeError::RequestError)?;
+
+        let user: serde_json::Value = serde_json::from_slice(user.body())?;
+
+        Ok(UserToken::from_existing_unchecked(
+            response.access_token,
+            response.refresh_token,
+            client_id,
+            client_secret,
+            user.pointer("/data/0/login").and_then(|l| l.as_str().map(|s| s.to_string()) ).unwrap(),
+            user.pointer("/data/0/id").and_then(|l| l.as_str().map(|s| s.to_string()) ).unwrap(),
+            response.scopes,
+            expires_in,
+        ))
+    }
+
     /// Set the client secret
     pub fn set_secret(&mut self, secret: Option<ClientSecret>) { self.client_secret = secret }
 }
