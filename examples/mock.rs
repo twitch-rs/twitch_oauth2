@@ -32,6 +32,6 @@ async fn main() -> anyhow::Result<()> {
         vec![],
     )
     .await?;
-    println!("token");
+    println!("token retrieved: {} - {:?}", token.access_token.secret(), token);
     Ok(())
 }

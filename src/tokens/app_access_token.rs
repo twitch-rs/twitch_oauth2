@@ -31,7 +31,7 @@ pub struct AppAccessToken {
 
 impl std::fmt::Debug for AppAccessToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("UserToken")
+        f.debug_struct("AppAccessToken")
             .field("access_token", &self.access_token)
             .field("refresh_token", &self.refresh_token)
             .field("client_id", &self.client_id)
