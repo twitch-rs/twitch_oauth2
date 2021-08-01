@@ -43,7 +43,7 @@ pub trait TwitchToken {
     /// # fn t() -> UserToken {todo!()}
     /// # let user_token = t();
     /// use twitch_oauth2::TwitchToken;
-    /// println!("token: {}", user_token.token().secret().as_str());
+    /// println!("token: {}", user_token.token().secret());
     /// ```
     fn token(&self) -> &AccessToken;
     /// Get the username associated to this token
@@ -67,11 +67,11 @@ pub trait TwitchToken {
     /// # use twitch_oauth2::UserToken;
     /// # fn t() -> UserToken {todo!()}
     /// # #[tokio::main]
-    /// # async fn run() -> Result<(), Box<std::error::Error + 'static>>{
+    /// # async fn run() -> Result<(), Box<dyn std::error::Error + 'static>>{
     /// # let mut user_token = t();
-    /// use twitch_oauth2::{UserToken, TwitchToken, client::reqwest_http_client};
+    /// use twitch_oauth2::{UserToken, TwitchToken};
     /// if user_token.is_elapsed() {
-    ///     user_token.refresh_token(reqwest_http_client).await?;
+    ///     user_token.refresh_token(&reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).build()?).await?;
     /// }
     /// # Ok(()) }
     /// # fn main() {run();}

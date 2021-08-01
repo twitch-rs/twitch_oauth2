@@ -17,10 +17,10 @@
 //! # use twitch_oauth2::{TwitchToken, UserToken, AccessToken, tokens::errors::ValidationError};
 //! # #[tokio::main]
 //! # async fn run() {
-//! # let reqwest_http_client = twitch_oauth2::dummy_http_client; // This is only here to fool doc tests
+//! # let reqwest_http_client = twitch_oauth2::client::DummyClient; // This is only here to fool doc tests
 //!     let token = AccessToken::new("sometokenherewhichisvalidornot".to_string());
 //!
-//!     match UserToken::from_existing(reqwest_http_client, token, None, None).await {
+//!     match UserToken::from_existing(&reqwest_http_client, token, None, None).await {
 //!         Ok(t) => println!("user_token: {}", t.token().secret()),
 //!         Err(e) => panic!("got error: {}", e),
 //!     }
@@ -43,24 +43,15 @@ pub use tokens::{AppAccessToken, TwitchToken, UserToken, ValidatedToken};
 
 pub use url;
 
-pub use types::{AccessToken, ClientId, ClientSecret, RefreshToken, CsrfToken};
+pub use types::{AccessToken, ClientId, ClientSecret, CsrfToken, RefreshToken};
 
 #[doc(hidden)]
-pub use types::{AccessTokenRef, ClientIdRef, ClientSecretRef, RefreshTokenRef, CsrfTokenRef};
+pub use types::{AccessTokenRef, ClientIdRef, ClientSecretRef, CsrfTokenRef, RefreshTokenRef};
 
 use self::client::Client;
 
 type HttpRequest = http::Request<Vec<u8>>;
 type HttpResponse = http::Response<Vec<u8>>;
-
-#[doc(hidden)]
-pub async fn dummy_http_client(_: HttpRequest) -> Result<HttpResponse, DummyError> {
-    Err(DummyError)
-}
-#[doc(hidden)]
-#[derive(Debug, thiserror::Error)]
-#[error("this client does not do anything, only used for documentation test that only checks code integrity")]
-pub struct DummyError;
 
 /// Generate a url with a default if `mock_api` feature is disabled, or env var is not defined or is invalid utf8
 macro_rules! mock_env_url {

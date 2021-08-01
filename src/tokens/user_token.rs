@@ -560,11 +560,10 @@ mod tests {
     #[test]
     fn generate_url() {
         dbg!(UserTokenBuilder::new(
-            ClientId::new("clientid".to_string()),
-            ClientSecret::new("secret".to_string()),
-            oauth2::RedirectUrl::new("https://localhost".to_string()).unwrap(),
+            ClientId::new("clientid"),
+            ClientSecret::new("secret"),
+            url::Url::parse("https://localhost").unwrap(),
         )
-        .unwrap()
         .force_verify(true)
         .generate_url()
         .0
@@ -575,15 +574,14 @@ mod tests {
     #[ignore]
     async fn get_token() {
         let mut t = UserTokenBuilder::new(
-            ClientId::new("clientid".to_string()),
-            ClientSecret::new("secret".to_string()),
-            crate::RedirectUrl::new(r#"https://localhost"#.to_string()).unwrap(),
+            ClientId::new("clientid"),
+            ClientSecret::new("secret"),
+            url::Url::parse(r#"https://localhost"#).unwrap(),
         )
-        .unwrap()
         .force_verify(true);
-        t.csrf = Some(oauth2::CsrfToken::new("random".to_string()));
+        t.csrf = Some(crate::CsrfToken::new("random"));
         let token = t
-            .get_user_token(crate::client::surf_http_client, "random", "authcode")
+            .get_user_token(&surf::Client::new(), "random", "authcode")
             .await
             .unwrap();
         println!("token: {:?} - {}", token, token.access_token.secret());
@@ -593,16 +591,15 @@ mod tests {
     #[ignore]
     async fn get_implicit_token() {
         let mut t = ImplicitUserTokenBuilder::new(
-            ClientId::new("clientid".to_string()),
-            crate::RedirectUrl::new(r#"http://localhost/twitch/register"#.to_string()).unwrap(),
+            ClientId::new("clientid"),
+            url::Url::parse(r#"http://localhost/twitch/register"#).unwrap(),
         )
-        .unwrap()
         .force_verify(true);
         println!("{}", t.generate_url().0);
-        t.csrf = Some(oauth2::CsrfToken::new("random".to_string()));
+        t.csrf = Some(crate::CsrfToken::new("random"));
         let token = t
             .get_user_token(
-                crate::client::surf_http_client,
+                &surf::Client::new(),
                 Some("random"),
                 Some("authcode"),
                 None,

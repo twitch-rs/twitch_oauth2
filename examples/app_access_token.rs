@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
         .expect("Please set env: CLIENT_SCOPES or pass client secret as an argument");
 
     let token = twitch_oauth2::AppAccessToken::get_app_access_token(
-        twitch_oauth2::client::surf_http_client,
+        &surf::Client::new(),
         client_id,
         client_secret,
         scopes,

@@ -24,6 +24,23 @@ pub trait Client<'a>: Sync + Send + 'a {
     ) -> BoxedFuture<'a, Result<crate::HttpResponse, <Self as Client>::Error>>;
 }
 
+#[doc(hidden)]
+#[derive(Debug, thiserror::Error, Clone)]
+#[error("this client does not do anything, only used for documentation test that only checks code integrity")]
+pub struct DummyClient;
+
+#[cfg(feature = "reqwest")]
+#[cfg_attr(nightly, doc(cfg(feature = "reqwest_client")))] // FIXME: This doc_cfg does nothing
+impl<'a> Client<'a> for DummyClient {
+    type Error = DummyClient;
+
+    fn req(
+        &'a self,
+        _: crate::HttpRequest,
+    ) -> BoxedFuture<'a, Result<crate::HttpResponse, Self::Error>> {
+        Box::pin(async move { Err(self.clone()) })
+    }
+}
 #[cfg(feature = "reqwest")]
 use reqwest::Client as ReqwestClient;
 
