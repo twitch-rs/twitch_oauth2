@@ -291,12 +291,12 @@ pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
     resp: &HttpResponse,
 ) -> Result<T, RequestParseError> {
     let body = parse_token_response_raw(resp)?.body();
-    if let Some(content) = resp.headers().get(http::header::CONTENT_TYPE) {
+    if let Some(_content) = resp.headers().get(http::header::CONTENT_TYPE) {
         // TODO: Remove this cfg, see issue https://github.com/twitchdev/twitch-cli/issues/81
         #[cfg(not(feature = "mock_api"))]
-        if content != "application/json" {
+        if _content != "application/json" {
             return Err(RequestParseError::NotJson {
-                found: String::from_utf8_lossy(content.as_bytes()).into_owned(),
+                found: String::from_utf8_lossy(_content.as_bytes()).into_owned(),
             });
         }
     }
