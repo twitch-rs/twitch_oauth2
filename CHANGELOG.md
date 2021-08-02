@@ -6,11 +6,37 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.2...Unreleased)
 
+### Breaking changes
+
+* All types associated with tokens are now defined in this crate. This is a consequence of the `oauth2` dependency being removed from tree.
+  Additionally, as another consequence, clients are now able to be specified as a `for<'a> &'a T where T: Client<'a>`, meaning `twitch_api2` can use its clients as an interface to token requests,
+  and clients can persist instead of being rebuilt every call. Care should be taken when making clients, as SSRF and similar attacks are possible with improper client configurations.
+
+### Added
+
+* Added types/braids `ClientId`, `ClientSecret`, `AccessToken`, `RefreshToken` and `CsrfToken`.
+* Added way to interact with the Twitch-CLI [mock API](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) using environment variables.
+  See static variables `AUTH_URL`, `TOKEN_URL`, `VALIDATE_URL` and `REVOKE_URL` for more information.
+* Added `impl Borrow<str> for Scope`, meaning it can be used in places it couldn't be used before. Primarily, it allows the following code to work:
+  ```rust
+  let scopes = vec![Scope::ChatEdit, Scope::ChatRead];
+  let space_separated_scope: String = scopes.as_slice().join(" ");
+  ```
+
+### Changed
+
+* Requests to `id.twitch.tv` now follow the documentation, instead of following a subset of the RFC for oauth2.
+* URLs are now initialized lazily and specified as `url::Url`s.
+
+### Removed
+
+* Removed `oauth2` dependency.
+
 ## [v0.5.2] - 2021-06-18
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.1...v0.5.2)
 
-# Added
+### Added
 
 * Added new scope `channel:manage:schedule`
 
@@ -18,7 +44,7 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.0...v0.5.1)
 
-# Added
+### Added
 
 * Added new scopes `channel:manage:polls`, `channel:manage:predictions`, `channel:read:polls`, `channel:read:predictions`, and `moderator:manage:automod`,
 * Added function `Scope::description` to get the description of the scope
