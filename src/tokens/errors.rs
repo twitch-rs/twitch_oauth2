@@ -4,9 +4,9 @@
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
-    /// request for token failed. {0}
+    /// request for token failed
     Request(#[source] RE),
-    /// could not parse response
+    /// could not parse response when getting app access token
     RequestParseError(#[from] crate::RequestParseError),
 }
 
@@ -15,9 +15,9 @@ pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
 pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
     /// token is not authorized for use
     NotAuthorized,
-    /// could not parse response
+    /// could not parse response when validating token
     RequestParseError(#[from] crate::RequestParseError),
-    /// failed to request validation: {0}
+    /// failed to request validation
     Request(#[source] RE),
     // TODO: This should be in it's own error enum specifically for UserToken validation
     /// validation did not return a login when it was expected
@@ -28,9 +28,9 @@ pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
-    /// could not parse response
+    /// could not parse response when revoking token
     RequestParseError(#[from] crate::RequestParseError),
-    /// failed to do revokation: {0}
+    /// failed to do revokation
     RequestError(#[source] RE),
 }
 
@@ -38,9 +38,9 @@ pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
-    /// request for token failed. {0}
+    /// request when refreshing token failed
     RequestError(#[source] RE),
-    /// could not parse response
+    /// could not parse response when refreshing token.
     RequestParseError(#[from] crate::RequestParseError),
     /// no client secret found
     // TODO: Include this in doc
@@ -55,13 +55,13 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
 /// Errors for [`UserTokenBuilder::get_user_token`](crate::tokens::UserTokenBuilder::get_user_token) and [`UserToken::mock_token`](crate::tokens::UserToken::mock_token)
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
-    /// request for token failed. {0}
+    /// request for user token failed
     RequestError(#[source] RE),
-    /// could not parse response
+    /// could not parse response when getting user token
     RequestParseError(#[from] crate::RequestParseError),
-    /// State CSRF does not match.
+    /// state CSRF does not match when exchanging user token
     StateMismatch,
-    /// could not get validation for token
+    /// could not get validation for user token
     ValidationError(#[from] ValidationError<RE>),
 }
 
@@ -76,7 +76,7 @@ pub enum ImplicitUserTokenExchangeError<RE: std::error::Error + Send + Sync + 's
         /// Description of error
         description: Option<String>,
     },
-    /// State CSRF does not match.
+    /// state CSRF does not match
     StateMismatch,
     /// could not get validation for token
     ValidationError(#[from] ValidationError<RE>),

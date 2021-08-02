@@ -24,7 +24,6 @@ async fn main() -> anyhow::Result<()> {
     let user_id = std::env::var("MOCK_USER_ID")
         .ok()
         .or_else(|| args.next())
-        .map(twitch_oauth2::ClientSecret::new)
         .expect("Please set env: MOCK_USER_ID or pass user_id as an argument");
 
     let token = twitch_oauth2::UserToken::mock_token(
