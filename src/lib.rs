@@ -292,7 +292,6 @@ pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
 ) -> Result<T, RequestParseError> {
     let body = parse_token_response_raw(resp)?.body();
     if let Some(content) = resp.headers().get(http::header::CONTENT_TYPE) {
-        dbg!(&content);
         // TODO: Remove this cfg, see issue https://github.com/twitchdev/twitch-cli/issues/81
         #[cfg(not(feature = "mock_api"))]
         if content != "application/json" {
