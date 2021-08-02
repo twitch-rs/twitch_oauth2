@@ -303,7 +303,7 @@ pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
     serde_json::from_slice(body).map_err(Into::into)
 }
 
-/// Errors from [`parse_response`]
+/// Errors from parsing responses
 #[derive(Debug, thiserror::Error, displaydoc::Display)]
 pub enum RequestParseError {
     /// deserialization failed
