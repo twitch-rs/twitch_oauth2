@@ -2,8 +2,8 @@
 #![deny(missing_docs, broken_intra_doc_links)] // This will be weird until 1.52, see https://github.com/rust-lang/rust/pull/80527
 #![cfg_attr(nightly, deny(rustdoc::broken_intra_doc_links))]
 #![cfg_attr(nightly, feature(doc_cfg))]
-#![doc(html_root_url = "https://docs.rs/twitch_oauth2/0.5.2")]
-//! [![github]](https://github.com/emilgardis/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.5.2/twitch_oauth2)
+#![doc(html_root_url = "https://docs.rs/twitch_oauth2/0.6.0-rc.1")]
+//! [![github]](https://github.com/emilgardis/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.6.0-rc.1/twitch_oauth2)
 //!
 //! [github]: https://img.shields.io/badge/github-emilgardis/twitch__oauth2-8da0cb?style=for-the-badge&labelColor=555555&logo=github"
 //! [crates-io]: https://img.shields.io/crates/v/twitch_oauth2.svg?style=for-the-badge&color=fc8d62&logo=rust"
@@ -291,12 +291,12 @@ pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
     resp: &HttpResponse,
 ) -> Result<T, RequestParseError> {
     let body = parse_token_response_raw(resp)?.body();
-    if let Some(content) = resp.headers().get(http::header::CONTENT_TYPE) {
+    if let Some(_content) = resp.headers().get(http::header::CONTENT_TYPE) {
         // TODO: Remove this cfg, see issue https://github.com/twitchdev/twitch-cli/issues/81
         #[cfg(not(feature = "mock_api"))]
-        if content != "application/json" {
+        if _content != "application/json" {
             return Err(RequestParseError::NotJson {
-                found: String::from_utf8_lossy(content.as_bytes()).into_owned(),
+                found: String::from_utf8_lossy(_content.as_bytes()).into_owned(),
             });
         }
     }
