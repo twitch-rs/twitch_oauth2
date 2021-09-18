@@ -91,6 +91,7 @@ scope_impls!(
     ChannelManageVideos,      scope: "channel:manage:videos",      doc: "Manage a channel’s videos, including deleting videos.";
     ChannelModerate,          scope: "channel:moderate",           doc: "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
     ChannelReadEditors,       scope: "channel:read:editors",       doc: "View a list of users with the editor role for a channel.";
+    ChannelReadGoals,         scope: "channel:read:goals",         doc: "View Creator Goals for a channel.";
     ChannelReadHypeTrain,     scope: "channel:read:hype_train",    doc: "View Hype Train information for a channel.";
     ChannelReadPolls,         scope: "channel:read:polls",         doc: "View a channel’s polls.";
     ChannelReadPredictions,   scope: "channel:read:predictions",   doc: "View a channel’s Channel Points Predictions.";
