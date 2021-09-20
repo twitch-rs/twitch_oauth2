@@ -22,6 +22,7 @@
   let scopes = vec![Scope::ChatEdit, Scope::ChatRead];
   let space_separated_scope: String = scopes.as_slice().join(" ");
   ```
+* Added scope `channel:read:goals`
 
 ### Changed
 
