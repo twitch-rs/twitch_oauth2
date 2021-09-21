@@ -75,9 +75,9 @@ macro_rules! mock_env_url {
 static TWITCH_OAUTH2_URL: once_cell::sync::Lazy<url::Url> =
     mock_env_url!("TWITCH_OAUTH2_URL", "https://id.twitch.tv/oauth2/");
 
-/// Authorization URL (`/authorize`) for `id.twitch.tv`
+/// Authorization URL (`https://id.twitch.tv/oauth2/authorize`) for `id.twitch.tv`
 ///
-/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_AUTH_URL` to override the full url.
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_AUTH_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
 ///
 /// # Examples
 ///
@@ -85,9 +85,9 @@ static TWITCH_OAUTH2_URL: once_cell::sync::Lazy<url::Url> =
 pub static AUTH_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAUTH2_AUTH_URL", {
     TWITCH_OAUTH2_URL.to_string() + "authorize"
 },);
-/// Token URL (`/token`) for `id.twitch.tv`
+/// Token URL (`https://id.twitch.tv/oauth2/token`) for `id.twitch.tv`
 ///
-/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_TOKEN_URL` to override the full url.
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_TOKEN_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
 ///
 /// # Examples
 ///
@@ -95,9 +95,9 @@ pub static AUTH_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAU
 pub static TOKEN_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAUTH2_TOKEN_URL", {
     TWITCH_OAUTH2_URL.to_string() + "token"
 },);
-/// Validation URL (`/validate`) for `id.twitch.tv`
+/// Validation URL (`https://id.twitch.tv/oauth2/validate`) for `id.twitch.tv`
 ///
-/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_VALIDATE_URL` to override the full url.
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_VALIDATE_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
 ///
 /// # Examples
 ///
@@ -106,9 +106,9 @@ pub static VALIDATE_URL: once_cell::sync::Lazy<url::Url> =
     mock_env_url!("TWITCH_OAUTH2_VALIDATE_URL", {
         TWITCH_OAUTH2_URL.to_string() + "validate"
     },);
-/// Revokation URL (`/revoke`) for `id.twitch.tv`
+/// Revokation URL (`https://id.twitch.tv/oauth2/revoke`) for `id.twitch.tv`
 ///
-/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_REVOKE_URL` to override the full url.
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_REVOKE_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
 ///
 /// # Examples
 ///

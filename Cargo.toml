@@ -75,4 +75,4 @@ path = "examples/mock_user.rs"
 required-features = ["reqwest_client", "mock_api"]
 
 [package.metadata.docs.rs]
-features = ["all"]
+features = ["all", "mock_api"]

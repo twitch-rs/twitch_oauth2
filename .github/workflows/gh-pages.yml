@@ -1,6 +1,6 @@
 name: github pages
 env:
-  CI_TWITCH_OAUTH2_FEATURES: "all"
+  CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
   RUSTDOCFLAGS: "-Z unstable-options --html-in-header=docs/pre-content.html"
 on:
   push:
@@ -20,7 +20,11 @@ jobs:
         uses: actions/cache@v1
         id: cache
         with:
-          path: ~/.cargo
+          path: 
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git
+            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: mention 40 character commit rev in doc
         run: sed -i "s/{{commit}}/$(git rev-parse HEAD)/g" docs/pre-content.html
