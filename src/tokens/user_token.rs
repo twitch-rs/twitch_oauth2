@@ -500,7 +500,7 @@ impl ImplicitUserTokenBuilder {
         let mut url = crate::AUTH_URL.clone();
 
         let auth = vec![
-            ("response_type", "code"),
+            ("response_type", "token"),
             ("client_id", self.client_id.as_str()),
             ("redirect_uri", self.redirect_url.as_str()),
             ("state", csrf.as_str()),
