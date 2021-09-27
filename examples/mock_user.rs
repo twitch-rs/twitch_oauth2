@@ -30,7 +30,6 @@ async fn main() -> anyhow::Result<()> {
         &reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .build()?,
-        None,
         client_id,
         client_secret,
         user_id,

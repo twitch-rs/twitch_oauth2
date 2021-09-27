@@ -3,7 +3,7 @@ use crate::tokens::{
     errors::{RefreshTokenError, UserTokenExchangeError, ValidationError},
     Scope, TwitchToken,
 };
-use crate::{parse_response, ClientSecret};
+use crate::ClientSecret;
 
 use super::errors::ImplicitUserTokenExchangeError;
 use crate::types::{AccessToken, ClientId, RefreshToken};
@@ -132,8 +132,6 @@ impl UserToken {
 
     /// Generate a user token from [mock-api](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md#auth-namespace)
     ///
-    /// This will call `/mock/users?user_id={user_id}` to validate the token, since there is no `auth/validate` endpoint in mock-api.
-    ///
     /// # Examples
     ///
     /// ```rust,no_run
@@ -143,8 +141,6 @@ impl UserToken {
     ///     &reqwest::Client::builder()
     ///         .redirect(reqwest::redirect::Policy::none())
     ///         .build()?,
-    ///     // Pass in the mock api url to mock/users, if this is none, we'll assume the host is the same as the `/auth` url, but living instead on `/mock/users`
-    ///     None,
     ///     "mockclientid".into(),
     ///     "mockclientsecret".into(),
     ///     "user_id",
@@ -154,9 +150,9 @@ impl UserToken {
     /// # fn main() {run();}
     /// ```
     #[cfg_attr(nightly, doc(cfg(feature = "mock_api")))]
+    #[cfg(feature = "mock_api")]
     pub async fn mock_token<'a, C>(
         http_client: &'a C,
-        mock_api_users_url: impl Into<Option<url::Url>>,
         client_id: ClientId,
         client_secret: ClientSecret,
         user_id: impl AsRef<str>,
@@ -189,61 +185,16 @@ impl UserToken {
             .req(req)
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
-        let response: crate::id::TwitchTokenResponse = parse_response(&resp)?;
-        let expires_in = response.expires_in();
-        let auth_header = format!("bearer {}", response.access_token().secret());
-        let mut user_headers = HeaderMap::new();
-        user_headers.insert(
-            http::header::AUTHORIZATION,
-            auth_header
-                .parse()
-                .expect("Failed to parse header for validation"),
-        );
-        user_headers.insert(
-            "Client-ID",
-            client_id
-                .as_str()
-                .parse()
-                .expect("Failed to parse header for validation"),
-        );
-        let mock_api_users_url = if let Some(url) = mock_api_users_url.into() {
-            url
-        } else {
-            // user didn't provide a url for user api mock. We assume the mock api lives on the same place as /auth
-            let mut url = crate::TWITCH_OAUTH2_URL.clone();
-            url.set_path("mock/users");
-            url
-        };
+        let response: crate::id::TwitchTokenResponse = crate::parse_response(&resp)?;
 
-        let user_req = crate::construct_request(
-            &mock_api_users_url,
-            &[("user_id", user_id)],
-            user_headers,
-            Method::GET,
-            vec![],
-        );
-
-        let user = http_client
-            .req(user_req)
-            .await
-            .map_err(UserTokenExchangeError::RequestError)?;
-
-        let user: serde_json::Value = crate::parse_response(&user)?;
-
-        Ok(UserToken::from_existing_unchecked(
+        UserToken::from_existing(
+            http_client,
             response.access_token,
             response.refresh_token,
-            client_id,
             client_secret,
-            user.pointer("/data/0/login")
-                .and_then(|login| login.as_str().map(|s| s.to_string()))
-                .unwrap(),
-            user.pointer("/data/0/id")
-                .and_then(|id| id.as_str().map(|s| s.to_string()))
-                .unwrap(),
-            response.scopes,
-            expires_in,
-        ))
+        )
+        .await
+        .map_err(Into::into)
     }
 
     /// Set the client secret
