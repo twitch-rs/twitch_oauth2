@@ -4,7 +4,11 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.2...Unreleased)
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.0...Unreleased)
+
+## [v0.6.0] - 2021-09-27
+
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.2...v0.6.0)
 
 ### Breaking changes
 
