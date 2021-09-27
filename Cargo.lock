@@ -1860,7 +1860,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
- "version_check",
 ]
 
 [[package]]

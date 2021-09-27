@@ -1,7 +1,8 @@
 name: github pages
 env:
   CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
-  RUSTDOCFLAGS: "-Z unstable-options --html-in-header=docs/pre-content.html"
+  RUSTDOCFLAGS: "-Z unstable-options --html-in-header=docs/pre-content.html --cfg nightly"
+  RUSTFLAGS: "--cfg nightly"
 on:
   push:
     branches:
