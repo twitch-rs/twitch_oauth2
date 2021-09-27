@@ -656,8 +656,8 @@ mod tests {
     #[test]
     fn generate_url() {
         dbg!(UserTokenBuilder::new(
-            ClientId::new("clientid"),
-            ClientSecret::new("secret"),
+            ClientId::new("random_client"),
+            ClientSecret::new("random_secret"),
             url::Url::parse("https://localhost").unwrap(),
         )
         .force_verify(true)
@@ -670,8 +670,13 @@ mod tests {
     #[ignore]
     async fn get_token() {
         let mut t = UserTokenBuilder::new(
-            ClientId::new("clientid"),
-            ClientSecret::new("secret"),
+            ClientId::new(
+                std::env::var("TWITCH_CLIENT_ID").expect("no env:TWITCH_CLIENT_ID provided"),
+            ),
+            ClientSecret::new(
+                std::env::var("TWITCH_CLIENT_SECRET")
+                    .expect("no env:TWITCH_CLIENT_SECRET provided"),
+            ),
             url::Url::parse(r#"https://localhost"#).unwrap(),
         )
         .force_verify(true);
@@ -687,7 +692,9 @@ mod tests {
     #[ignore]
     async fn get_implicit_token() {
         let mut t = ImplicitUserTokenBuilder::new(
-            ClientId::new("clientid"),
+            ClientId::new(
+                std::env::var("TWITCH_CLIENT_ID").expect("no env:TWITCH_CLIENT_ID provided"),
+            ),
             url::Url::parse(r#"http://localhost/twitch/register"#).unwrap(),
         )
         .force_verify(true);
