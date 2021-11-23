@@ -6,6 +6,12 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.0...Unreleased)
 
+### Added
+
+* Added new scopes `moderator:manage:automod_settings`, `moderator:manage:banned_users`,
+  `moderator:manage:blocked_terms`, `moderator:manage:chat_settings`, `moderator:read:automod_settings`,
+  `moderator:read:blocked_terms` and `moderator:read:chat_settings`
+
 ## [v0.6.0] - 2021-09-27
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.2...v0.6.0)
