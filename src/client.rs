@@ -30,7 +30,6 @@ pub trait Client<'a>: Sync + Send + 'a {
 pub struct DummyClient;
 
 #[cfg(feature = "reqwest")]
-#[cfg_attr(nightly, doc(cfg(feature = "reqwest_client")))] // FIXME: This doc_cfg does nothing
 impl<'a> Client<'a> for DummyClient {
     type Error = DummyClient;
 
@@ -45,7 +44,6 @@ impl<'a> Client<'a> for DummyClient {
 use reqwest::Client as ReqwestClient;
 
 #[cfg(feature = "reqwest")]
-#[cfg_attr(nightly, doc(cfg(feature = "reqwest_client")))] // FIXME: This doc_cfg does nothing
 impl<'a> Client<'a> for ReqwestClient {
     type Error = reqwest::Error;
 
@@ -54,7 +52,6 @@ impl<'a> Client<'a> for ReqwestClient {
         request: crate::HttpRequest,
     ) -> BoxedFuture<'a, Result<crate::HttpResponse, Self::Error>> {
         // Reqwest plays really nice here and has a try_from on `http::Request` -> `reqwest::Request`
-        use std::convert::TryFrom;
         let req = match reqwest::Request::try_from(request) {
             Ok(req) => req,
             Err(e) => return Box::pin(async { Err(e) }),
@@ -96,7 +93,6 @@ pub enum SurfError {
 }
 
 #[cfg(feature = "surf")]
-#[cfg_attr(nightly, doc(cfg(feature = "surf_client")))] // FIXME: This doc_cfg does nothing
 impl<'a> Client<'a> for SurfClient {
     type Error = SurfError;
 

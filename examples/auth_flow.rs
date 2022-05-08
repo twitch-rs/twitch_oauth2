@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Go to this page: {}", url);
 
-    let input = rpassword::prompt_password_stdout(
+    let input = rpassword::prompt_password(
         "Paste in the resulting adress after authenticating (input hidden): ",
     )?;
 
