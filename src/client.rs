@@ -52,7 +52,6 @@ impl<'a> Client<'a> for ReqwestClient {
         request: crate::HttpRequest,
     ) -> BoxedFuture<'a, Result<crate::HttpResponse, Self::Error>> {
         // Reqwest plays really nice here and has a try_from on `http::Request` -> `reqwest::Request`
-        use std::convert::TryFrom;
         let req = match reqwest::Request::try_from(request) {
             Ok(req) => req,
             Err(e) => return Box::pin(async { Err(e) }),
