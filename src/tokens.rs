@@ -5,7 +5,7 @@ pub mod errors;
 mod user_token;
 
 pub use app_access_token::AppAccessToken;
-use twitch_types::{UserId, UserName, UserIdRef, UserNameRef};
+use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 pub use user_token::{ImplicitUserTokenBuilder, UserToken, UserTokenBuilder};
 
 use crate::client::Client;

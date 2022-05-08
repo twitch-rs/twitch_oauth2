@@ -1,4 +1,4 @@
-use twitch_types::{UserId, UserName, UserIdRef, UserNameRef};
+use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
 use crate::client::Client;
 use crate::tokens::{
@@ -157,7 +157,7 @@ impl UserToken {
         http_client: &'a C,
         client_id: ClientId,
         client_secret: ClientSecret,
-        user_id: impl AsRef<UserIdRef>,
+        user_id: impl AsRef<str>,
         scopes: Vec<Scope>,
     ) -> Result<UserToken, UserTokenExchangeError<<C as Client<'a>>::Error>>
     where
