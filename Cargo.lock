@@ -1334,11 +1334,13 @@ dependencies = [
 
 [[package]]
 name = "rpassword"
-version = "5.0.1"
+version = "6.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffc936cf8a7ea60c58f030fd36a612a48f440610214dc54bc36431f9ea0c3efb"
+checksum = "2bf099a1888612545b683d2661a1940089f6c2e5a8e38979b2159da876bfd956"
 dependencies = [
  "libc",
+ "serde",
+ "serde_json",
  "winapi",
 ]
 
@@ -1860,9 +1862,9 @@ dependencies = [
 
 [[package]]
 name = "twitch_types"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c37968a06bf8af6ba705ebefaf3f9bf5d0ff1980c2491ef6b7ac2a60a853a78"
+checksum = "01819c917a1bddfc20a295db6588fa1b838382fbffe4b1cbfffb81e6db54fa73"
 dependencies = [
  "aliri_braid",
  "displaydoc",

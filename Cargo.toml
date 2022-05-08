@@ -35,15 +35,19 @@ aliri_braid = "0.1.9"
 url = "2.2.2"
 base64 = "0.13.0"
 rand = "0.8.4"
-twitch_types = "0.1.0"
+twitch_types = "0.2.0"
 
 [dev-dependencies]
-tokio = { version = "1.12.0", features = ["rt-multi-thread", "macros", "test-util"] }
+tokio = { version = "1.12.0", features = [
+    "rt-multi-thread",
+    "macros",
+    "test-util",
+] }
 dotenv = "0.15.0"
 anyhow = "1.0.44"
 reqwest = "0.11.4"
 surf = "2.3.1"
-rpassword = "5.0.1"
+rpassword = "6.0.1"
 
 [[example]]
 name = "user_token"
