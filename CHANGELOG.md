@@ -6,6 +6,8 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.1...Unreleased)
 
+* switch to [`twitch_types`](https://crates.io/crates/twitch_types) for `UserId` and `Nickname`/`UserName`
+
 ## [v0.6.1] - 2021-11-23
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.0...v0.6.1)
