@@ -1,3 +1,5 @@
+use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
+
 use crate::client::Client;
 use crate::tokens::{
     errors::{RefreshTokenError, UserTokenExchangeError, ValidationError},
@@ -20,9 +22,9 @@ pub struct UserToken {
     client_id: ClientId,
     client_secret: Option<ClientSecret>,
     /// Username of user associated with this token
-    pub login: String,
+    pub login: UserName,
     /// User ID of the user associated with this token
-    pub user_id: String,
+    pub user_id: UserId,
     /// The refresh token used to extend the life of this user token
     pub refresh_token: Option<RefreshToken>,
     /// Expiration from when the response was generated.
@@ -61,8 +63,8 @@ impl UserToken {
         refresh_token: impl Into<Option<RefreshToken>>,
         client_id: impl Into<ClientId>,
         client_secret: impl Into<Option<ClientSecret>>,
-        login: String,
-        user_id: String,
+        login: UserName,
+        user_id: UserId,
         scopes: Option<Vec<Scope>>,
         expires_in: Option<std::time::Duration>,
     ) -> UserToken {
@@ -209,9 +211,9 @@ impl TwitchToken for UserToken {
 
     fn token(&self) -> &AccessToken { &self.access_token }
 
-    fn login(&self) -> Option<&str> { Some(&self.login) }
+    fn login(&self) -> Option<&UserNameRef> { Some(&self.login) }
 
-    fn user_id(&self) -> Option<&str> { Some(&self.user_id) }
+    fn user_id(&self) -> Option<&UserIdRef> { Some(&self.user_id) }
 
     async fn refresh_token<'a, C>(
         &mut self,

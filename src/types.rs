@@ -1,3 +1,4 @@
+#![allow(clippy::extra_unused_lifetimes)]
 //! Types used in OAUTH2 flow.
 
 use std::fmt;

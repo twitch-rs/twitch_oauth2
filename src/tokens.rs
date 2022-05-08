@@ -5,6 +5,7 @@ pub mod errors;
 mod user_token;
 
 pub use app_access_token::AppAccessToken;
+use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 pub use user_token::{ImplicitUserTokenBuilder, UserToken, UserTokenBuilder};
 
 use crate::client::Client;
@@ -47,9 +48,9 @@ pub trait TwitchToken {
     /// ```
     fn token(&self) -> &AccessToken;
     /// Get the username associated to this token
-    fn login(&self) -> Option<&str>;
+    fn login(&self) -> Option<&UserNameRef>;
     /// Get the user id associated to this token
-    fn user_id(&self) -> Option<&str>;
+    fn user_id(&self) -> Option<&UserIdRef>;
     /// Refresh this token, changing the token to a newer one
     async fn refresh_token<'a, C>(
         &mut self,
@@ -121,9 +122,9 @@ impl<T: TwitchToken + Send> TwitchToken for Box<T> {
 
     fn token(&self) -> &AccessToken { (**self).token() }
 
-    fn login(&self) -> Option<&str> { (**self).login() }
+    fn login(&self) -> Option<&UserNameRef> { (**self).login() }
 
-    fn user_id(&self) -> Option<&str> { (**self).user_id() }
+    fn user_id(&self) -> Option<&UserIdRef> { (**self).user_id() }
 
     async fn refresh_token<'a, C>(
         &mut self,
@@ -149,9 +150,9 @@ pub struct ValidatedToken {
     /// Client ID associated with the token. Twitch requires this in all helix API calls
     pub client_id: ClientId,
     /// Username associated with the token
-    pub login: Option<String>,
+    pub login: Option<UserName>,
     /// User ID associated with the token
-    pub user_id: Option<String>,
+    pub user_id: Option<UserId>,
     /// Scopes attached to the token.
     pub scopes: Option<Vec<Scope>>,
     /// Lifetime of the token

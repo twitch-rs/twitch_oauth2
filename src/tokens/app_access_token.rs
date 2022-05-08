@@ -1,3 +1,5 @@
+use twitch_types::{UserIdRef, UserNameRef};
+
 use super::errors::{AppAccessTokenError, ValidationError};
 use crate::{
     client::Client,
@@ -47,9 +49,9 @@ impl TwitchToken for AppAccessToken {
 
     fn token(&self) -> &AccessToken { &self.access_token }
 
-    fn login(&self) -> Option<&str> { None }
+    fn login(&self) -> Option<&UserNameRef> { None }
 
-    fn user_id(&self) -> Option<&str> { None }
+    fn user_id(&self) -> Option<&UserIdRef> { None }
 
     async fn refresh_token<'a, C>(
         &mut self,
