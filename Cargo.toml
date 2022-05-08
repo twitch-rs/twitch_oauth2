@@ -1,24 +1,22 @@
 [package]
 name = "twitch_oauth2"
 version = "0.7.0"
-authors = ["Emil Gardström <emil.gardstrom@gmail.com>"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/Emilgardis/twitch_oauth2"
 license = "MIT OR Apache-2.0"
 description = "Oauth2 for Twitch endpoints"
 keywords = ["oauth", "twitch", "async", "asynchronous"]
 documentation = "https://docs.rs/twitch_oauth2/0.7.0"
 readme = "README.md"
-resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default = []
-reqwest_client = ["reqwest"]
-surf_client_curl = ["surf_client", "surf/curl-client"]
-surf_client = ["surf", "http-types", "http-types/hyperium_http"]
+reqwest = ["dep:reqwest"]
+surf_client_curl = ["dep:surf", "surf/curl-client"]
+surf = ["dep:surf", "dep:http-types", "http-types?/hyperium_http"]
 mock_api = []
-all = ["surf_client_curl", "reqwest_client"]
+all = ["surf_client_curl", "dep:reqwest"]
 
 [dependencies]
 thiserror = "1.0.29"
@@ -52,28 +50,28 @@ rpassword = "6.0.1"
 [[example]]
 name = "user_token"
 path = "examples/user_token.rs"
-required-features = ["surf_client"]
+required-features = ["surf"]
 
 [[example]]
 name = "app_access_token"
 path = "examples/app_access_token.rs"
-required-features = ["surf_client"]
+required-features = ["surf"]
 
 [[example]]
 name = "auth_flow"
 path = "examples/auth_flow.rs"
-required-features = ["reqwest_client"]
+required-features = ["reqwest"]
 
 
 [[example]]
 name = "mock_app"
 path = "examples/mock_app.rs"
-required-features = ["reqwest_client", "mock_api"]
+required-features = ["reqwest", "mock_api"]
 
 [[example]]
 name = "mock_user"
 path = "examples/mock_user.rs"
-required-features = ["reqwest_client", "mock_api"]
+required-features = ["reqwest", "mock_api"]
 
 [package.metadata.docs.rs]
 features = ["all", "mock_api"]
