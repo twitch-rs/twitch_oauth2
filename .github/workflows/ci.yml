@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        rust: [1.60, nightly]
+        rust: [1.60.0, nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -87,11 +87,11 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Run clippy --all-targets --all-features -- -D warnings
+      - name: Run clippy --all-targets --all-features
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --locked --all-targets --all-features -- -D warnings 
+          args: --locked --all-targets --all-features 
   docs:
     name: Docs
     runs-on: ubuntu-latest
