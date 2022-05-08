@@ -4,7 +4,11 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.1...Unreleased)
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.7.0...Unreleased)
+
+## [v0.7.0] - 2022-05-08
+
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.1...v0.7.0)
 
 * switch to [`twitch_types`](https://crates.io/crates/twitch_types) for `UserId` and `Nickname`/`UserName`
 
