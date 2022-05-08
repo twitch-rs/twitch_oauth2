@@ -10,7 +10,10 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.1...v0.7.0)
 
+### Breaking changes
+
 * switch to [`twitch_types`](https://crates.io/crates/twitch_types) for `UserId` and `Nickname`/`UserName`
+* bump MSRV to 1.60, also changes the feature names for clients to their simpler variant `surf` and `client`
 
 ## [v0.6.1] - 2021-11-23
 
