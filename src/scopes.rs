@@ -86,6 +86,7 @@ scope_impls!(
     ChannelManageExtensions,        scope: "channel:manage:extensions",         doc: "Manage a channel’s Extension configuration, including activating Extensions.";
     ChannelManagePolls,             scope: "channel:manage:polls",              doc: "Manage a channel’s polls.";
     ChannelManagePredictions,       scope: "channel:manage:predictions",        doc: "Manage of channel’s Channel Points Predictions";
+    ChannelManageRaids,             scope: "channel:manage:raids",              doc: "Manage a Channel’s raids.";
     ChannelManageRedemptions,       scope: "channel:manage:redemptions",        doc: "Manage Channel Points custom rewards and their redemptions on a channel.";
     ChannelManageSchedule,          scope: "channel:manage:schedule",           doc: "Manage a channel’s stream schedule.";
     ChannelManageVideos,            scope: "channel:manage:videos",             doc: "Manage a channel’s videos, including deleting videos.";

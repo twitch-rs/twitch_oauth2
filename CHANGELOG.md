@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.7.0...Unreleased)
 
+### Added
+
+* Added scope `channel:manage:raids`
+
 ## [v0.7.0] - 2022-05-08
 
 [Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.1...v0.7.0)
