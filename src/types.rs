@@ -8,7 +8,7 @@ use std::fmt;
 pub struct ClientId;
 
 /// A Client Secret
-#[aliri_braid::braid(display_impl = "owned", debug_impl = "owned", serde)]
+#[aliri_braid::braid(display = "owned", debug = "owned", serde)]
 pub struct ClientSecret;
 
 impl fmt::Debug for ClientSecretRef {
@@ -23,7 +23,7 @@ impl fmt::Display for ClientSecretRef {
 }
 
 /// An Access Token
-#[aliri_braid::braid(display_impl = "owned", debug_impl = "owned", serde)]
+#[aliri_braid::braid(display = "owned", debug = "owned", serde)]
 pub struct AccessToken;
 
 impl fmt::Debug for AccessTokenRef {
@@ -38,7 +38,7 @@ impl fmt::Display for AccessTokenRef {
 }
 
 /// A Refresh Token
-#[aliri_braid::braid(display_impl = "owned", debug_impl = "owned", serde)]
+#[aliri_braid::braid(display = "owned", debug = "owned", serde)]
 pub struct RefreshToken;
 
 impl fmt::Debug for RefreshTokenRef {
@@ -53,7 +53,7 @@ impl fmt::Display for RefreshTokenRef {
 }
 
 /// A Csrf Token
-#[aliri_braid::braid(display_impl = "owned", debug_impl = "owned", serde)]
+#[aliri_braid::braid(display = "owned", debug = "owned", serde)]
 pub struct CsrfToken;
 
 impl fmt::Debug for CsrfTokenRef {
