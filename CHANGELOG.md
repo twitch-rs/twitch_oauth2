@@ -4,11 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.7.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.0...Unreleased)
+
+## Changed
+
+* Organization moved to `twitch-rs`
 
 ## [v0.7.0] - 2022-05-08
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.1...v0.7.0)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.6.1...v0.7.0)
 
 ### Breaking changes
 
@@ -17,7 +21,7 @@
 
 ## [v0.6.1] - 2021-11-23
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.6.0...v0.6.1)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.6.0...v0.6.1)
 
 ### Added
 
@@ -27,12 +31,12 @@
 
 ## [v0.6.0] - 2021-09-27
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.2...v0.6.0)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.5.2...v0.6.0)
 
 ### Breaking changes
 
 * All types associated with tokens are now defined in this crate. This is a consequence of the `oauth2` dependency being removed from tree.
-  Additionally, as another consequence, clients are now able to be specified as a `for<'a> &'a T where T: Client<'a>`, meaning `twitch_api2` can use its clients as an interface to token requests,
+  Additionally, as another consequence, clients are now able to be specified as a `for<'a> &'a T where T: Client<'a>`, meaning `twitch_api` can use its clients as an interface to token requests,
   and clients can persist instead of being rebuilt every call. Care should be taken when making clients, as SSRF and similar attacks are possible with improper client configurations.
 
 ### Added
@@ -58,7 +62,7 @@
 
 ## [v0.5.2] - 2021-06-18
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.1...v0.5.2)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.5.1...v0.5.2)
 
 ### Added
 
@@ -66,7 +70,7 @@
 
 ## [v0.5.1] - 2021-05-16
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.5.0...v0.5.1)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.5.0...v0.5.1)
 
 ### Added
 
@@ -75,7 +79,7 @@
 
 ## [v0.5.0] - 2021-05-08
 
-[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/49a083ceda6768cc52a1f8f1714bb7f942f24c01...v0.5.0)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/49a083ceda6768cc52a1f8f1714bb7f942f24c01...v0.5.0)
 
 ### Added
 
