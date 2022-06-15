@@ -2,7 +2,7 @@
 name = "twitch_oauth2"
 version = "0.7.0"
 edition = "2021"
-repository = "https://github.com/Emilgardis/twitch_oauth2"
+repository = "https://github.com/twitch-rs/twitch_oauth2"
 license = "MIT OR Apache-2.0"
 description = "Oauth2 for Twitch endpoints"
 keywords = ["oauth", "twitch", "async", "asynchronous"]
