@@ -4,17 +4,21 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.0...Unreleased)
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.7.1...Unreleased)
 
-## Changed
+## [v0.7.1] - 2022-08-27
 
-* Organization moved to `twitch-rs`
+[Commits](https://github.com/Emilgardis/twitch_oauth2/compare/v0.7.0...v0.7.1)
 
 ### Added
 
 * Added scopes `channel:manage:raids`, `channel:manage:moderators`, `channel:manage:vips`, `channel:read:charity`,
   `channel:read:vips`, `moderator:manage:announcements`, `moderator:manage:chat_messages`, `user:manage:chat_color` and
   `user:manage:whispers`
+
+### Changed
+
+* Organization moved to `twitch-rs`
 
 ## [v0.7.0] - 2022-05-08
 
