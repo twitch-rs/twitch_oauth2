@@ -12,7 +12,9 @@
 
 ### Added
 
-* Added scope `channel:manage:raids`
+* Added scopes `channel:manage:raids`, `channel:manage:moderators`, `channel:manage:vips`, `channel:read:charity`,
+  `channel:read:vips`, `moderator:manage:announcements`, `moderator:manage:chat_messages`, `user:manage:chat_color` and
+  `user:manage:whispers`
 
 ## [v0.7.0] - 2022-05-08
 
@@ -101,6 +103,6 @@
 * Fixed wrong scope `user:read:stream_key` -> `channel:read:stream_key`
 * BREAKING: changed `TwitchToken::expires` -> `TwitchToken::expires_in` to calculate current lifetime of token
 
-## End of Changelog 
+## End of Changelog
 
 Changelog starts on v0.5.0
