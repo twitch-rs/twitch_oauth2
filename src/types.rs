@@ -69,9 +69,7 @@ impl fmt::Display for CsrfTokenRef {
 
 impl CsrfToken {
     /// Make a new random CSRF token.
-    pub fn new_random() -> CsrfToken {
-        Self::new_random_len(16)
-    }
+    pub fn new_random() -> CsrfToken { Self::new_random_len(16) }
 
     /// Make a new random CSRF token with given amount of bytes
     pub fn new_random_len(len: u32) -> CsrfToken {
@@ -88,32 +86,24 @@ impl ClientSecretRef {
     /// Get the secret from this string.
     ///
     /// This function is the same as [`ClientSecret::as_str`](ClientSecretRef::as_str), but has another name for searchability, prefer to use this function.
-    pub fn secret(&self) -> &str {
-        self.as_str()
-    }
+    pub fn secret(&self) -> &str { self.as_str() }
 }
 
 impl AccessTokenRef {
     /// Get the secret from this string.
     ///
     /// This function is the same as [`AccessToken::as_str`](AccessTokenRef::as_str), but has another name for searchability, prefer to use this function.
-    pub fn secret(&self) -> &str {
-        self.as_str()
-    }
+    pub fn secret(&self) -> &str { self.as_str() }
 }
 impl RefreshTokenRef {
     /// Get the secret from this string.
     ///
     /// This function is the same as [`RefreshToken::as_str`](RefreshTokenRef::as_str), but has another name for searchability, prefer to use this function.
-    pub fn secret(&self) -> &str {
-        self.as_str()
-    }
+    pub fn secret(&self) -> &str { self.as_str() }
 }
 impl CsrfTokenRef {
     /// Get the secret from this string.
     ///
     /// This function is the same as [`CsrfToken::as_str`](CsrfTokenRef::as_str), but has another name for searchability, prefer to use this function.
-    pub fn secret(&self) -> &str {
-        self.as_str()
-    }
+    pub fn secret(&self) -> &str { self.as_str() }
 }
