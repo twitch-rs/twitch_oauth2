@@ -586,7 +586,7 @@ impl ImplicitUserTokenBuilder {
         match (access_token, error, error_description) {
             (Some(access_token), None, None) => UserToken::from_existing(
                 http_client,
-                crate::types::AccessToken::new(access_token.to_string()),
+                crate::types::AccessToken::from(access_token),
                 None,
                 None,
             )
@@ -609,8 +609,8 @@ mod tests {
     #[test]
     fn generate_url() {
         dbg!(UserTokenBuilder::new(
-            ClientId::new("random_client"),
-            ClientSecret::new("random_secret"),
+            ClientId::from("random_client"),
+            ClientSecret::from("random_secret"),
             url::Url::parse("https://localhost").unwrap(),
         )
         .force_verify(true)
@@ -633,7 +633,7 @@ mod tests {
             url::Url::parse(r#"https://localhost"#).unwrap(),
         )
         .force_verify(true);
-        t.csrf = Some(crate::CsrfToken::new("random"));
+        t.csrf = Some(crate::CsrfToken::from("random"));
         let token = t
             .get_user_token(&surf::Client::new(), "random", "authcode")
             .await
@@ -652,7 +652,7 @@ mod tests {
         )
         .force_verify(true);
         println!("{}", t.generate_url().0);
-        t.csrf = Some(crate::CsrfToken::new("random"));
+        t.csrf = Some(crate::CsrfToken::from("random"));
         let token = t
             .get_user_token(
                 &surf::Client::new(),

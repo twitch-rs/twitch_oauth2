@@ -6,6 +6,11 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.1...Unreleased)
 
+### Breaking
+
+* Bumped `aliri_braid` to `0.2`, this change means that the `new` method on the types in `types` only take an owned string now
+  * `AccessToken::new`, `ClientId::new`, `ClientSecret::new`, `CsrfToken::new` and `RefreshToken::new` now take a `String` instead of `impl Into<String>`
+
 ## [v0.7.1] - 2022-08-27
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.0...v0.7.1)
