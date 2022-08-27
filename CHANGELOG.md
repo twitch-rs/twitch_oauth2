@@ -4,9 +4,13 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.1...Unreleased)
 
-## Changed
+## [v0.7.1] - 2022-08-27
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.0...v0.7.1)
+
+### Changed
 
 * Organization moved to `twitch-rs`
 
