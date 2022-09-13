@@ -141,13 +141,14 @@ impl AppAccessToken {
         client_id: impl Into<ClientId>,
         client_secret: impl Into<ClientSecret>,
     ) -> AppAccessToken {
+        let expires_in = response.expires_in();
         AppAccessToken::from_existing_unchecked(
             response.access_token,
             response.refresh_token,
             client_id.into(),
             client_secret,
             response.scopes,
-            response.expires_in.map(std::time::Duration::from_secs),
+            expires_in,
         )
     }
 
@@ -170,15 +171,7 @@ impl AppAccessToken {
             .map_err(AppAccessTokenError::Request)?;
 
         let response = crate::id::TwitchTokenResponse::from_response(&resp)?;
-        let expires_in = response.expires_in();
-        let app_access = AppAccessToken::from_existing_unchecked(
-            response.access_token,
-            response.refresh_token,
-            client_id,
-            client_secret,
-            response.scopes,
-            expires_in,
-        );
+        let app_access = AppAccessToken::from_response(response, client_id, client_secret);
 
         Ok(app_access)
     }
