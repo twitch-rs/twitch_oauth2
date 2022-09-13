@@ -12,11 +12,12 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default = []
-reqwest = ["dep:reqwest"]
-surf_client_curl = ["dep:surf", "surf/curl-client"]
-surf = ["dep:surf", "dep:http-types", "http-types?/hyperium_http"]
+client = []
+reqwest = ["dep:reqwest", "client"]
+surf_client_curl = ["surf", "surf/curl-client"]
+surf = ["dep:surf", "dep:http-types", "http-types?/hyperium_http", "client"]
 mock_api = []
-all = ["surf_client_curl", "dep:reqwest"]
+all = ["surf_client_curl", "reqwest"]
 
 [dependencies]
 thiserror = "1.0.29"

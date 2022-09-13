@@ -1,13 +1,14 @@
 use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
+use super::errors::ValidationError;
+#[cfg(feature = "client")]
+use super::errors::{ImplicitUserTokenExchangeError, RefreshTokenError, UserTokenExchangeError};
+#[cfg(feature = "client")]
 use crate::client::Client;
-use crate::tokens::{
-    errors::{RefreshTokenError, UserTokenExchangeError, ValidationError},
-    Scope, TwitchToken,
-};
-use crate::ClientSecret;
 
-use super::errors::ImplicitUserTokenExchangeError;
+use crate::tokens::{Scope, TwitchToken};
+use crate::{ClientSecret, ValidatedToken};
+
 use crate::types::{AccessToken, ClientId, RefreshToken};
 
 /// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-implicit-code-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-authorization-code-flow)
@@ -54,6 +55,49 @@ impl std::fmt::Debug for UserToken {
 }
 
 impl UserToken {
+    /// Create a new token
+    pub fn new(
+        access_token: AccessToken,
+        refresh_token: Option<RefreshToken>,
+        validated: ValidatedToken,
+        client_secret: impl Into<Option<ClientSecret>>,
+    ) -> Result<UserToken, ValidationError<std::convert::Infallible>> {
+        Ok(UserToken::from_existing_unchecked(
+            access_token,
+            refresh_token,
+            validated.client_id,
+            client_secret,
+            validated.login.ok_or(ValidationError::NoLogin)?,
+            validated.user_id.ok_or(ValidationError::NoLogin)?,
+            validated.scopes,
+            Some(validated.expires_in).filter(|d| {
+                // FIXME: https://github.com/rust-lang/rust/pull/84084
+                // FIXME: nanos are not returned
+                // if duration is zero, the token will never expire. if the token was expired, twitch would return NotAuthorized
+                // TODO: There could be a situation where this fails, if the token is just about to expire, say 500ms, does twitch round up to 1 or down to 0?
+                !(d.as_secs() == 0 && d.as_nanos() == 0)
+            }),
+        ))
+    }
+
+    /// Assemble token and validate it. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
+    ///
+    /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
+    #[cfg(feature = "client")]
+    pub async fn from_existing<'a, C>(
+        http_client: &'a C,
+        access_token: AccessToken,
+        refresh_token: impl Into<Option<RefreshToken>>,
+        client_secret: impl Into<Option<ClientSecret>>,
+    ) -> Result<UserToken, ValidationError<<C as Client<'a>>::Error>>
+    where
+        C: Client<'a>,
+    {
+        let validated = access_token.validate_token(http_client).await?;
+        Self::new(access_token, refresh_token.into(), validated, client_secret)
+            .map_err(|e| e.into_other())
+    }
+
     /// Assemble token without checks.
     ///
     /// If `expires_in` is `None`, we'll assume `token.is_elapsed` is always false
@@ -85,35 +129,18 @@ impl UserToken {
         }
     }
 
-    /// Assemble token and validate it. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
-    ///
-    /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
-    pub async fn from_existing<'a, C>(
-        http_client: &'a C,
-        access_token: AccessToken,
-        refresh_token: impl Into<Option<RefreshToken>>,
+    /// Assemble token from twitch responses.
+    pub fn from_response(
+        response: crate::id::TwitchTokenResponse,
+        validated: ValidatedToken,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<<C as Client<'a>>::Error>>
-    where
-        C: Client<'a>,
-    {
-        let validated = crate::validate_token(http_client, &access_token).await?;
-        Ok(Self::from_existing_unchecked(
-            access_token,
-            refresh_token.into(),
-            validated.client_id,
+    ) -> Result<UserToken, ValidationError<std::convert::Infallible>> {
+        Self::new(
+            response.access_token,
+            response.refresh_token,
+            validated,
             client_secret,
-            validated.login.ok_or(ValidationError::NoLogin)?,
-            validated.user_id.ok_or(ValidationError::NoLogin)?,
-            validated.scopes,
-            Some(validated.expires_in).filter(|d| {
-                // FIXME: https://github.com/rust-lang/rust/pull/84084
-                // FIXME: nanos are not returned
-                // if duration is zero, the token will never expire. if the token was expired, twitch would return NotAuthorized
-                // TODO: There could be a situation where this fails, if the token is just about to expire, say 500ms, does twitch round up to 1 or down to 0?
-                !(d.as_secs() == 0 && d.as_nanos() == 0)
-            }),
-        ))
+        )
     }
 
     #[doc(hidden)]
@@ -151,8 +178,7 @@ impl UserToken {
     /// # Ok(())}
     /// # fn main() {run();}
     /// ```
-    #[cfg_attr(nightly, doc(cfg(feature = "mock_api")))]
-    #[cfg(feature = "mock_api")]
+    #[cfg(all(feature = "mock_api", feature = "client"))]
     pub async fn mock_token<'a, C>(
         http_client: &'a C,
         client_id: ClientId,
@@ -187,7 +213,7 @@ impl UserToken {
             .req(req)
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
-        let response: crate::id::TwitchTokenResponse = crate::parse_response(&resp)?;
+        let response = crate::id::TwitchTokenResponse::from_response(&resp)?;
 
         UserToken::from_existing(
             http_client,
@@ -215,6 +241,7 @@ impl TwitchToken for UserToken {
 
     fn user_id(&self) -> Option<&UserIdRef> { Some(&self.user_id) }
 
+    #[cfg(feature = "client")]
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
@@ -224,13 +251,14 @@ impl TwitchToken for UserToken {
         C: Client<'a>,
     {
         if let Some(client_secret) = self.client_secret.clone() {
-            let (access_token, expires, refresh_token) = if let Some(token) =
-                self.refresh_token.take()
-            {
-                crate::refresh_token(http_client, &token, &self.client_id, &client_secret).await?
-            } else {
-                return Err(RefreshTokenError::NoRefreshToken);
-            };
+            let (access_token, expires, refresh_token) =
+                if let Some(token) = self.refresh_token.take() {
+                    token
+                        .refresh_token(http_client, &self.client_id, &client_secret)
+                        .await?
+                } else {
+                    return Err(RefreshTokenError::NoRefreshToken);
+                };
             self.access_token = access_token;
             self.expires_in = expires;
             self.refresh_token = refresh_token;
@@ -277,8 +305,8 @@ impl UserTokenBuilder {
     ///
     /// To avoid this, use a path such as `https://example.com/twitch/register` or similar instead, where the `url` crate would not add a trailing `/`.
     pub fn new(
-        client_id: ClientId,
-        client_secret: ClientSecret,
+        client_id: impl Into<ClientId>,
+        client_secret: impl Into<ClientSecret>,
         redirect_url: url::Url,
     ) -> UserTokenBuilder {
         UserTokenBuilder {
@@ -286,8 +314,8 @@ impl UserTokenBuilder {
             csrf: None,
             force_verify: false,
             redirect_url,
-            client_id,
-            client_secret,
+            client_id: client_id.into(),
+            client_secret: client_secret.into(),
         }
     }
 
@@ -341,11 +369,78 @@ impl UserTokenBuilder {
     #[doc(hidden)]
     pub fn set_csrf(&mut self, csrf: crate::types::CsrfToken) { self.csrf = Some(csrf); }
 
+    /// Check if the CSRF is valid
+    pub fn csrf_is_valid(&self, csrf: &str) -> bool {
+        if let Some(csrf2) = &self.csrf {
+            csrf2.secret() == csrf
+        } else {
+            false
+        }
+    }
+
+    /// Get the request for getting a [TwitchTokenResponse](crate::id::TwitchTokenResponse), to be used in [UserToken::from_response].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{tokens::UserTokenBuilder, id::TwitchTokenResponse};
+    /// use url::Url;
+    /// let callback_url = Url::parse("http://localhost/twitch/register")?;
+    /// let mut builder = UserTokenBuilder::new("myclientid", "myclientsecret", callback_url);
+    /// let (url, _csrf_code) = builder.generate_url();
+    ///
+    /// // Direct the user to this url.
+    /// // Later when your server gets a response on `callback_url` with `?code=xxxxxxx&state=xxxxxxx&scope=aa%3Aaa+bb%3Abb`
+    ///
+    /// // validate the state
+    /// # let state_in_query = _csrf_code.secret();
+    /// if !builder.csrf_is_valid(state_in_query) {
+    ///     panic!("state mismatched")
+    /// }
+    /// // and then get your token
+    /// # let code_in_query = _csrf_code.secret();
+    /// let request = builder.get_user_token_request(code_in_query);
+    ///
+    /// // use your favorite http client
+    ///
+    /// let response: http::Response<Vec<u8>> = client_req(request);
+    /// let twitch_response = TwitchTokenResponse::from_response(&response)?;
+    ///
+    /// // you now have a access token, do what you want with it.
+    /// // You're recommended to convert it into a `UserToken` via `UserToken::from_response`
+    ///
+    /// // You can validate the access_token like this
+    /// let validated_req = twitch_response.access_token.validate_token_request();
+    /// # fn client_req(_: http::Request<Vec<u8>>) -> http::Response<Vec<u8>> { http::Response::new(
+    /// # r#"{"access_token":"rfx2uswqe8l4g1mkagrvg5tv0ks3","expires_in":14124,"refresh_token":"5b93chm6hdve3mycz05zfzatkfdenfspp1h1ar2xxdalen01","scope":["channel:moderate","chat:edit","chat:read"],"token_type":"bearer"}"#.bytes().collect()
+    /// # ) }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn get_user_token_request(&self, code: &str) -> http::Request<Vec<u8>> {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let mut params = HashMap::new();
+        params.insert("client_id", self.client_id.as_str());
+        params.insert("client_secret", self.client_secret.secret());
+        params.insert("code", code);
+        params.insert("grant_type", "authorization_code");
+        params.insert("redirect_uri", self.redirect_url.as_str());
+
+        crate::construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        )
+    }
+
     /// Generate the code with the help of the authorization code
     ///
     /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
     ///
     /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `<redirect_url or first defined url in dev console>?error=<error type>&error_description=<description of error>`
+    #[cfg(feature = "client")]
     pub async fn get_user_token<'a, C>(
         self,
         http_client: &'a C,
@@ -356,46 +451,22 @@ impl UserTokenBuilder {
     where
         C: Client<'a>,
     {
-        if let Some(csrf) = self.csrf {
-            if csrf.secret() != state {
-                return Err(UserTokenExchangeError::StateMismatch);
-            }
-        } else {
+        if !self.csrf_is_valid(state) {
             return Err(UserTokenExchangeError::StateMismatch);
         }
 
-        // FIXME: self.client.exchange_code(code) does not work as oauth2 currently only sends it in body as per spec, but twitch uses query params.
-        use http::{HeaderMap, Method};
-        use std::collections::HashMap;
-        let mut params = HashMap::new();
-        params.insert("client_id", self.client_id.as_str());
-        params.insert("client_secret", self.client_secret.secret());
-        params.insert("code", code);
-        params.insert("grant_type", "authorization_code");
-        params.insert("redirect_uri", self.redirect_url.as_str());
-
-        let req = crate::construct_request(
-            &crate::TOKEN_URL,
-            &params,
-            HeaderMap::new(),
-            Method::POST,
-            vec![],
-        );
+        let req = self.get_user_token_request(code);
 
         let resp = http_client
             .req(req)
             .await
             .map_err(UserTokenExchangeError::RequestError)?;
 
-        let response: crate::id::TwitchTokenResponse = crate::parse_response(&resp)?;
-        UserToken::from_existing(
-            http_client,
-            response.access_token,
-            response.refresh_token,
-            self.client_secret,
-        )
-        .await
-        .map_err(Into::into)
+        let response = crate::id::TwitchTokenResponse::from_response(&resp)?;
+        let validated = response.access_token.validate_token(http_client).await?;
+
+        UserToken::from_response(response, validated, self.client_secret)
+            .map_err(|v| v.into_other().into())
     }
 }
 
@@ -471,6 +542,15 @@ impl ImplicitUserTokenBuilder {
         };
 
         (url, csrf)
+    }
+
+    /// Check if the CSRF is valid
+    pub fn csrf_is_valid(&self, csrf: &str) -> bool {
+        if let Some(csrf2) = &self.csrf {
+            csrf2.secret() == csrf
+        } else {
+            false
+        }
     }
 
     /// Generate the code with the help of the hash.
@@ -565,6 +645,7 @@ impl ImplicitUserTokenBuilder {
     /// ```
     ///
     ///
+    #[cfg(feature = "client")]
     pub async fn get_user_token<'a, C>(
         self,
         http_client: &'a C,
@@ -576,13 +657,10 @@ impl ImplicitUserTokenBuilder {
     where
         C: Client<'a>,
     {
-        if let Some(csrf) = self.csrf {
-            if csrf.secret() != state.unwrap_or("") {
-                return Err(ImplicitUserTokenExchangeError::StateMismatch);
-            }
-        } else {
+        if !state.map(|s| self.csrf_is_valid(s)).unwrap_or_default() {
             return Err(ImplicitUserTokenExchangeError::StateMismatch);
         }
+
         match (access_token, error, error_description) {
             (Some(access_token), None, None) => UserToken::from_existing(
                 http_client,
@@ -621,6 +699,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore]
+    #[cfg(feature = "surf")]
     async fn get_token() {
         let mut t = UserTokenBuilder::new(
             ClientId::new(
@@ -643,6 +722,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore]
+    #[cfg(feature = "surf")]
     async fn get_implicit_token() {
         let mut t = ImplicitUserTokenBuilder::new(
             ClientId::new(

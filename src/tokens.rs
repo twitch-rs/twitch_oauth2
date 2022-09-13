@@ -8,10 +8,13 @@ pub use app_access_token::AppAccessToken;
 use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 pub use user_token::{ImplicitUserTokenBuilder, UserToken, UserTokenBuilder};
 
+#[cfg(feature = "client")]
 use crate::client::Client;
-use crate::{scopes::Scope, validate_token};
+use crate::{id::TwitchTokenErrorResponse, scopes::Scope, RequestParseError};
 
-use errors::*;
+use errors::ValidationError;
+#[cfg(feature = "client")]
+use errors::{RefreshTokenError, RevokeTokenError};
 
 use crate::types::{AccessToken, ClientId};
 use serde::Deserialize;
@@ -52,6 +55,7 @@ pub trait TwitchToken {
     /// Get the user id associated to this token
     fn user_id(&self) -> Option<&UserIdRef>;
     /// Refresh this token, changing the token to a newer one
+    #[cfg(feature = "client")]
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
@@ -87,6 +91,7 @@ pub trait TwitchToken {
     /// # Note
     ///
     /// This will not mutate any current data in the [TwitchToken]
+    #[cfg(feature = "client")]
     async fn validate_token<'a, C>(
         &self,
         http_client: &'a C,
@@ -96,10 +101,11 @@ pub trait TwitchToken {
         C: Client<'a>,
     {
         let token = &self.token();
-        validate_token(http_client, token).await
+        token.validate_token(http_client).await
     }
 
     /// Revoke the token. See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
+    #[cfg(feature = "client")]
     async fn revoke_token<'a, C>(
         self,
         http_client: &'a C,
@@ -110,7 +116,7 @@ pub trait TwitchToken {
     {
         let token = self.token();
         let client_id = self.client_id();
-        crate::revoke_token(http_client, token, client_id).await
+        token.revoke_token(http_client, client_id).await
     }
 }
 
@@ -126,6 +132,7 @@ impl<T: TwitchToken + Send> TwitchToken for Box<T> {
 
     fn user_id(&self) -> Option<&UserIdRef> { (**self).user_id() }
 
+    #[cfg(feature = "client")]
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
@@ -164,4 +171,24 @@ fn seconds_to_duration<'a, D: serde::de::Deserializer<'a>>(
     d: D,
 ) -> Result<std::time::Duration, D::Error> {
     Ok(std::time::Duration::from_secs(u64::deserialize(d)?))
+}
+impl ValidatedToken {
+    /// Assemble a a validated token from a response.
+    ///
+    /// Get the request that generates this response with [`AccessToken::validate_token_request`][crate::types::AccessTokenRef::validate_token_request]
+    pub fn from_response<B: AsRef<[u8]>>(
+        resp: &http::Response<B>,
+    ) -> Result<ValidatedToken, ValidationError<std::convert::Infallible>> {
+        match crate::parse_response(resp) {
+            Ok(ok) => Ok(ok),
+            Err(err) => match err {
+                RequestParseError::TwitchError(TwitchTokenErrorResponse { status, .. })
+                    if status == http::StatusCode::UNAUTHORIZED =>
+                {
+                    Err(ValidationError::NotAuthorized)
+                }
+                err => Err(err.into()),
+            },
+        }
+    }
 }
