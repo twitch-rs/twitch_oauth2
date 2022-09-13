@@ -32,7 +32,7 @@ pub enum BearerTokenType {
 }
 
 /// Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]
-#[async_trait::async_trait]
+#[cfg_attr(feature = "client", async_trait::async_trait)]
 pub trait TwitchToken {
     /// Get the type of token.
     fn token_type() -> BearerTokenType;
@@ -120,7 +120,7 @@ pub trait TwitchToken {
     }
 }
 
-#[async_trait::async_trait]
+#[cfg_attr(feature = "client", async_trait::async_trait)]
 impl<T: TwitchToken + Send> TwitchToken for Box<T> {
     fn token_type() -> BearerTokenType { T::token_type() }
 
