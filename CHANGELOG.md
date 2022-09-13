@@ -6,6 +6,12 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.8.0...Unreleased)
 
+### Breaking
+
+* Added new feature flag `client` that enables client specific functions. Without this feature,
+  `twitch_oauth2` will only provide non-async functions and
+  provide library users `http::Request`s and consume `http::Response`s.
+
 ## [v0.8.0] - 2022-08-27
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.7.1...v0.8.0)
