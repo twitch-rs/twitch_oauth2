@@ -70,13 +70,7 @@ impl UserToken {
             validated.login.ok_or(ValidationError::NoLogin)?,
             validated.user_id.ok_or(ValidationError::NoLogin)?,
             validated.scopes,
-            Some(validated.expires_in).filter(|d| {
-                // FIXME: https://github.com/rust-lang/rust/pull/84084
-                // FIXME: nanos are not returned
-                // if duration is zero, the token will never expire. if the token was expired, twitch would return NotAuthorized
-                // TODO: There could be a situation where this fails, if the token is just about to expire, say 500ms, does twitch round up to 1 or down to 0?
-                !(d.as_secs() == 0 && d.as_nanos() == 0)
-            }),
+            validated.expires_in,
         ))
     }
 
@@ -683,10 +677,45 @@ impl ImplicitUserTokenBuilder {
 
 #[cfg(test)]
 mod tests {
+    use crate::id::TwitchTokenResponse;
+
     pub use super::*;
+
+    #[test]
+    fn from_validated_and_token() {
+        let body = br#"
+        {
+            "client_id": "wbmytr93xzw8zbg0p1izqyzzc5mbiz",
+            "login": "twitchdev",
+            "scopes": [
+              "channel:read:subscriptions"
+            ],
+            "user_id": "141981764",
+            "expires_in": 5520838
+        }
+        "#;
+        let response = http::Response::builder().status(200).body(body).unwrap();
+        let validated = ValidatedToken::from_response(&response).unwrap();
+        let body = br#"
+        {
+            "access_token": "rfx2uswqe8l4g1mkagrvg5tv0ks3",
+            "expires_in": 14124,
+            "refresh_token": "5b93chm6hdve3mycz05zfzatkfdenfspp1h1ar2xxdalen01",
+            "scope": [
+                "channel:read:subscriptions"
+            ],
+            "token_type": "bearer"
+          }
+        "#;
+        let response = http::Response::builder().status(200).body(body).unwrap();
+        let response = TwitchTokenResponse::from_response(&response).unwrap();
+
+        UserToken::from_response(response, validated, None).unwrap();
+    }
+
     #[test]
     fn generate_url() {
-        dbg!(UserTokenBuilder::new(
+        UserTokenBuilder::new(
             ClientId::from("random_client"),
             ClientSecret::from("random_secret"),
             url::Url::parse("https://localhost").unwrap(),
@@ -694,7 +723,7 @@ mod tests {
         .force_verify(true)
         .generate_url()
         .0
-        .to_string());
+        .to_string();
     }
 
     #[tokio::test]

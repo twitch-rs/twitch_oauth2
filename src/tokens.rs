@@ -163,23 +163,29 @@ pub struct ValidatedToken {
     /// Scopes attached to the token.
     pub scopes: Option<Vec<Scope>>,
     /// Lifetime of the token
-    #[serde(deserialize_with = "seconds_to_duration")]
-    pub expires_in: std::time::Duration,
+    #[serde(deserialize_with = "expires_in")]
+    pub expires_in: Option<std::time::Duration>,
 }
 
-fn seconds_to_duration<'a, D: serde::de::Deserializer<'a>>(
+fn expires_in<'a, D: serde::de::Deserializer<'a>>(
     d: D,
-) -> Result<std::time::Duration, D::Error> {
-    Ok(std::time::Duration::from_secs(u64::deserialize(d)?))
+) -> Result<Option<std::time::Duration>, D::Error> {
+    let num = u64::deserialize(d)?;
+    if num == 0 {
+        Ok(None)
+    } else {
+        Ok(Some(std::time::Duration::from_secs(num)))
+    }
 }
+
 impl ValidatedToken {
     /// Assemble a a validated token from a response.
     ///
     /// Get the request that generates this response with [`AccessToken::validate_token_request`][crate::types::AccessTokenRef::validate_token_request]
     pub fn from_response<B: AsRef<[u8]>>(
-        resp: &http::Response<B>,
+        response: &http::Response<B>,
     ) -> Result<ValidatedToken, ValidationError<std::convert::Infallible>> {
-        match crate::parse_response(resp) {
+        match crate::parse_response(response) {
             Ok(ok) => Ok(ok),
             Err(err) => match err {
                 RequestParseError::TwitchError(TwitchTokenErrorResponse { status, .. })
@@ -190,5 +196,60 @@ impl ValidatedToken {
                 err => Err(err.into()),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ValidatedToken;
+
+    use super::errors::ValidationError;
+
+    #[test]
+    fn validated_token() {
+        let body = br#"
+        {
+            "client_id": "wbmytr93xzw8zbg0p1izqyzzc5mbiz",
+            "login": "twitchdev",
+            "scopes": [
+              "channel:read:subscriptions"
+            ],
+            "user_id": "141981764",
+            "expires_in": 5520838
+        }
+        "#;
+        let response = http::Response::builder().status(200).body(body).unwrap();
+        ValidatedToken::from_response(&response).unwrap();
+    }
+
+    #[test]
+    fn validated_non_expiring_token() {
+        let body = br#"
+        {
+            "client_id": "wbmytr93xzw8zbg0p1izqyzzc5mbiz",
+            "login": "twitchdev",
+            "scopes": [
+              "channel:read:subscriptions"
+            ],
+            "user_id": "141981764",
+            "expires_in": 0
+        }
+        "#;
+        let response = http::Response::builder().status(200).body(body).unwrap();
+        let token = ValidatedToken::from_response(&response).unwrap();
+        assert!(token.expires_in.is_none());
+    }
+
+    #[test]
+    fn validated_error_response() {
+        let body = br#"
+        {
+            "status": 401,
+            "message": "missing authorization token",
+        }
+        "#;
+        let response = http::Response::builder().status(401).body(body).unwrap();
+        let error = ValidatedToken::from_response(&response).unwrap_err();
+        assert!(matches!(error, ValidationError::RequestParseError(_)))
     }
 }

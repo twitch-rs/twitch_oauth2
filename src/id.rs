@@ -29,9 +29,9 @@ pub struct TwitchTokenResponse {
 impl TwitchTokenResponse {
     /// Create a [TwitchTokenResponse] from a [http::Response]
     pub fn from_response<B: AsRef<[u8]>>(
-        resp: &http::Response<B>,
+        response: &http::Response<B>,
     ) -> Result<TwitchTokenResponse, RequestParseError> {
-        crate::parse_response(resp)
+        crate::parse_response(response)
     }
 }
 

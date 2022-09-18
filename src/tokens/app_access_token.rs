@@ -131,7 +131,7 @@ impl AppAccessToken {
             validated.client_id,
             client_secret,
             validated.scopes,
-            Some(validated.expires_in),
+            validated.expires_in,
         ))
     }
 
