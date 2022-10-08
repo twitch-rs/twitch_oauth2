@@ -20,8 +20,8 @@ pub trait Client<'a>: Sync + Send + 'a {
     /// Send a request
     fn req(
         &'a self,
-        request: crate::HttpRequest,
-    ) -> BoxedFuture<'a, Result<crate::HttpResponse, <Self as Client>::Error>>;
+        request: http::Request<Vec<u8>>,
+    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, <Self as Client>::Error>>;
 }
 
 #[doc(hidden)]
@@ -35,8 +35,8 @@ impl<'a> Client<'a> for DummyClient {
 
     fn req(
         &'a self,
-        _: crate::HttpRequest,
-    ) -> BoxedFuture<'a, Result<crate::HttpResponse, Self::Error>> {
+        _: http::Request<Vec<u8>>,
+    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
         Box::pin(async move { Err(self.clone()) })
     }
 }
@@ -49,8 +49,8 @@ impl<'a> Client<'a> for ReqwestClient {
 
     fn req(
         &'a self,
-        request: crate::HttpRequest,
-    ) -> BoxedFuture<'a, Result<crate::HttpResponse, Self::Error>> {
+        request: http::Request<Vec<u8>>,
+    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
         // Reqwest plays really nice here and has a try_from on `http::Request` -> `reqwest::Request`
         let req = match reqwest::Request::try_from(request) {
             Ok(req) => req,
@@ -98,8 +98,8 @@ impl<'a> Client<'a> for SurfClient {
 
     fn req(
         &'a self,
-        request: crate::HttpRequest,
-    ) -> BoxedFuture<'a, Result<crate::HttpResponse, Self::Error>> {
+        request: http::Request<Vec<u8>>,
+    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
         // First we translate the `http::Request` method and uri into types that surf understands.
 
         let method: surf::http::Method = request.method().clone().into();
@@ -124,7 +124,7 @@ impl<'a> Client<'a> for SurfClient {
         }
 
         // assembly the request, now we can send that to our `surf::Client`
-        req.body_bytes(&request.body());
+        req.body_bytes(request.body());
 
         let client = self.clone();
         Box::pin(async move {

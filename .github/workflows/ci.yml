@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v1
         id: cache
         with:
-          path: | 
+          path: |
             ~/.cargo/registry/index
             ~/.cargo/registry/cache
             ~/.cargo/git
@@ -65,7 +65,6 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
-
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
@@ -81,17 +80,22 @@ jobs:
         uses: actions/cache@v1
         id: cache
         with:
-          path: | 
+          path: |
             ~/.cargo/registry/index
             ~/.cargo/registry/cache
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Run clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --locked
       - name: Run clippy --all-targets --all-features
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --locked --all-targets --all-features 
+          args: --locked --all-targets --all-features
   docs:
     name: Docs
     runs-on: ubuntu-latest
@@ -106,7 +110,7 @@ jobs:
         uses: actions/cache@v1
         id: cache
         with:
-          path: | 
+          path: |
             ~/.cargo/registry/index
             ~/.cargo/registry/cache
             ~/.cargo/git

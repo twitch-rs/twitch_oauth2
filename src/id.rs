@@ -2,9 +2,14 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::AccessToken;
+use crate::{AccessToken, RequestParseError};
 use std::time::Duration;
 /// Twitch's representation of the oauth flow.
+///
+/// Retrieve with
+///
+/// * [`UserTokenBuilder::get_user_token_request`](crate::tokens::UserTokenBuilder::get_user_token_request)
+/// * [`AppAccessToken::::get_app_access_token_request`](crate::tokens::AppAccessToken::get_app_access_token_request)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TwitchTokenResponse {
     /// Access token
@@ -19,6 +24,15 @@ pub struct TwitchTokenResponse {
     #[serde(rename = "scope", deserialize_with = "scope::deserialize")]
     #[serde(default)]
     pub scopes: Option<Vec<crate::Scope>>,
+}
+
+impl TwitchTokenResponse {
+    /// Create a [TwitchTokenResponse] from a [http::Response]
+    pub fn from_response<B: AsRef<[u8]>>(
+        response: &http::Response<B>,
+    ) -> Result<TwitchTokenResponse, RequestParseError> {
+        crate::parse_response(response)
+    }
 }
 
 /// Twitch's representation of the oauth flow for errors

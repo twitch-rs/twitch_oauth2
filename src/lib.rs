@@ -2,7 +2,7 @@
 #![deny(missing_docs, broken_intra_doc_links)] // This will be weird until 1.52, see https://github.com/rust-lang/rust/pull/80527
 #![cfg_attr(nightly, deny(rustdoc::broken_intra_doc_links))]
 #![cfg_attr(nightly, feature(doc_cfg))]
-#![doc(html_root_url = "https://docs.rs/twitch_oauth2/0.8.0")]
+#![cfg_attr(nightly, feature(doc_auto_cfg))]
 //! [![github]](https://github.com/twitch-rs/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.8.0/twitch_oauth2)
 //!
 //! [github]: https://img.shields.io/badge/github-twitch--rs/twitch__oauth2-8da0cb?style=for-the-badge&labelColor=555555&logo=github"
@@ -27,6 +27,7 @@
 //! # }
 //! # fn main() {run()}
 //! ```
+#[cfg(feature = "client")]
 pub mod client;
 pub mod id;
 pub mod scopes;
@@ -35,6 +36,7 @@ pub mod types;
 
 use http::StatusCode;
 use id::TwitchTokenErrorResponse;
+#[cfg(feature = "client")]
 use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 
 #[doc(inline)]
@@ -49,10 +51,8 @@ pub use types::{AccessToken, ClientId, ClientSecret, CsrfToken, RefreshToken};
 #[doc(hidden)]
 pub use types::{AccessTokenRef, ClientIdRef, ClientSecretRef, CsrfTokenRef, RefreshTokenRef};
 
+#[cfg(feature = "client")]
 use self::client::Client;
-
-type HttpRequest = http::Request<Vec<u8>>;
-type HttpResponse = http::Response<Vec<u8>>;
 
 /// Generate a url with a default if `mock_api` feature is disabled, or env var is not defined or is invalid utf8
 macro_rules! mock_env_url {
@@ -118,128 +118,148 @@ pub static REVOKE_URL: once_cell::sync::Lazy<url::Url> =
         TWITCH_OAUTH2_URL.to_string() + "revoke"
     },);
 
-/// Validate this token.
-///
-/// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
-pub async fn validate_token<'a, C>(
-    client: &'a C,
-    token: &AccessTokenRef,
-) -> Result<ValidatedToken, ValidationError<<C as Client<'a>>::Error>>
-where
-    C: Client<'a>,
-{
-    use http::{header::AUTHORIZATION, HeaderMap, Method};
+impl AccessTokenRef {
+    /// Get the request needed to validate this token.
+    ///
+    /// Parse the response from this endpoint with [ValidatedToken::from_response](crate::ValidatedToken::from_response)
+    pub fn validate_token_request(&self) -> http::Request<Vec<u8>> {
+        use http::{header::AUTHORIZATION, HeaderMap, Method};
 
-    let auth_header = format!("OAuth {}", token.secret());
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        AUTHORIZATION,
-        auth_header
-            .parse()
-            .expect("Failed to parse header for validation"),
-    );
+        let auth_header = format!("OAuth {}", self.secret());
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            AUTHORIZATION,
+            auth_header
+                .parse()
+                .expect("Failed to parse header for validation"),
+        );
 
-    let req = crate::construct_request::<&[(String, String)], _, _>(
-        &crate::VALIDATE_URL,
-        &[],
-        headers,
-        Method::GET,
-        vec![],
-    );
-
-    let resp = client.req(req).await.map_err(ValidationError::Request)?;
-    if resp.status() == StatusCode::UNAUTHORIZED {
-        return Err(ValidationError::NotAuthorized);
+        crate::construct_request::<&[(String, String)], _, _>(
+            &crate::VALIDATE_URL,
+            &[],
+            headers,
+            Method::GET,
+            vec![],
+        )
     }
-    match crate::parse_response(&resp) {
-        Ok(ok) => Ok(ok),
-        Err(err) => match err {
-            RequestParseError::TwitchError(TwitchTokenErrorResponse { status, .. })
-                if status == StatusCode::UNAUTHORIZED =>
-            {
-                Err(ValidationError::NotAuthorized)
-            }
-            err => Err(err.into()),
-        },
+
+    /// Validate this token.
+    ///
+    /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
+    #[cfg(feature = "client")]
+    pub async fn validate_token<'a, C>(
+        &self,
+        client: &'a C,
+    ) -> Result<ValidatedToken, ValidationError<<C as Client<'a>>::Error>>
+    where
+        C: Client<'a>,
+    {
+        let req = self.validate_token_request();
+
+        let resp = client.req(req).await.map_err(ValidationError::Request)?;
+        if resp.status() == StatusCode::UNAUTHORIZED {
+            return Err(ValidationError::NotAuthorized);
+        }
+        ValidatedToken::from_response(&resp).map_err(|v| v.into_other())
+    }
+
+    /// Get the request needed to revoke this token.
+    pub fn revoke_token_request(&self, client_id: &ClientId) -> http::Request<Vec<u8>> {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let mut params = HashMap::new();
+        params.insert("client_id", client_id.as_str());
+        params.insert("token", self.secret());
+
+        construct_request(
+            &crate::REVOKE_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        )
+    }
+
+    /// Revoke the token.
+    ///
+    /// See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
+    #[cfg(feature = "client")]
+    pub async fn revoke_token<'a, C>(
+        &self,
+        http_client: &'a C,
+        client_id: &ClientId,
+    ) -> Result<(), RevokeTokenError<<C as Client<'a>>::Error>>
+    where
+        C: Client<'a>,
+    {
+        let req = self.revoke_token_request(client_id);
+
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(RevokeTokenError::RequestError)?;
+
+        let _ = parse_token_response_raw(&resp)?;
+        Ok(())
     }
 }
 
-/// Revoke the token.
-///
-/// See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
-pub async fn revoke_token<'a, C>(
-    http_client: &'a C,
-    token: &AccessToken,
-    client_id: &ClientId,
-) -> Result<(), RevokeTokenError<<C as Client<'a>>::Error>>
-where
-    C: Client<'a>,
-{
-    use http::{HeaderMap, Method};
-    use std::collections::HashMap;
-    let mut params = HashMap::new();
-    params.insert("client_id", client_id.as_str());
-    params.insert("token", token.secret());
+impl RefreshTokenRef {
+    /// Get the request needed to refresh this token.
+    ///
+    /// Parse the response from this endpoint with [TwitchTokenResponse::from_response](crate::id::TwitchTokenResponse::from_response)
+    pub fn refresh_token_request(
+        &self,
+        client_id: &ClientId,
+        client_secret: &ClientSecret,
+    ) -> http::Request<Vec<u8>> {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
 
-    let req = construct_request(
-        &crate::REVOKE_URL,
-        &params,
-        HeaderMap::new(),
-        Method::POST,
-        vec![],
-    );
+        let mut params = HashMap::new();
+        params.insert("client_id", client_id.as_str());
+        params.insert("client_secret", client_secret.secret());
+        params.insert("grant_type", "refresh_token");
+        params.insert("refresh_token", self.secret());
 
-    let resp = http_client
-        .req(req)
-        .await
-        .map_err(RevokeTokenError::RequestError)?;
+        construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        )
+    }
 
-    let _ = parse_token_response_raw(&resp)?;
-    Ok(())
-}
+    /// Refresh the token, call if it has expired.
+    ///
+    /// See <https://dev.twitch.tv/docs/authentication#refreshing-access-tokens>
+    #[cfg(feature = "client")]
+    pub async fn refresh_token<'a, C>(
+        &self,
+        http_client: &'a C,
+        client_id: &ClientId,
+        client_secret: &ClientSecret,
+    ) -> Result<
+        (AccessToken, std::time::Duration, Option<RefreshToken>),
+        RefreshTokenError<<C as Client<'a>>::Error>,
+    >
+    where
+        C: Client<'a>,
+    {
+        let req = self.refresh_token_request(client_id, client_secret);
 
-/// Refresh the token, call if it has expired.
-///
-/// See <https://dev.twitch.tv/docs/authentication#refreshing-access-tokens>
-pub async fn refresh_token<'a, C>(
-    http_client: &'a C,
-    refresh_token: &RefreshTokenRef,
-    client_id: &ClientId,
-    client_secret: &ClientSecret,
-) -> Result<
-    (AccessToken, std::time::Duration, Option<RefreshToken>),
-    RefreshTokenError<<C as Client<'a>>::Error>,
->
-where
-    C: Client<'a>,
-{
-    use http::{HeaderMap, Method};
-    use std::collections::HashMap;
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(RefreshTokenError::RequestError)?;
+        let res = id::TwitchTokenResponse::from_response(&resp)?;
 
-    let mut params = HashMap::new();
-    params.insert("client_id", client_id.as_str());
-    params.insert("client_secret", client_secret.secret());
-    params.insert("grant_type", "refresh_token");
-    params.insert("refresh_token", refresh_token.secret());
-
-    let req = construct_request(
-        &crate::TOKEN_URL,
-        &params,
-        HeaderMap::new(),
-        Method::POST,
-        vec![],
-    );
-
-    let resp = http_client
-        .req(req)
-        .await
-        .map_err(RefreshTokenError::RequestError)?;
-    let res: id::TwitchTokenResponse = parse_response(&resp)?;
-
-    let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
-    let refresh_token = res.refresh_token;
-    let access_token = res.access_token;
-    Ok((access_token, expires_in, refresh_token))
+        let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
+        let refresh_token = res.refresh_token;
+        let access_token = res.access_token;
+        Ok((access_token, expires_in, refresh_token))
+    }
 }
 
 /// Construct a request that accepts `application/json` on default
@@ -249,7 +269,7 @@ fn construct_request<I, K, V>(
     headers: http::HeaderMap,
     method: http::Method,
     body: Vec<u8>,
-) -> HttpRequest
+) -> http::Request<Vec<u8>>
 where
     I: std::iter::IntoIterator,
     I::Item: std::borrow::Borrow<(K, V)>,
@@ -274,10 +294,10 @@ where
 }
 
 /// Parses a response, validating it and returning the response if all ok.
-pub(crate) fn parse_token_response_raw(
-    resp: &HttpResponse,
-) -> Result<&HttpResponse, RequestParseError> {
-    match serde_json::from_slice::<TwitchTokenErrorResponse>(resp.body()) {
+pub(crate) fn parse_token_response_raw<B: AsRef<[u8]>>(
+    resp: &http::Response<B>,
+) -> Result<&http::Response<B>, RequestParseError> {
+    match serde_json::from_slice::<TwitchTokenErrorResponse>(resp.body().as_ref()) {
         Err(_) => match resp.status() {
             StatusCode::OK => Ok(resp),
             _ => Err(RequestParseError::Other(resp.status())),
@@ -287,10 +307,10 @@ pub(crate) fn parse_token_response_raw(
 }
 
 /// Parses a response, validating it and returning json deserialized response
-pub(crate) fn parse_response<T: serde::de::DeserializeOwned>(
-    resp: &HttpResponse,
+pub(crate) fn parse_response<T: serde::de::DeserializeOwned, B: AsRef<[u8]>>(
+    resp: &http::Response<B>,
 ) -> Result<T, RequestParseError> {
-    let body = parse_token_response_raw(resp)?.body();
+    let body = parse_token_response_raw(resp)?.body().as_ref();
     if let Some(_content) = resp.headers().get(http::header::CONTENT_TYPE) {
         // TODO: Remove this cfg, see issue https://github.com/twitchdev/twitch-cli/issues/81
         #[cfg(not(feature = "mock_api"))]
