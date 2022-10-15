@@ -62,12 +62,12 @@ members = ["xtask"]
 [[example]]
 name = "user_token"
 path = "examples/user_token.rs"
-required-features = ["surf"]
+required-features = ["reqwest"]
 
 [[example]]
 name = "app_access_token"
 path = "examples/app_access_token.rs"
-required-features = ["surf"]
+required-features = ["reqwest"]
 
 [[example]]
 name = "auth_flow"

@@ -4,7 +4,9 @@ use twitch_oauth2::TwitchToken;
 async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error
     let mut args = std::env::args().skip(1);
-
+    let reqwest = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
     let client_id = std::env::var("TWITCH_CLIENT_ID")
         .ok()
         .or_else(|| args.next())
@@ -25,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
         .expect("Please set env: CLIENT_SCOPES or pass client secret as an argument");
 
     let token = twitch_oauth2::AppAccessToken::get_app_access_token(
-        &surf::Client::new(),
+        &reqwest,
         client_id,
         client_secret,
         scopes,

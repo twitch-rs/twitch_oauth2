@@ -1,8 +1,11 @@
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error
-
     let mut args = std::env::args().skip(1);
+
+    let reqwest = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
     std::env::var("TWITCH_OAUTH2_URL")
         .ok()
         .or_else(|| args.next())
@@ -22,9 +25,7 @@ async fn main() -> anyhow::Result<()> {
         .expect("Please set env: MOCK_CLIENT_SECRET or pass client secret as an argument");
 
     let token = twitch_oauth2::AppAccessToken::get_app_access_token(
-        &reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()?,
+        &reqwest,
         client_id,
         client_secret,
         vec![],

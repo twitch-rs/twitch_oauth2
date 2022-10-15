@@ -4,8 +4,13 @@ use twitch_oauth2::TwitchToken;
 async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error
     let mut args = std::env::args().skip(1);
+
+    let reqwest = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+
     let token = twitch_oauth2::UserToken::from_existing(
-        &surf::Client::new(),
+        &reqwest,
         std::env::var("TWITCH_TOKEN")
             .ok()
             .or_else(|| args.next())
