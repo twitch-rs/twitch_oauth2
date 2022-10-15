@@ -87,4 +87,5 @@ required-features = ["reqwest", "mock_api"]
 
 [package.metadata.docs.rs]
 features = ["all", "mock_api"]
-rustc-args = ["--cfg", "nightly", "-Zrustdoc-scrape-examples=examples"]
+rustc-args = ["--cfg", "nightly"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]
