@@ -33,6 +33,7 @@ async fn main() -> anyhow::Result<()> {
         scopes,
     )
     .await?;
+
     println!("{:?}", token);
     dbg!(token.is_elapsed());
     Ok(())

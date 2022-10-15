@@ -9,23 +9,26 @@ async fn main() -> anyhow::Result<()> {
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
 
-    let token = twitch_oauth2::UserToken::from_existing(
-        &reqwest,
-        std::env::var("TWITCH_TOKEN")
-            .ok()
-            .or_else(|| args.next())
-            .map(twitch_oauth2::AccessToken::new)
-            .expect("Please set env: TWITCH_TOKEN or pass token as first argument"),
-        std::env::var("TWITCH_REFRESH_TOKEN")
-            .ok()
-            .or_else(|| args.next())
-            .map(twitch_oauth2::RefreshToken::new),
-        std::env::var("TWITCH_CLIENT_SECRET")
-            .ok()
-            .or_else(|| args.next())
-            .map(twitch_oauth2::ClientSecret::new),
-    )
-    .await?;
+    let user_token = std::env::var("TWITCH_TOKEN")
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::AccessToken::new)
+        .expect("Please set env: TWITCH_TOKEN or pass token as first argument");
+
+    let refresh_token = std::env::var("TWITCH_REFRESH_TOKEN")
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::RefreshToken::new);
+
+    let client_secret = std::env::var("TWITCH_CLIENT_SECRET")
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::ClientSecret::new);
+
+    let token =
+        twitch_oauth2::UserToken::from_existing(&reqwest, user_token, refresh_token, client_secret)
+            .await?;
+
     println!("{:?}", token);
     dbg!(token.is_elapsed());
     Ok(())
