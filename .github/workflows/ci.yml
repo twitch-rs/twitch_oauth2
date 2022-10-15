@@ -46,19 +46,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           override: true
-      - name: Ready cache
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
-      - name: Cache cargo
-        uses: actions/cache@v1
-        id: cache
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: Test twitch_oauth2
         uses: actions-rs/cargo@v1
         with:
@@ -91,16 +79,7 @@ jobs:
           toolchain: nightly
           override: true
           components: clippy
-      - name: Cache cargo
-        uses: actions/cache@v1
-        id: cache
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: Run clippy
         uses: actions-rs/cargo@v1
         with:
@@ -121,16 +100,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-      - name: Cache cargo
-        uses: actions/cache@v1
-        id: cache
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       # We do the following to make sure docs.rs can document properly without anything broken, and that docs are working.
       - name: Run doc tests
         uses: actions-rs/cargo@v1

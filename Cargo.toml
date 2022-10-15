@@ -8,6 +8,14 @@ description = "Oauth2 for Twitch endpoints"
 keywords = ["oauth", "twitch", "async", "asynchronous"]
 documentation = "https://docs.rs/twitch_oauth2/0.9.0"
 readme = "README.md"
+include = [
+    "src/*",
+    "./Cargo.toml",
+    "examples/*",
+    "./README.md",
+    "CHANGELOG.md",
+    "LICENSE*",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
@@ -79,4 +87,4 @@ required-features = ["reqwest", "mock_api"]
 
 [package.metadata.docs.rs]
 features = ["all", "mock_api"]
-rustc-args = ["--cfg", "nightly"]
+rustc-args = ["--cfg", "nightly", "-Zrustdoc-scrape-examples=examples"]
