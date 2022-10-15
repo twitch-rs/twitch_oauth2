@@ -108,10 +108,4 @@ jobs:
           command: test
           args: --doc --all-features
       - name: Check twitch_oauth2 docs
-        uses: actions-rs/cargo@v1
-        env:
-          RUSTDOCFLAGS: "--cfg nightly"
-          RUSTFLAGS: "--cfg nightly"
-        with:
-          command: doc
-          args: --locked --no-deps --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}"
+        run: cargo xtask doc
