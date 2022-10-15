@@ -1,6 +1,4 @@
 name: github pages
-env:
-  CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
 on:
   push:
     branches:
