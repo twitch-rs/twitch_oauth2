@@ -5,24 +5,31 @@ use twitch_oauth2::tokens::UserTokenBuilder;
 async fn main() -> anyhow::Result<()> {
     let _ = dotenv::dotenv(); // Eat error
     let mut args = std::env::args().skip(1);
-    let mut builder = UserTokenBuilder::new(
-        std::env::var("TWITCH_CLIENT_ID")
-            .ok()
-            .or_else(|| args.next())
-            .map(twitch_oauth2::ClientId::new)
-            .context("Please set env: TWITCH_CLIENT_ID or pass as first argument")?,
-        std::env::var("TWITCH_CLIENT_SECRET")
-            .ok()
-            .or_else(|| args.next())
-            .map(twitch_oauth2::ClientSecret::new)
-            .context("Please set env: TWITCH_CLIENT_SECRET or pass as second argument")?,
-        std::env::var("TWITCH_REDIRECT_URL")
-            .ok()
-            .or_else(|| args.next())
-            .map(|r| twitch_oauth2::url::Url::parse(&r))
-            .context("Please set env: TWITCH_REDIRECT_URL or pass as third argument")??,
-    )
-    .force_verify(true);
+
+    let reqwest = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+
+    let client_id = std::env::var("TWITCH_CLIENT_ID")
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::ClientId::new)
+        .context("Please set env: TWITCH_CLIENT_ID or pass as first argument")?;
+
+    let client_secret = std::env::var("TWITCH_CLIENT_SECRET")
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::ClientSecret::new)
+        .context("Please set env: TWITCH_CLIENT_SECRET or pass as second argument")?;
+
+    let redirect_url = std::env::var("TWITCH_REDIRECT_URL")
+        .ok()
+        .or_else(|| args.next())
+        .map(|r| twitch_oauth2::url::Url::parse(&r))
+        .context("Please set env: TWITCH_REDIRECT_URL or pass as third argument")??;
+
+    let mut builder =
+        UserTokenBuilder::new(client_id, client_secret, redirect_url).force_verify(true);
 
     let (url, _) = builder.generate_url();
 
@@ -38,15 +45,7 @@ async fn main() -> anyhow::Result<()> {
 
     match (map.get("state"), map.get("code")) {
         (Some(state), Some(code)) => {
-            let token = builder
-                .get_user_token(
-                    &reqwest::Client::builder()
-                        .redirect(reqwest::redirect::Policy::none())
-                        .build()?,
-                    state,
-                    code,
-                )
-                .await?;
+            let token = builder.get_user_token(&reqwest, state, code).await?;
             println!("Got token: {:?}", token);
         }
         _ => match (map.get("error"), map.get("error_description")) {

@@ -8,6 +8,14 @@ description = "Oauth2 for Twitch endpoints"
 keywords = ["oauth", "twitch", "async", "asynchronous"]
 documentation = "https://docs.rs/twitch_oauth2/0.9.0"
 readme = "README.md"
+include = [
+    "src/*",
+    "./Cargo.toml",
+    "examples/*",
+    "./README.md",
+    "CHANGELOG.md",
+    "LICENSE*",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
@@ -54,12 +62,12 @@ members = ["xtask"]
 [[example]]
 name = "user_token"
 path = "examples/user_token.rs"
-required-features = ["surf"]
+required-features = ["reqwest"]
 
 [[example]]
 name = "app_access_token"
 path = "examples/app_access_token.rs"
-required-features = ["surf"]
+required-features = ["reqwest"]
 
 [[example]]
 name = "auth_flow"
@@ -80,3 +88,4 @@ required-features = ["reqwest", "mock_api"]
 [package.metadata.docs.rs]
 features = ["all", "mock_api"]
 rustc-args = ["--cfg", "nightly"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]

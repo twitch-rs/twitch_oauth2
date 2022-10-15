@@ -1,8 +1,4 @@
 name: github pages
-env:
-  CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
-  RUSTDOCFLAGS: "-Z unstable-options --html-in-header=docs/pre-content.html --cfg nightly"
-  RUSTFLAGS: "--cfg nightly"
 on:
   push:
     branches:
@@ -17,29 +13,13 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-      - name: Cache cargo
-        uses: actions/cache@v1
-        id: cache
-        with:
-          path:
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: mention 40 character commit rev in doc
-        run: sed -i "s/{{commit}}/$(git rev-parse HEAD)/g" docs/pre-content.html
-      - name: mention short commit rev in doc
-        run: sed -i "s/{{commit_short}}/$(git rev-parse --short HEAD)/g" docs/pre-content.html
+      - uses: Swatinem/rust-cache@v2
       - name: build twitch_oauth2 docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --no-deps --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}"
+        run: cargo xtask doc
       - name: move index.html
-        run: cp ./docs/index.html ./target/doc/index.html
+        run: cp ./docs/index.html ./target/extra/doc/index.html
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/doc
+          publish_dir: ./target/extra/doc
