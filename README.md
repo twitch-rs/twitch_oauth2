@@ -1,7 +1,7 @@
 Twitch OAuth2 | OAuth2 for Twitch endpoints
 ============================================
 
-[![github]](https://github.com/twitch-rs/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.8.0/twitch_oauth2)
+[![github]](https://github.com/twitch-rs/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.9.0/twitch_oauth2)
 
 [github]: https://img.shields.io/badge/github-twitch--rs/twitch__oauth2-8da0cb?style=for-the-badge&labelColor=555555&logo=github"
 [crates-io]: https://img.shields.io/crates/v/twitch_oauth2.svg?style=for-the-badge&color=fc8d62&logo=rust"
@@ -33,4 +33,4 @@ for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
 </sub>
 
-[local-docs]: https://img.shields.io/github/workflow/status/twitch-rs/twitch_oauth2/github%20pages/master?label=docs&style=flat-square&event=push
+[local-docs]: https://img.shields.io/github/workflow/status/twitch-rs/twitch_oauth2/github%20pages/main?label=docs&style=flat-square&event=push
