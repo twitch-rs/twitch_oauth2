@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]"><meta name="keywords" content="rust, rustlang, rust-lang, TwitchToken"><title>TwitchToken in twitch_oauth2 - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../normalize.css"><link rel="stylesheet" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../ayu.css" disabled><link rel="stylesheet" href="../dark.css" disabled><link rel="stylesheet" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"><!-- intentional break -->
-<p class="content">This documentation was built on commit <a href="https://github.com/twitch-rs/twitch_oauth2/tree/a6b997418c23cd78e99963301a6880e0cad26b57">a6b9974</a></p>
-</head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../twitch_oauth2/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../twitch_oauth2/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2 class="location"><a href="#">TwitchToken</a></h2><div class="sidebar-elems"><section><h3 class="sidebar-title"><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.client_id">client_id</a></li><li><a href="#tymethod.expires_in">expires_in</a></li><li><a href="#tymethod.login">login</a></li><li><a href="#tymethod.refresh_token">refresh_token</a></li><li><a href="#tymethod.scopes">scopes</a></li><li><a href="#tymethod.token">token</a></li><li><a href="#tymethod.token_type">token_type</a></li><li><a href="#tymethod.user_id">user_id</a></li></ul><h3 class="sidebar-title"><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.is_elapsed">is_elapsed</a></li><li><a href="#method.revoke_token">revoke_token</a></li><li><a href="#method.validate_token">validate_token</a></li></ul><h3 class="sidebar-title"><a href="#foreign-impls">Implementations on Foreign Types</a></h3><ul class="block"><li><a href="#impl-TwitchToken-for-Box%3CT%3E">Box&lt;T&gt;</a></li></ul><h3 class="sidebar-title"><a href="#implementors">Implementors</a></h3></section><h2 class="location"><a href="index.html">In twitch_oauth2</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../twitch_oauth2/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Trait <a href="index.html">twitch_oauth2</a>::<wbr><a class="trait" href="#">TwitchToken</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/twitch_oauth2/tokens.rs.html#36-121">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="item-decl"><pre class="rust trait"><code>pub trait TwitchToken {
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]"><meta name="keywords" content="rust, rustlang, rust-lang, TwitchToken"><title>TwitchToken in twitch_oauth2 - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../normalize.css"><link rel="stylesheet" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../ayu.css" disabled><link rel="stylesheet" href="../dark.css" disabled><link rel="stylesheet" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../main.js"></script><script defer src="../scrape-examples.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../twitch_oauth2/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../twitch_oauth2/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2 class="location"><a href="#">TwitchToken</a></h2><div class="sidebar-elems"><section><h3 class="sidebar-title"><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.client_id">client_id</a></li><li><a href="#tymethod.expires_in">expires_in</a></li><li><a href="#tymethod.login">login</a></li><li><a href="#tymethod.refresh_token">refresh_token</a></li><li><a href="#tymethod.scopes">scopes</a></li><li><a href="#tymethod.token">token</a></li><li><a href="#tymethod.token_type">token_type</a></li><li><a href="#tymethod.user_id">user_id</a></li></ul><h3 class="sidebar-title"><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.is_elapsed">is_elapsed</a></li><li><a href="#method.revoke_token">revoke_token</a></li><li><a href="#method.validate_token">validate_token</a></li></ul><h3 class="sidebar-title"><a href="#foreign-impls">Implementations on Foreign Types</a></h3><ul class="block"><li><a href="#impl-TwitchToken-for-Box%3CT%3E">Box&lt;T&gt;</a></li></ul><h3 class="sidebar-title"><a href="#implementors">Implementors</a></h3></section><h2 class="location"><a href="index.html">In twitch_oauth2</a></h2></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../twitch_oauth2/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Trait <a href="index.html">twitch_oauth2</a>::<wbr><a class="trait" href="#">TwitchToken</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/twitch_oauth2/tokens.rs.html#36-121">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="item-decl"><pre class="rust trait"><code>pub trait TwitchToken {
     fn <a href="#tymethod.token_type" class="fnname">token_type</a>() -&gt; <a class="enum" href="tokens/enum.BearerTokenType.html" title="enum twitch_oauth2::tokens::BearerTokenType">BearerTokenType</a>;
 <span class="item-spacer"></span>    fn <a href="#tymethod.client_id" class="fnname">client_id</a>(&amp;self) -&gt; &amp;<a class="struct" href="types/struct.ClientId.html" title="struct twitch_oauth2::types::ClientId">ClientId</a>;
 <span class="item-spacer"></span>    fn <a href="#tymethod.token" class="fnname">token</a>(&amp;self) -&gt; &amp;<a class="struct" href="types/struct.AccessToken.html" title="struct twitch_oauth2::types::AccessToken">AccessToken</a>;
@@ -33,7 +31,137 @@
 <span class="kw">if </span>user_token.is_elapsed() {
     user_token.refresh_token(<span class="kw-2">&amp;</span>reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).build()<span class="question-mark">?</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 }</code></pre></div>
-</div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.validate_token" class="method has-srclink"><a class="srclink rightside" href="../src/twitch_oauth2/tokens.rs.html#95-105">source</a><h4 class="code-header">fn <a href="#method.validate_token" class="fnname">validate_token</a>&lt;'a, 'life0, 'async_trait, C&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;'life0 self,<br>&nbsp;&nbsp;&nbsp;&nbsp;http_client: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>C<br>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="struct.ValidatedToken.html" title="struct twitch_oauth2::ValidatedToken">ValidatedToken</a>, <a class="enum" href="tokens/errors/enum.ValidationError.html" title="enum twitch_oauth2::tokens::errors::ValidationError">ValidationError</a>&lt;&lt;C as <a class="trait" href="client/trait.Client.html" title="trait twitch_oauth2::client::Client">Client</a>&lt;'a&gt;&gt;::<a class="associatedtype" href="client/trait.Client.html#associatedtype.Error" title="type twitch_oauth2::client::Client::Error">Error</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;C: <a class="trait" href="client/trait.Client.html" title="trait twitch_oauth2::client::Client">Client</a>&lt;'a&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;'a: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;C: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;'life0: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,</span></h4></section></summary><span class="item-info"><div class="stab portability">Available on <strong>crate feature <code>client</code></strong> only.</div></span><div class="docblock"><p>Validate this token. Should be checked on regularly, according to <a href="https://dev.twitch.tv/docs/authentication#validating-requests">https://dev.twitch.tv/docs/authentication#validating-requests</a></p>
+</div><div class="docblock scraped-example-list"><span></span><h5 id="scraped-examples"><a href="#scraped-examples">Examples found in repository</a><a class="scrape-help" href="../scrape-examples-help.html">?</a></h5><div class="scraped-example " data-locs="[[[30,30],&quot;../src/app_access_token/app_access_token.rs.html#34&quot;,&quot;line 34&quot;]]"><div class="scraped-example-title">examples/app_access_token.rs (<a href="../src/app_access_token/app_access_token.rs.html#34">line 34</a>)</div><div class="code-wrapper"><span class="expand">&varr;</span><div class="example-wrap"><pre class="src-line-numbers"><span>4</span>
+<span>5</span>
+<span>6</span>
+<span>7</span>
+<span>8</span>
+<span>9</span>
+<span>10</span>
+<span>11</span>
+<span>12</span>
+<span>13</span>
+<span>14</span>
+<span>15</span>
+<span>16</span>
+<span>17</span>
+<span>18</span>
+<span>19</span>
+<span>20</span>
+<span>21</span>
+<span>22</span>
+<span>23</span>
+<span>24</span>
+<span>25</span>
+<span>26</span>
+<span>27</span>
+<span>28</span>
+<span>29</span>
+<span>30</span>
+<span>31</span>
+<span>32</span>
+<span>33</span>
+<span>34</span>
+<span>35</span>
+<span>36</span>
+</pre><pre class="rust"><code><span class="kw">async fn </span>main() -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let _ </span>= dotenv::dotenv(); <span class="comment">// Eat error
+    </span><span class="kw">let </span><span class="kw-2">mut </span>args = std::env::args().skip(<span class="number">1</span>);
+
+    <span class="kw">let </span>reqwest = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>client_id = std::env::var(<span class="string">&quot;TWITCH_CLIENT_ID&quot;</span>)
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::ClientId::new)
+        .expect(<span class="string">&quot;Please set env: TWITCH_CLIENT_ID or pass client id as an argument&quot;</span>);
+
+    <span class="kw">let </span>client_secret = std::env::var(<span class="string">&quot;TWITCH_CLIENT_SECRET&quot;</span>)
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::ClientSecret::new)
+        .expect(<span class="string">&quot;Please set env: TWITCH_CLIENT_SECRET or pass client secret as an argument&quot;</span>);
+
+    <span class="comment">// Get the app access token
+    </span><span class="kw">let </span>token = twitch_oauth2::AppAccessToken::get_app_access_token(
+        <span class="kw-2">&amp;</span>reqwest,
+        client_id,
+        client_secret,
+        <span class="macro">vec!</span>[],
+    )
+    .<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, token);
+    <span class="macro">dbg!</span>(token.<span class="highlight focus">is_elapsed</span>());
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+</div></div><details class="rustdoc-toggle more-examples-toggle"><summary class="hideme"><span>More examples</span></summary><div class="hide-more">Hide additional examples</div><div class="more-scraped-examples"><div class="toggle-line"><div class="toggle-line-inner"></div></div><div class="more-scraped-examples-inner"><div class="scraped-example " data-locs="[[[29,29],&quot;../src/user_token/user_token.rs.html#33&quot;,&quot;line 33&quot;]]"><div class="scraped-example-title">examples/user_token.rs (<a href="../src/user_token/user_token.rs.html#33">line 33</a>)</div><div class="code-wrapper"><span class="expand">&varr;</span><div class="example-wrap"><pre class="src-line-numbers"><span>4</span>
+<span>5</span>
+<span>6</span>
+<span>7</span>
+<span>8</span>
+<span>9</span>
+<span>10</span>
+<span>11</span>
+<span>12</span>
+<span>13</span>
+<span>14</span>
+<span>15</span>
+<span>16</span>
+<span>17</span>
+<span>18</span>
+<span>19</span>
+<span>20</span>
+<span>21</span>
+<span>22</span>
+<span>23</span>
+<span>24</span>
+<span>25</span>
+<span>26</span>
+<span>27</span>
+<span>28</span>
+<span>29</span>
+<span>30</span>
+<span>31</span>
+<span>32</span>
+<span>33</span>
+<span>34</span>
+<span>35</span>
+</pre><pre class="rust"><code><span class="kw">async fn </span>main() -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">let _ </span>= dotenv::dotenv(); <span class="comment">// Eat error
+    </span><span class="kw">let </span><span class="kw-2">mut </span>args = std::env::args().skip(<span class="number">1</span>);
+
+    <span class="kw">let </span>reqwest = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>user_token = std::env::var(<span class="string">&quot;TWITCH_TOKEN&quot;</span>)
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::AccessToken::new)
+        .expect(<span class="string">&quot;Please set env: TWITCH_TOKEN or pass token as first argument&quot;</span>);
+
+    <span class="kw">let </span>refresh_token = std::env::var(<span class="string">&quot;TWITCH_REFRESH_TOKEN&quot;</span>)
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::RefreshToken::new);
+
+    <span class="kw">let </span>client_secret = std::env::var(<span class="string">&quot;TWITCH_CLIENT_SECRET&quot;</span>)
+        .ok()
+        .or_else(|| args.next())
+        .map(twitch_oauth2::ClientSecret::new);
+
+    <span class="kw">let </span>token =
+        twitch_oauth2::UserToken::from_existing(<span class="kw-2">&amp;</span>reqwest, user_token, refresh_token, client_secret)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, token);
+    <span class="macro">dbg!</span>(token.<span class="highlight focus">is_elapsed</span>());
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+</div></div></div></div></details></div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.validate_token" class="method has-srclink"><a class="srclink rightside" href="../src/twitch_oauth2/tokens.rs.html#95-105">source</a><h4 class="code-header">fn <a href="#method.validate_token" class="fnname">validate_token</a>&lt;'a, 'life0, 'async_trait, C&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;&amp;'life0 self,<br>&nbsp;&nbsp;&nbsp;&nbsp;http_client: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>C<br>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="struct" href="struct.ValidatedToken.html" title="struct twitch_oauth2::ValidatedToken">ValidatedToken</a>, <a class="enum" href="tokens/errors/enum.ValidationError.html" title="enum twitch_oauth2::tokens::errors::ValidationError">ValidationError</a>&lt;&lt;C as <a class="trait" href="client/trait.Client.html" title="trait twitch_oauth2::client::Client">Client</a>&lt;'a&gt;&gt;::<a class="associatedtype" href="client/trait.Client.html#associatedtype.Error" title="type twitch_oauth2::client::Client::Error">Error</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;C: <a class="trait" href="client/trait.Client.html" title="trait twitch_oauth2::client::Client">Client</a>&lt;'a&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;'a: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;C: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;'life0: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,</span></h4></section></summary><span class="item-info"><div class="stab portability">Available on <strong>crate feature <code>client</code></strong> only.</div></span><div class="docblock"><p>Validate this token. Should be checked on regularly, according to <a href="https://dev.twitch.tv/docs/authentication#validating-requests">https://dev.twitch.tv/docs/authentication#validating-requests</a></p>
 <h5 id="note"><a href="#note">Note</a></h5>
 <p>This will not mutate any current data in the <a href="trait.TwitchToken.html" title="TwitchToken">TwitchToken</a></p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.revoke_token" class="method has-srclink"><a class="srclink rightside" href="../src/twitch_oauth2/tokens.rs.html#109-120">source</a><h4 class="code-header">fn <a href="#method.revoke_token" class="fnname">revoke_token</a>&lt;'a, 'async_trait, C&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;self,<br>&nbsp;&nbsp;&nbsp;&nbsp;http_client: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;'a </a>C<br>) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/nightly/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>, <a class="enum" href="tokens/errors/enum.RevokeTokenError.html" title="enum twitch_oauth2::tokens::errors::RevokeTokenError">RevokeTokenError</a>&lt;&lt;C as <a class="trait" href="client/trait.Client.html" title="trait twitch_oauth2::client::Client">Client</a>&lt;'a&gt;&gt;::<a class="associatedtype" href="client/trait.Client.html#associatedtype.Error" title="type twitch_oauth2::client::Client::Error">Error</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;C: <a class="trait" href="client/trait.Client.html" title="trait twitch_oauth2::client::Client">Client</a>&lt;'a&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;'a: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;C: 'async_trait,<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait,</span></h4></section></summary><span class="item-info"><div class="stab portability">Available on <strong>crate feature <code>client</code></strong> only.</div></span><div class="docblock"><p>Revoke the token. See <a href="https://dev.twitch.tv/docs/authentication#revoking-access-tokens">https://dev.twitch.tv/docs/authentication#revoking-access-tokens</a></p>
