@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.9.0...Unreleased)
 
+### Added
+
+- Added new scopes `moderator:read:chatters`, `moderator:read:shield_mode`, `moderator:manage:shield_mode`
+
 ## [v0.9.0] - 2022-10-15
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.8.0...v0.9.0)
