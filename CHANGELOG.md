@@ -4,7 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.9.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.9.1...Unreleased)
+
+## [v0.9.1] - 2022-12-03
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.9.0...v0.9.1)
+
+### Added
+
+- Added new scopes `moderator:read:chatters`, `moderator:read:shield_mode`, `moderator:manage:shield_mode`
 
 ## [v0.9.0] - 2022-10-15
 
