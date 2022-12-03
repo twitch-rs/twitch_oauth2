@@ -86,7 +86,7 @@ fn main() -> color_eyre::Result<()> {
             }
             cmd!(
                 sh,
-                "cargo doc --target-dir {target_dir} --no-deps --features {TWITCH_OAUTH2_FEATURES} -Zunstable-options -Zrustdoc-scrape-examples=examples {last...}"
+                "cargo doc --target-dir {target_dir} --no-deps --features {TWITCH_OAUTH2_FEATURES} -Zunstable-options -Zrustdoc-scrape-examples {last...}"
             )
             .run()?;
         }
