@@ -16,21 +16,6 @@ jobs:
     steps:
       - name: Done
         run: exit 0
-  security-audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: 1.60.0
-          override: true
-      - uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
   cargo-deny:
     name: Cargo Deny
     runs-on: ubuntu-latest
@@ -42,7 +27,7 @@ jobs:
           - licenses
           - sources
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - uses: EmbarkStudios/cargo-deny-action@v1
