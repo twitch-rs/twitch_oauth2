@@ -83,9 +83,9 @@ impl UserToken {
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<<C as Client<'a>>::Error>>
+    ) -> Result<UserToken, ValidationError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         let validated = access_token.validate_token(http_client).await?;
         Self::new(access_token, refresh_token.into(), validated, client_secret)
@@ -179,9 +179,9 @@ impl UserToken {
         client_secret: ClientSecret,
         user_id: impl AsRef<str>,
         scopes: Vec<Scope>,
-    ) -> Result<UserToken, UserTokenExchangeError<<C as Client<'a>>::Error>>
+    ) -> Result<UserToken, UserTokenExchangeError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         use http::{HeaderMap, Method};
         use std::collections::HashMap;
@@ -239,10 +239,10 @@ impl TwitchToken for UserToken {
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
-    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<(), RefreshTokenError<<C as Client>::Error>>
     where
         Self: Sized,
-        C: Client<'a>,
+        C: Client,
     {
         if let Some(client_secret) = self.client_secret.clone() {
             let (access_token, expires, refresh_token) =
@@ -441,9 +441,9 @@ impl UserTokenBuilder {
         state: &str,
         // TODO: Should be either str or AuthorizationCode
         code: &str,
-    ) -> Result<UserToken, UserTokenExchangeError<<C as Client<'a>>::Error>>
+    ) -> Result<UserToken, UserTokenExchangeError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         if !self.csrf_is_valid(state) {
             return Err(UserTokenExchangeError::StateMismatch);
@@ -647,9 +647,9 @@ impl ImplicitUserTokenBuilder {
         access_token: Option<&str>,
         error: Option<&str>,
         error_description: Option<&str>,
-    ) -> Result<UserToken, ImplicitUserTokenExchangeError<<C as Client<'a>>::Error>>
+    ) -> Result<UserToken, ImplicitUserTokenExchangeError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         if !state.map(|s| self.csrf_is_valid(s)).unwrap_or_default() {
             return Err(ImplicitUserTokenExchangeError::StateMismatch);

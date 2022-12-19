@@ -59,10 +59,10 @@ pub trait TwitchToken {
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
-    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<(), RefreshTokenError<<C as Client>::Error>>
     where
         Self: Sized,
-        C: Client<'a>;
+        C: Client;
     /// Get current lifetime of token.
     fn expires_in(&self) -> std::time::Duration;
 
@@ -95,10 +95,10 @@ pub trait TwitchToken {
     async fn validate_token<'a, C>(
         &self,
         http_client: &'a C,
-    ) -> Result<ValidatedToken, ValidationError<<C as Client<'a>>::Error>>
+    ) -> Result<ValidatedToken, ValidationError<<C as Client>::Error>>
     where
         Self: Sized,
-        C: Client<'a>,
+        C: Client,
     {
         let token = &self.token();
         token.validate_token(http_client).await
@@ -109,10 +109,10 @@ pub trait TwitchToken {
     async fn revoke_token<'a, C>(
         self,
         http_client: &'a C,
-    ) -> Result<(), RevokeTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<(), RevokeTokenError<<C as Client>::Error>>
     where
         Self: Sized,
-        C: Client<'a>,
+        C: Client,
     {
         let token = self.token();
         let client_id = self.client_id();
@@ -136,10 +136,10 @@ impl<T: TwitchToken + Send> TwitchToken for Box<T> {
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
-    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<(), RefreshTokenError<<C as Client>::Error>>
     where
         Self: Sized,
-        C: Client<'a>,
+        C: Client,
     {
         (**self).refresh_token(http_client).await
     }
