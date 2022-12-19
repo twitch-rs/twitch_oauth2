@@ -114,8 +114,8 @@ impl AppAccessToken {
 
     /// Assemble token and validate it. Retrieves [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
     #[cfg(feature = "client")]
-    pub async fn from_existing<'a, RE, C>(
-        http_client: &'a C,
+    pub async fn from_existing<RE, C>(
+        http_client: &C,
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: ClientSecret,
@@ -154,8 +154,8 @@ impl AppAccessToken {
 
     /// Generate app access token via [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
     #[cfg(feature = "client")]
-    pub async fn get_app_access_token<'a, C>(
-        http_client: &'a C,
+    pub async fn get_app_access_token<C>(
+        http_client: &C,
         client_id: ClientId,
         client_secret: ClientSecret,
         scopes: Vec<Scope>,
