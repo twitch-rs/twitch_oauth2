@@ -10,6 +10,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.9.1...v0.9.2)
 
+### Breaking
+
+- Changed `Client` trait to not be specified over a lifetime. Fixes an issue where &'1 Thing<'static> where: Thing<'static> would wrongly lower '1 to be specific. See https://github.com/twitch-rs/twitch_api/issues/236
+
 ## [v0.9.1] - 2022-12-03
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.9.0...v0.9.1)

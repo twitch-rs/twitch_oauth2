@@ -150,9 +150,9 @@ impl AccessTokenRef {
     pub async fn validate_token<'a, C>(
         &self,
         client: &'a C,
-    ) -> Result<ValidatedToken, ValidationError<<C as Client<'a>>::Error>>
+    ) -> Result<ValidatedToken, ValidationError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         let req = self.validate_token_request();
 
@@ -188,9 +188,9 @@ impl AccessTokenRef {
         &self,
         http_client: &'a C,
         client_id: &ClientId,
-    ) -> Result<(), RevokeTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<(), RevokeTokenError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         let req = self.revoke_token_request(client_id);
 
@@ -242,10 +242,10 @@ impl RefreshTokenRef {
         client_secret: &ClientSecret,
     ) -> Result<
         (AccessToken, std::time::Duration, Option<RefreshToken>),
-        RefreshTokenError<<C as Client<'a>>::Error>,
+        RefreshTokenError<<C as Client>::Error>,
     >
     where
-        C: Client<'a>,
+        C: Client,
     {
         let req = self.refresh_token_request(client_id, client_secret);
 

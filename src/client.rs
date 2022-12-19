@@ -14,11 +14,11 @@ pub static TWITCH_OAUTH2_USER_AGENT: &str =
 type BoxedFuture<'a, T> = std::pin::Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 /// A client that can do OAUTH2 requests
-pub trait Client<'a>: Sync + Send + 'a {
+pub trait Client: Sync + Send {
     /// Error returned by the client
     type Error: Error + Send + Sync + 'static;
     /// Send a request
-    fn req(
+    fn req<'a>(
         &'a self,
         request: http::Request<Vec<u8>>,
     ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, <Self as Client>::Error>>;
@@ -30,10 +30,10 @@ pub trait Client<'a>: Sync + Send + 'a {
 pub struct DummyClient;
 
 #[cfg(feature = "reqwest")]
-impl<'a> Client<'a> for DummyClient {
+impl Client for DummyClient {
     type Error = DummyClient;
 
-    fn req(
+    fn req<'a>(
         &'a self,
         _: http::Request<Vec<u8>>,
     ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
@@ -44,10 +44,10 @@ impl<'a> Client<'a> for DummyClient {
 use reqwest::Client as ReqwestClient;
 
 #[cfg(feature = "reqwest")]
-impl<'a> Client<'a> for ReqwestClient {
+impl Client for ReqwestClient {
     type Error = reqwest::Error;
 
-    fn req(
+    fn req<'a>(
         &'a self,
         request: http::Request<Vec<u8>>,
     ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
@@ -93,10 +93,10 @@ pub enum SurfError {
 }
 
 #[cfg(feature = "surf")]
-impl<'a> Client<'a> for SurfClient {
+impl Client for SurfClient {
     type Error = SurfError;
 
-    fn req(
+    fn req<'a>(
         &'a self,
         request: http::Request<Vec<u8>>,
     ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {

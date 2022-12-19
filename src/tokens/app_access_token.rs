@@ -62,9 +62,9 @@ impl TwitchToken for AppAccessToken {
     async fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
-    ) -> Result<(), RefreshTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<(), RefreshTokenError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         let (access_token, expires_in, refresh_token) =
             if let Some(token) = self.refresh_token.take() {
@@ -119,9 +119,9 @@ impl AppAccessToken {
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: ClientSecret,
-    ) -> Result<AppAccessToken, ValidationError<<C as Client<'a>>::Error>>
+    ) -> Result<AppAccessToken, ValidationError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         let token = access_token;
         let validated = token.validate_token(http_client).await?;
@@ -159,9 +159,9 @@ impl AppAccessToken {
         client_id: ClientId,
         client_secret: ClientSecret,
         scopes: Vec<Scope>,
-    ) -> Result<AppAccessToken, AppAccessTokenError<<C as Client<'a>>::Error>>
+    ) -> Result<AppAccessToken, AppAccessTokenError<<C as Client>::Error>>
     where
-        C: Client<'a>,
+        C: Client,
     {
         let req = Self::get_app_access_token_request(&client_id, &client_secret, scopes);
 
