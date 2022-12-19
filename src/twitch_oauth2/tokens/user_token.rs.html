@@ -855,8 +855,8 @@
     ///
     /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;client&quot;</span>)]
-    </span><span class="kw">pub async fn </span>from_existing&lt;<span class="lifetime">&#39;a</span>, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+    </span><span class="kw">pub async fn </span>from_existing&lt;C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         access_token: AccessToken,
         refresh_token: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;RefreshToken&gt;&gt;,
         client_secret: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;ClientSecret&gt;&gt;,
@@ -950,8 +950,8 @@
     /// # fn main() {run();}
     /// ```
     </span><span class="attr">#[cfg(all(feature = <span class="string">&quot;mock_api&quot;</span>, feature = <span class="string">&quot;client&quot;</span>))]
-    </span><span class="kw">pub async fn </span>mock_token&lt;<span class="lifetime">&#39;a</span>, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+    </span><span class="kw">pub async fn </span>mock_token&lt;C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         client_id: ClientId,
         client_secret: ClientSecret,
         user_id: <span class="kw">impl </span>AsRef&lt;str&gt;,

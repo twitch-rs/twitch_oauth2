@@ -104,9 +104,6 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
 </pre><pre class="rust"><code><span class="attr">#![allow(clippy::extra_unused_lifetimes)]
 </span><span class="doccomment">//! Types used in OAUTH2 flow.
 
@@ -184,10 +181,7 @@
     </span><span class="kw">pub fn </span>new_random_len(len: u32) -&gt; CsrfToken {
         <span class="kw">use </span>rand::Rng <span class="kw">as _</span>;
         <span class="kw">let </span>random_bytes: Vec&lt;u8&gt; = (<span class="number">0</span>..len).map(|<span class="kw">_</span>| rand::thread_rng().gen::&lt;u8&gt;()).collect();
-        CsrfToken::new(base64::encode_config(
-            <span class="kw-2">&amp;</span>random_bytes,
-            base64::URL_SAFE_NO_PAD,
-        ))
+        CsrfToken::new(base64::encode_config(random_bytes, base64::URL_SAFE_NO_PAD))
     }
 }
 

@@ -551,8 +551,8 @@
 <span>537</span>
 <span>538</span>
 <span>539</span>
-</pre><pre class="rust"><code><button class="expand">&varr;</button>    <span class="kw">pub async fn </span>mock_token&lt;<span class="lifetime">&#39;a</span>, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+</pre><pre class="rust"><code><button class="expand">&varr;</button>    <span class="kw">pub async fn </span>mock_token&lt;C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         client_id: ClientId,
         client_secret: ClientSecret,
         user_id: <span class="kw">impl </span>AsRef&lt;str&gt;,

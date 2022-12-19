@@ -5,9 +5,9 @@
 <p>This will drop any excess capacity.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.take" class="method has-srclink"><a class="srclink rightside" href="../../src/twitch_oauth2/types.rs.html#26">source</a><h4 class="code-header">pub fn <a href="#method.take" class="fn">take</a>(self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></h4></section></summary><div class="docblock"><p>Unwraps the underlying <a href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="String"><code>String</code></a> value</p>
 </div></details></div></details></div><h2 id="deref-methods-AccessTokenRef" class="small-section-header"><span>Methods from <a class="trait" href="https://doc.rust-lang.org/nightly/core/ops/deref/trait.Deref.html" title="trait core::ops::deref::Deref">Deref</a>&lt;Target = <a class="struct" href="struct.AccessTokenRef.html" title="struct twitch_oauth2::types::AccessTokenRef">AccessTokenRef</a>&gt;</span><a href="#deref-methods-AccessTokenRef" class="anchor">§</a></h2><div id="deref-methods-AccessTokenRef-1"><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.as_str" class="method has-srclink"><a class="srclink rightside" href="../../src/twitch_oauth2/types.rs.html#26">source</a><h4 class="code-header">pub fn <a href="#method.as_str" class="fn">as_str</a>(&amp;self) -&gt; &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a></h4></section></summary><div class="docblock"><p>Provides access to the underlying value as a string slice.</p>
-</div><div class="docblock scraped-example-list"><span></span><h5 id="scraped-examples"><a href="#scraped-examples">Examples found in repository</a><a class="scrape-help" href="../../scrape-examples-help.html">?</a></h5><div class="scraped-example expanded" data-locs="[[[0,0],&quot;../../src/twitch_oauth2/types.rs.html#96&quot;,&quot;line 96&quot;]]"><div class="scraped-example-title">src/types.rs (<a href="../../src/twitch_oauth2/types.rs.html#96">line 96</a>)</div><div class="code-wrapper"><div class="example-wrap"><pre class="src-line-numbers"><span>96</span>
+</div><div class="docblock scraped-example-list"><span></span><h5 id="scraped-examples"><a href="#scraped-examples">Examples found in repository</a><a class="scrape-help" href="../../scrape-examples-help.html">?</a></h5><div class="scraped-example expanded" data-locs="[[[0,0],&quot;../../src/twitch_oauth2/types.rs.html#93&quot;,&quot;line 93&quot;]]"><div class="scraped-example-title">src/types.rs (<a href="../../src/twitch_oauth2/types.rs.html#93">line 93</a>)</div><div class="code-wrapper"><div class="example-wrap"><pre class="src-line-numbers"><span>93</span>
 </pre><pre class="rust"><code>    <span class="kw">pub fn </span>secret(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str { <span class="self">self</span>.<span class="highlight focus">as_str</span>() }</code></pre></div>
-</div></div></div></details></div><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.secret" class="method has-srclink"><a class="srclink rightside" href="../../src/twitch_oauth2/types.rs.html#96">source</a><h4 class="code-header">pub fn <a href="#method.secret" class="fn">secret</a>(&amp;self) -&gt; &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a></h4></section></summary><div class="docblock"><p>Get the secret from this string.</p>
+</div></div></div></details></div><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.secret" class="method has-srclink"><a class="srclink rightside" href="../../src/twitch_oauth2/types.rs.html#93">source</a><h4 class="code-header">pub fn <a href="#method.secret" class="fn">secret</a>(&amp;self) -&gt; &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a></h4></section></summary><div class="docblock"><p>Get the secret from this string.</p>
 <p>This function is the same as <a href="struct.AccessTokenRef.html#method.as_str"><code>AccessToken::as_str</code></a>, but has another name for searchability, prefer to use this function.</p>
 </div><div class="docblock scraped-example-list"><span></span><h5 id="scraped-examples-1"><a href="#scraped-examples-1">Examples found in repository</a><a class="scrape-help" href="../../scrape-examples-help.html">?</a></h5><div class="scraped-example " data-locs="[[[3,3],&quot;../../src/twitch_oauth2/lib.rs.html#128&quot;,&quot;line 128&quot;],[[47,47],&quot;../../src/twitch_oauth2/lib.rs.html#172&quot;,&quot;line 172&quot;]]"><div class="scraped-example-title">src/lib.rs (<a href="../../src/twitch_oauth2/lib.rs.html#128">line 128</a>)</div><div class="code-wrapper"><button class="prev">&pr;</button> <button class="next">&sc;</button><div class="example-wrap"><pre class="src-line-numbers"><span>125</span>
 <span>126</span>
@@ -563,8 +563,8 @@
 <span>462</span>
 <span>463</span>
 <span>464</span>
-</pre><pre class="rust"><code><button class="expand">&varr;</button>    <span class="kw">pub async fn </span>from_existing&lt;<span class="lifetime">&#39;a</span>, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+</pre><pre class="rust"><code><button class="expand">&varr;</button>    <span class="kw">pub async fn </span>from_existing&lt;C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         access_token: AccessToken,
         refresh_token: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;RefreshToken&gt;&gt;,
         client_secret: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;ClientSecret&gt;&gt;,
@@ -658,8 +658,8 @@
     /// # fn main() {run();}
     /// ```
     </span><span class="attr">#[cfg(all(feature = <span class="string">&quot;mock_api&quot;</span>, feature = <span class="string">&quot;client&quot;</span>))]
-    </span><span class="kw">pub async fn </span>mock_token&lt;<span class="lifetime">&#39;a</span>, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+    </span><span class="kw">pub async fn </span>mock_token&lt;C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         client_id: ClientId,
         client_secret: ClientSecret,
         user_id: <span class="kw">impl </span>AsRef&lt;str&gt;,
@@ -967,8 +967,8 @@
 <span>134</span>
 <span>135</span>
 <span>136</span>
-</pre><pre class="rust"><code><button class="expand">&varr;</button>    <span class="kw">pub async fn </span>from_existing&lt;<span class="lifetime">&#39;a</span>, RE, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+</pre><pre class="rust"><code><button class="expand">&varr;</button>    <span class="kw">pub async fn </span>from_existing&lt;RE, C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         access_token: AccessToken,
         refresh_token: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;RefreshToken&gt;&gt;,
         client_secret: ClientSecret,

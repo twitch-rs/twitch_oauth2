@@ -182,10 +182,10 @@
     <span class="doccomment">/// Error returned by the client
     </span><span class="kw">type </span>Error: Error + Send + Sync + <span class="lifetime">&#39;static</span>;
     <span class="doccomment">/// Send a request
-    </span><span class="kw">fn </span>req&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
+    </span><span class="kw">fn </span>req(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         request: http::Request&lt;Vec&lt;u8&gt;&gt;,
-    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, &lt;<span class="self">Self </span><span class="kw">as </span>Client&gt;::Error&gt;&gt;;
+    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;_</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, &lt;<span class="self">Self </span><span class="kw">as </span>Client&gt;::Error&gt;&gt;;
 }
 
 <span class="attr">#[doc(hidden)]
@@ -197,10 +197,10 @@
 </span><span class="kw">impl </span>Client <span class="kw">for </span>DummyClient {
     <span class="kw">type </span>Error = DummyClient;
 
-    <span class="kw">fn </span>req&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
+    <span class="kw">fn </span>req(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: http::Request&lt;Vec&lt;u8&gt;&gt;,
-    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, <span class="self">Self</span>::Error&gt;&gt; {
+    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;_</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, <span class="self">Self</span>::Error&gt;&gt; {
         Box::pin(<span class="kw">async move </span>{ <span class="prelude-val">Err</span>(<span class="self">self</span>.clone()) })
     }
 }
@@ -211,10 +211,10 @@
 </span><span class="kw">impl </span>Client <span class="kw">for </span>ReqwestClient {
     <span class="kw">type </span>Error = reqwest::Error;
 
-    <span class="kw">fn </span>req&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
+    <span class="kw">fn </span>req(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         request: http::Request&lt;Vec&lt;u8&gt;&gt;,
-    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, <span class="self">Self</span>::Error&gt;&gt; {
+    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;_</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, <span class="self">Self</span>::Error&gt;&gt; {
         <span class="comment">// Reqwest plays really nice here and has a try_from on `http::Request` -&gt; `reqwest::Request`
         </span><span class="kw">let </span>req = <span class="kw">match </span>reqwest::Request::try_from(request) {
             <span class="prelude-val">Ok</span>(req) =&gt; req,
@@ -260,10 +260,10 @@
 </span><span class="kw">impl </span>Client <span class="kw">for </span>SurfClient {
     <span class="kw">type </span>Error = SurfError;
 
-    <span class="kw">fn </span>req&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
+    <span class="kw">fn </span>req(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         request: http::Request&lt;Vec&lt;u8&gt;&gt;,
-    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, <span class="self">Self</span>::Error&gt;&gt; {
+    ) -&gt; BoxedFuture&lt;<span class="lifetime">&#39;_</span>, <span class="prelude-ty">Result</span>&lt;http::Response&lt;Vec&lt;u8&gt;&gt;, <span class="self">Self</span>::Error&gt;&gt; {
         <span class="comment">// First we translate the `http::Request` method and uri into types that surf understands.
 
         </span><span class="kw">let </span>method: surf::http::Method = request.method().clone().into();

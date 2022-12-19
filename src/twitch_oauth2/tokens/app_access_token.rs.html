@@ -322,8 +322,8 @@
 
     <span class="doccomment">/// Assemble token and validate it. Retrieves [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;client&quot;</span>)]
-    </span><span class="kw">pub async fn </span>from_existing&lt;<span class="lifetime">&#39;a</span>, RE, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+    </span><span class="kw">pub async fn </span>from_existing&lt;RE, C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         access_token: AccessToken,
         refresh_token: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;RefreshToken&gt;&gt;,
         client_secret: ClientSecret,
@@ -362,8 +362,8 @@
 
     <span class="doccomment">/// Generate app access token via [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;client&quot;</span>)]
-    </span><span class="kw">pub async fn </span>get_app_access_token&lt;<span class="lifetime">&#39;a</span>, C&gt;(
-        http_client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C,
+    </span><span class="kw">pub async fn </span>get_app_access_token&lt;C&gt;(
+        http_client: <span class="kw-2">&amp;</span>C,
         client_id: ClientId,
         client_secret: ClientSecret,
         scopes: Vec&lt;Scope&gt;,
