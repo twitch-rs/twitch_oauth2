@@ -78,8 +78,8 @@ impl UserToken {
     ///
     /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
     #[cfg(feature = "client")]
-    pub async fn from_existing<'a, C>(
-        http_client: &'a C,
+    pub async fn from_existing<C>(
+        http_client: &C,
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: impl Into<Option<ClientSecret>>,
@@ -173,8 +173,8 @@ impl UserToken {
     /// # fn main() {run();}
     /// ```
     #[cfg(all(feature = "mock_api", feature = "client"))]
-    pub async fn mock_token<'a, C>(
-        http_client: &'a C,
+    pub async fn mock_token<C>(
+        http_client: &C,
         client_id: ClientId,
         client_secret: ClientSecret,
         user_id: impl AsRef<str>,

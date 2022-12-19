@@ -18,10 +18,10 @@ pub trait Client: Sync + Send {
     /// Error returned by the client
     type Error: Error + Send + Sync + 'static;
     /// Send a request
-    fn req<'a>(
-        &'a self,
+    fn req(
+        &self,
         request: http::Request<Vec<u8>>,
-    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, <Self as Client>::Error>>;
+    ) -> BoxedFuture<'_, Result<http::Response<Vec<u8>>, <Self as Client>::Error>>;
 }
 
 #[doc(hidden)]
@@ -33,10 +33,10 @@ pub struct DummyClient;
 impl Client for DummyClient {
     type Error = DummyClient;
 
-    fn req<'a>(
-        &'a self,
+    fn req(
+        &self,
         _: http::Request<Vec<u8>>,
-    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
+    ) -> BoxedFuture<'_, Result<http::Response<Vec<u8>>, Self::Error>> {
         Box::pin(async move { Err(self.clone()) })
     }
 }
@@ -47,10 +47,10 @@ use reqwest::Client as ReqwestClient;
 impl Client for ReqwestClient {
     type Error = reqwest::Error;
 
-    fn req<'a>(
-        &'a self,
+    fn req(
+        &self,
         request: http::Request<Vec<u8>>,
-    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
+    ) -> BoxedFuture<'_, Result<http::Response<Vec<u8>>, Self::Error>> {
         // Reqwest plays really nice here and has a try_from on `http::Request` -> `reqwest::Request`
         let req = match reqwest::Request::try_from(request) {
             Ok(req) => req,
@@ -96,10 +96,10 @@ pub enum SurfError {
 impl Client for SurfClient {
     type Error = SurfError;
 
-    fn req<'a>(
-        &'a self,
+    fn req(
+        &self,
         request: http::Request<Vec<u8>>,
-    ) -> BoxedFuture<'a, Result<http::Response<Vec<u8>>, Self::Error>> {
+    ) -> BoxedFuture<'_, Result<http::Response<Vec<u8>>, Self::Error>> {
         // First we translate the `http::Request` method and uri into types that surf understands.
 
         let method: surf::http::Method = request.method().clone().into();
