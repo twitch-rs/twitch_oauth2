@@ -33,4 +33,4 @@ for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
 </sub>
 
-[local-docs]: https://img.shields.io/github/workflow/status/twitch-rs/twitch_oauth2/github%20pages/main?label=docs&style=flat-square&event=push
+[local-docs]: https://img.shields.io/github/actions/workflow/status/twitch-rs/twitch_oauth2/gh-pages.yml?label=dev%20docs&style=flat-square&event=push
