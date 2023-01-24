@@ -4,7 +4,16 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.10.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.11.0...Unreleased)
+
+## [v0.11.0] - 2023-01-24
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.10.0...v0.11.0)
+
+### Breaking
+
+- Updated `twitch_types` to `0.4.0`
+- MSRV bumped to ``1.66.1`
 
 ## [v0.10.0] - 2022-12-19
 

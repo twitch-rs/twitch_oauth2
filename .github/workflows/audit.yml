@@ -32,7 +32,7 @@ jobs:
           submodules: recursive
       - uses: EmbarkStudios/cargo-deny-action@v1
         with:
-          rust-version: "1.60.0"
+          rust-version: "1.66.1"
           command: check ${{ matrix.checks }} -s
           arguments: --all-features
           log-level: warn
