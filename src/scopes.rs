@@ -1,10 +1,9 @@
 //! Module for all possible scopes in twitch.
-
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 macro_rules! scope_impls {
-    ($($i:ident,scope: $rename:literal, doc: $doc:literal);* $(;)? ) => {
+    ($($(#[cfg(($cfg:meta))])* $(#[$meta:meta])* $i:ident,scope: $rename:literal, doc: $doc:literal);* $(;)? ) => {
         #[doc = "Scopes for twitch."]
         #[doc = ""]
         #[doc = "<https://dev.twitch.tv/docs/authentication/#scopes>"]
@@ -14,6 +13,8 @@ macro_rules! scope_impls {
         #[serde(into = "String")]
         pub enum Scope {
             $(
+                $(#[$cfg])*
+                $(#[$meta])*
                 #[doc = $doc]
                 #[doc = "\n\n"]
                 #[doc = "`"]
@@ -28,9 +29,12 @@ macro_rules! scope_impls {
 
         impl std::fmt::Display for Scope {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                #![allow(deprecated)]
+
                 f.write_str(match self {
                     Scope::Other(s) => &s,
                     $(
+                        $(#[$cfg])*
                         Scope::$i => $rename,
                     )*
                 })
@@ -42,33 +46,53 @@ macro_rules! scope_impls {
             #[doc = "\n\n"]
             #[doc = "Please note that this may not work for you, as some auth flows and \"apis\" don't accept all scopes"]
             pub fn all() -> Vec<Scope> {
+                #![allow(deprecated)]
                 vec![
-                    $(Scope::$i,)*
+
+                    $(
+                        $(#[$cfg])*
+                        Scope::$i,
+                    )*
                 ]
             }
 
             #[doc = "Get a description for the token"]
             pub fn description(&self) -> &'static str {
+                #![allow(deprecated)]
+
                 match self {
-                    $(Self::$i => $doc,)*
+
+                    $(
+                        $(#[$cfg])*
+                        Self::$i => $doc,
+                    )*
                     _ => "unknown scope"
                 }
             }
 
             #[doc = "Make a scope from a cow string"]
             pub fn parse<C>(s: C) -> Scope where C: Into<Cow<'static, str>> {
+                #![allow(deprecated)]
                 use std::borrow::Borrow;
                 let s = s.into();
                 match s.borrow() {
-                    $($rename => {Scope::$i})*,
+
+                    $(
+                        $(#[$cfg])*
+                        $rename => {Scope::$i}
+                    )*,
                     _ => Scope::Other(s)
                 }
             }
 
             /// Get the scope as a borrowed string.
             pub fn as_str(&self) -> &str {
+                #![allow(deprecated)]
                 match self {
-                    $(Scope::$i => $rename,)*
+                    $(
+                        $(#[$cfg])*
+                        Scope::$i => $rename,
+                    )*
                     Self::Other(c) =>  c.as_ref()
                 }
             }
@@ -103,7 +127,8 @@ scope_impls!(
     ChannelReadStreamKey,           scope: "channel:read:stream_key",           doc: "View an authorized user’s stream key.";
     ChannelReadSubscriptions,       scope: "channel:read:subscriptions",        doc: "View a list of all subscribers to a channel and check if a user is subscribed to a channel.";
     ChannelReadVips,                scope: "channel:read:vips",                 doc: "Read the list of VIPs in your channel.";
-    ChannelSubscriptions,           scope: "channel_subscriptions",             doc: "\\[DEPRECATED\\] Read all subscribers to your channel.";
+    #[deprecated(note = "Use `ChannelReadSubscriptions` (`channel:read:subscriptions`) instead")]
+    ChannelSubscriptions,           scope: "channel_subscriptions",             doc: "Read all subscribers to your channel.";
     ChatEdit,                       scope: "chat:edit",                         doc: "Send live stream chat and rooms messages.";
     ChatRead,                       scope: "chat:read",                         doc: "View live stream chat and rooms messages.";
     ClipsEdit,                      scope: "clips:edit",                        doc: "Manage Clips for a channel.";
@@ -115,6 +140,8 @@ scope_impls!(
     ModeratorManageBlockedTerms,    scope: "moderator:manage:blocked_terms",    doc: "Manage a broadcaster’s list of blocked terms.";
     ModeratorManageChatMessages,    scope: "moderator:manage:chat_messages",    doc: "Delete chat messages in channels where you have the moderator role";
     ModeratorManageChatSettings,    scope: "moderator:manage:chat_settings",    doc: "View a broadcaster’s chat room settings.";
+    ModeratorReadShoutouts,         scope: "moderator:read:shoutouts",          doc: "View a broadcaster’s shoutouts.";
+    ModeratorManageShoutouts,       scope: "moderator:manage:shoutouts",        doc: "Manage a broadcaster’s shoutouts.";
     ModeratorReadAutomodSettings,   scope: "moderator:read:automod_settings",   doc: "View a broadcaster’s AutoMod settings.";
     ModeratorReadBlockedTerms,      scope: "moderator:read:blocked_terms",      doc: "View a broadcaster’s list of blocked terms.";
     ModeratorReadChatSettings,      scope: "moderator:read:chat_settings",      doc: "View a broadcaster’s chat room settings.";
