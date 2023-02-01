@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/scopes.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>scopes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6d262342be62306e.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-5f7299aa2b503fb1.css"><link rel="stylesheet" disabled href="../../static.files/dark-dfb18ef8114bb428.css"><link rel="stylesheet" disabled href="../../static.files/ayu-4047a6aaddd3789d.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../twitch_oauth2/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/scopes.rs`."><title>scopes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c6d069be585f4e9.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-f501212b8b071243.css"><link rel="stylesheet" disabled href="../../static.files/dark-e92fc12c34ff89d3.css"><link rel="stylesheet" disabled href="../../static.files/ayu-c8c85693c8a4f9db.css"><script id="default-settings" ></script><script src="../../static.files/storage-ff4706381ddb2707.js"></script><script defer src="../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-02cbe07fc548e88c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../twitch_oauth2/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -166,13 +166,39 @@
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
 <a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for all possible scopes in twitch.
-
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::borrow::Cow;
 
 <span class="macro">macro_rules! </span>scope_impls {
-    ($(<span class="macro-nonterminal">$i</span>:ident,scope: <span class="macro-nonterminal">$rename</span>:literal, doc: <span class="macro-nonterminal">$doc</span>:literal);* $(;)<span class="question-mark">? </span>) =&gt; {
+    ($($(<span class="attr">#[cfg((<span class="macro-nonterminal">$cfg</span>:meta))]</span>)* $(<span class="attr">#[<span class="macro-nonterminal">$meta</span>:meta]</span>)* <span class="macro-nonterminal">$i</span>:ident,scope: <span class="macro-nonterminal">$rename</span>:literal, doc: <span class="macro-nonterminal">$doc</span>:literal);* $(;)<span class="question-mark">? </span>) =&gt; {
         <span class="attr">#[doc = <span class="string">&quot;Scopes for twitch.&quot;</span>]
         #[doc = <span class="string">&quot;&quot;</span>]
         #[doc = <span class="string">&quot;&lt;https://dev.twitch.tv/docs/authentication/#scopes&gt;&quot;</span>]
@@ -182,6 +208,8 @@
         #[serde(into = <span class="string">&quot;String&quot;</span>)]
         </span><span class="kw">pub enum </span>Scope {
             $(
+                $(<span class="attr">#[<span class="macro-nonterminal">$cfg</span>]</span>)*
+                $(<span class="attr">#[<span class="macro-nonterminal">$meta</span>]</span>)*
                 <span class="attr">#[doc = <span class="macro-nonterminal">$doc</span>]
                 #[doc = <span class="string">&quot;\n\n&quot;</span>]
                 #[doc = <span class="string">&quot;`&quot;</span>]
@@ -196,9 +224,12 @@
 
         <span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Scope {
             <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-                f.write_str(<span class="kw">match </span><span class="self">self </span>{
+                <span class="attr">#![allow(deprecated)]
+
+                </span>f.write_str(<span class="kw">match </span><span class="self">self </span>{
                     Scope::Other(s) =&gt; <span class="kw-2">&amp;</span>s,
                     $(
+                        $(<span class="attr">#[<span class="macro-nonterminal">$cfg</span>]</span>)*
                         Scope::<span class="macro-nonterminal">$i </span>=&gt; <span class="macro-nonterminal">$rename</span>,
                     )*
                 })
@@ -210,33 +241,53 @@
             #[doc = <span class="string">&quot;\n\n&quot;</span>]
             #[doc = <span class="string">&quot;Please note that this may not work for you, as some auth flows and \&quot;apis\&quot; don&#39;t accept all scopes&quot;</span>]
             </span><span class="kw">pub fn </span>all() -&gt; Vec&lt;Scope&gt; {
-                <span class="macro">vec!</span>[
-                    $(Scope::<span class="macro-nonterminal">$i</span>,)*
+                <span class="attr">#![allow(deprecated)]
+                </span><span class="macro">vec!</span>[
+
+                    $(
+                        $(<span class="attr">#[<span class="macro-nonterminal">$cfg</span>]</span>)*
+                        Scope::<span class="macro-nonterminal">$i</span>,
+                    )*
                 ]
             }
 
             <span class="attr">#[doc = <span class="string">&quot;Get a description for the token&quot;</span>]
             </span><span class="kw">pub fn </span>description(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
-                <span class="kw">match </span><span class="self">self </span>{
-                    $(<span class="self">Self</span>::<span class="macro-nonterminal">$i </span>=&gt; <span class="macro-nonterminal">$doc</span>,)*
+                <span class="attr">#![allow(deprecated)]
+
+                </span><span class="kw">match </span><span class="self">self </span>{
+
+                    $(
+                        $(<span class="attr">#[<span class="macro-nonterminal">$cfg</span>]</span>)*
+                        <span class="self">Self</span>::<span class="macro-nonterminal">$i </span>=&gt; <span class="macro-nonterminal">$doc</span>,
+                    )*
                     <span class="kw">_ </span>=&gt; <span class="string">&quot;unknown scope&quot;
                 </span>}
             }
 
             <span class="attr">#[doc = <span class="string">&quot;Make a scope from a cow string&quot;</span>]
             </span><span class="kw">pub fn </span>parse&lt;C&gt;(s: C) -&gt; Scope <span class="kw">where </span>C: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt; {
-                <span class="kw">use </span>std::borrow::Borrow;
+                <span class="attr">#![allow(deprecated)]
+                </span><span class="kw">use </span>std::borrow::Borrow;
                 <span class="kw">let </span>s = s.into();
                 <span class="kw">match </span>s.borrow() {
-                    $(<span class="macro-nonterminal">$rename </span>=&gt; {Scope::<span class="macro-nonterminal">$i</span>})<span class="kw-2">*</span>,
+
+                    $(
+                        $(<span class="attr">#[<span class="macro-nonterminal">$cfg</span>]</span>)*
+                        <span class="macro-nonterminal">$rename </span>=&gt; {Scope::<span class="macro-nonterminal">$i</span>}
+                    )<span class="kw-2">*</span>,
                     <span class="kw">_ </span>=&gt; Scope::Other(s)
                 }
             }
 
             <span class="doccomment">/// Get the scope as a borrowed string.
             </span><span class="kw">pub fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-                <span class="kw">match </span><span class="self">self </span>{
-                    $(Scope::<span class="macro-nonterminal">$i </span>=&gt; <span class="macro-nonterminal">$rename</span>,)*
+                <span class="attr">#![allow(deprecated)]
+                </span><span class="kw">match </span><span class="self">self </span>{
+                    $(
+                        $(<span class="attr">#[<span class="macro-nonterminal">$cfg</span>]</span>)*
+                        Scope::<span class="macro-nonterminal">$i </span>=&gt; <span class="macro-nonterminal">$rename</span>,
+                    )*
                     <span class="self">Self</span>::Other(c) =&gt;  c.as_ref()
                 }
             }
@@ -271,7 +322,8 @@
     ChannelReadStreamKey,           scope: <span class="string">&quot;channel:read:stream_key&quot;</span>,           doc: <span class="string">&quot;View an authorized user’s stream key.&quot;</span>;
     ChannelReadSubscriptions,       scope: <span class="string">&quot;channel:read:subscriptions&quot;</span>,        doc: <span class="string">&quot;View a list of all subscribers to a channel and check if a user is subscribed to a channel.&quot;</span>;
     ChannelReadVips,                scope: <span class="string">&quot;channel:read:vips&quot;</span>,                 doc: <span class="string">&quot;Read the list of VIPs in your channel.&quot;</span>;
-    ChannelSubscriptions,           scope: <span class="string">&quot;channel_subscriptions&quot;</span>,             doc: <span class="string">&quot;\\[DEPRECATED\\] Read all subscribers to your channel.&quot;</span>;
+    <span class="attr">#[deprecated(note = <span class="string">&quot;Use `ChannelReadSubscriptions` (`channel:read:subscriptions`) instead&quot;</span>)]
+    </span>ChannelSubscriptions,           scope: <span class="string">&quot;channel_subscriptions&quot;</span>,             doc: <span class="string">&quot;Read all subscribers to your channel.&quot;</span>;
     ChatEdit,                       scope: <span class="string">&quot;chat:edit&quot;</span>,                         doc: <span class="string">&quot;Send live stream chat and rooms messages.&quot;</span>;
     ChatRead,                       scope: <span class="string">&quot;chat:read&quot;</span>,                         doc: <span class="string">&quot;View live stream chat and rooms messages.&quot;</span>;
     ClipsEdit,                      scope: <span class="string">&quot;clips:edit&quot;</span>,                        doc: <span class="string">&quot;Manage Clips for a channel.&quot;</span>;
@@ -283,6 +335,8 @@
     ModeratorManageBlockedTerms,    scope: <span class="string">&quot;moderator:manage:blocked_terms&quot;</span>,    doc: <span class="string">&quot;Manage a broadcaster’s list of blocked terms.&quot;</span>;
     ModeratorManageChatMessages,    scope: <span class="string">&quot;moderator:manage:chat_messages&quot;</span>,    doc: <span class="string">&quot;Delete chat messages in channels where you have the moderator role&quot;</span>;
     ModeratorManageChatSettings,    scope: <span class="string">&quot;moderator:manage:chat_settings&quot;</span>,    doc: <span class="string">&quot;View a broadcaster’s chat room settings.&quot;</span>;
+    ModeratorReadShoutouts,         scope: <span class="string">&quot;moderator:read:shoutouts&quot;</span>,          doc: <span class="string">&quot;View a broadcaster’s shoutouts.&quot;</span>;
+    ModeratorManageShoutouts,       scope: <span class="string">&quot;moderator:manage:shoutouts&quot;</span>,        doc: <span class="string">&quot;Manage a broadcaster’s shoutouts.&quot;</span>;
     ModeratorReadAutomodSettings,   scope: <span class="string">&quot;moderator:read:automod_settings&quot;</span>,   doc: <span class="string">&quot;View a broadcaster’s AutoMod settings.&quot;</span>;
     ModeratorReadBlockedTerms,      scope: <span class="string">&quot;moderator:read:blocked_terms&quot;</span>,      doc: <span class="string">&quot;View a broadcaster’s list of blocked terms.&quot;</span>;
     ModeratorReadChatSettings,      scope: <span class="string">&quot;moderator:read:chat_settings&quot;</span>,      doc: <span class="string">&quot;View a broadcaster’s chat room settings.&quot;</span>;
@@ -335,4 +389,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="twitch_oauth2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (c8e6a9e8b 2023-01-23)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="twitch_oauth2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (dc1d9d50f 2023-01-31)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-7c23ac01f615ce90.css" ></div></body></html>
