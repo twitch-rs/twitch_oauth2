@@ -6,6 +6,14 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.11.0...Unreleased)
 
+### Added
+
+- Added scopes for shoutouts
+
+### Changed
+
+- Marked `channel_subscriptions` as deprecated.
+
 ## [v0.11.0] - 2023-01-24
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.10.0...v0.11.0)
