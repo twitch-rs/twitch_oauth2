@@ -146,9 +146,11 @@ scope_impls!(
     ModeratorReadBlockedTerms,      scope: "moderator:read:blocked_terms",      doc: "View a broadcaster’s list of blocked terms.";
     ModeratorReadChatSettings,      scope: "moderator:read:chat_settings",      doc: "View a broadcaster’s chat room settings.";
     ModeratorReadChatters,          scope: "moderator:read:chatters",           doc: "View the chatters in a broadcaster’s chat room.";
+    ModeratorReadFollowers,         scope: "moderator:read:followers",          doc: "Read the followers of a broadcaster.";
     ModeratorReadShieldMode,        scope: "moderator:read:shield_mode",        doc: "View a broadcaster’s Shield Mode status.";
     ModeratorManageShieldMode,      scope: "moderator:manage:shield_mode",      doc: "Manage a broadcaster’s Shield Mode status.";
     UserEdit,                       scope: "user:edit",                         doc: "Manage a user object.";
+    #[deprecated(note = "Not used anymore, see https://discuss.dev.twitch.tv/t/deprecation-of-create-and-delete-follows-api-endpoints/32351")]
     UserEditBroadcast,              scope: "user:edit:broadcast",               doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
     UserEditFollows,                scope: "user:edit:follows",                 doc: "\\[DEPRECATED\\] Was previously used for “Create User Follows” and “Delete User Follows.";
     UserManageBlockedUsers,         scope: "user:manage:blocked_users",         doc: "Manage the block list of a user.";
