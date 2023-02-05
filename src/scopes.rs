@@ -3,7 +3,15 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 macro_rules! scope_impls {
-    ($($(#[cfg(($cfg:meta))])* $(#[$meta:meta])* $i:ident,scope: $rename:literal, doc: $doc:literal);* $(;)? ) => {
+    (@omit #[deprecated($depr:tt)] $i:ident) => {
+        #[cfg(_internal_never)]
+        Self::$i
+    };
+    (@omit $i:ident) => {
+        Self::$i
+    };
+
+    ($($(#[cfg(($cfg:meta))])* $(#[deprecated($depr:meta)])? $i:ident,scope: $rename:literal, doc: $doc:literal);* $(;)? ) => {
         #[doc = "Scopes for twitch."]
         #[doc = ""]
         #[doc = "<https://dev.twitch.tv/docs/authentication/#scopes>"]
@@ -13,8 +21,8 @@ macro_rules! scope_impls {
         #[serde(into = "String")]
         pub enum Scope {
             $(
-                $(#[$cfg])*
-                $(#[$meta])*
+                $(#[cfg($cfg)])*
+                $(#[deprecated($depr)])*
                 #[doc = $doc]
                 #[doc = "\n\n"]
                 #[doc = "`"]
@@ -34,7 +42,7 @@ macro_rules! scope_impls {
                 f.write_str(match self {
                     Scope::Other(s) => &s,
                     $(
-                        $(#[$cfg])*
+                        $(#[cfg($cfg)])*
                         Scope::$i => $rename,
                     )*
                 })
@@ -46,12 +54,10 @@ macro_rules! scope_impls {
             #[doc = "\n\n"]
             #[doc = "Please note that this may not work for you, as some auth flows and \"apis\" don't accept all scopes"]
             pub fn all() -> Vec<Scope> {
-                #![allow(deprecated)]
                 vec![
 
                     $(
-                        $(#[$cfg])*
-                        Scope::$i,
+                        scope_impls!(@omit $(#[deprecated($depr)])* $i),
                     )*
                 ]
             }
@@ -63,7 +69,7 @@ macro_rules! scope_impls {
                 match self {
 
                     $(
-                        $(#[$cfg])*
+                        $(#[cfg($cfg)])*
                         Self::$i => $doc,
                     )*
                     _ => "unknown scope"
@@ -78,7 +84,7 @@ macro_rules! scope_impls {
                 match s.borrow() {
 
                     $(
-                        $(#[$cfg])*
+                        $(#[cfg($cfg)])*
                         $rename => {Scope::$i}
                     )*,
                     _ => Scope::Other(s)
@@ -90,7 +96,7 @@ macro_rules! scope_impls {
                 #![allow(deprecated)]
                 match self {
                     $(
-                        $(#[$cfg])*
+                        $(#[cfg($cfg)])*
                         Scope::$i => $rename,
                     )*
                     Self::Other(c) =>  c.as_ref()
@@ -150,8 +156,8 @@ scope_impls!(
     ModeratorReadShieldMode,        scope: "moderator:read:shield_mode",        doc: "View a broadcaster’s Shield Mode status.";
     ModeratorManageShieldMode,      scope: "moderator:manage:shield_mode",      doc: "Manage a broadcaster’s Shield Mode status.";
     UserEdit,                       scope: "user:edit",                         doc: "Manage a user object.";
-    #[deprecated(note = "Not used anymore, see https://discuss.dev.twitch.tv/t/deprecation-of-create-and-delete-follows-api-endpoints/32351")]
     UserEditBroadcast,              scope: "user:edit:broadcast",               doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
+    #[deprecated(note = "Not used anymore, see https://discuss.dev.twitch.tv/t/deprecation-of-create-and-delete-follows-api-endpoints/32351")]
     UserEditFollows,                scope: "user:edit:follows",                 doc: "\\[DEPRECATED\\] Was previously used for “Create User Follows” and “Delete User Follows.";
     UserManageBlockedUsers,         scope: "user:manage:blocked_users",         doc: "Manage the block list of a user.";
     UserManageChatColor,            scope: "user:manage:chat_color",            doc: "Update the color used for the user’s name in chat.Update User Chat Color";
@@ -192,6 +198,14 @@ mod tests {
     fn roundabout() {
         for scope in Scope::all() {
             assert_eq!(scope, Scope::parse(scope.to_string()))
+        }
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn no_deprecated() {
+        for scope in Scope::all() {
+            assert!(scope != Scope::ChannelSubscriptions )
         }
     }
 }
