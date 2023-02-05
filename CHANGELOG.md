@@ -9,6 +9,11 @@
 ### Added
 
 - Added `moderator:read:followers` scope
+- Added `Scope::all_slice`, `Scope::as_static_str` to do const operations
+
+### Changed
+
+- Made `Scope::description` const
 
 ### Changed
 
