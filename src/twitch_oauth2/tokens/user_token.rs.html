@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/tokens/user_token.rs`."><title>user_token.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fcf36bf1daa7018b.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-f501212b8b071243.css"><link rel="stylesheet" disabled href="../../../static.files/dark-e92fc12c34ff89d3.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-c8c85693c8a4f9db.css"><script id="default-settings" ></script><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-364b95f387bc3166.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../twitch_oauth2/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/tokens/user_token.rs`."><title>user_token.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="twitch_oauth2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (84dd17b56 2023-04-14)" data-search-js="search-18a8966354e5d906.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../twitch_oauth2/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -775,7 +775,13 @@
 <a href="#775" id="775">775</a>
 <a href="#776" id="776">776</a>
 <a href="#777" id="777">777</a>
-</pre><pre class="rust"><code><span class="kw">use </span>twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
 <span class="kw">use </span><span class="kw">super</span>::errors::ValidationError;
 <span class="attr">#[cfg(feature = <span class="string">&quot;client&quot;</span>)]
@@ -788,7 +794,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::types::{AccessToken, ClientId, RefreshToken};
 
-<span class="doccomment">/// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-implicit-code-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-authorization-code-flow)
+<span class="doccomment">/// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
 ///
 /// Used for requests that need an authenticated user. See also [`AppAccessToken`](super::AppAccessToken)
 ///
@@ -844,8 +850,12 @@
             refresh_token,
             validated.client_id,
             client_secret,
-            validated.login.ok_or(ValidationError::NoLogin)<span class="question-mark">?</span>,
-            validated.user_id.ok_or(ValidationError::NoLogin)<span class="question-mark">?</span>,
+            validated.login.ok_or(ValidationError::InvalidToken(
+                <span class="string">&quot;validation did not include a `login`, token might be an app access token&quot;</span>,
+            ))<span class="question-mark">?</span>,
+            validated.user_id.ok_or(ValidationError::InvalidToken(
+                <span class="string">&quot;validation did not include a `user_id`, token might be an app access token&quot;</span>,
+            ))<span class="question-mark">?</span>,
             validated.scopes,
             validated.expires_in,
         ))
@@ -870,6 +880,8 @@
     }
 
     <span class="doccomment">/// Assemble token without checks.
+    ///
+    /// # Notes
     ///
     /// If `expires_in` is `None`, we&#39;ll assume `token.is_elapsed` is always false
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
@@ -920,7 +932,7 @@
     /// Hidden because it&#39;s not expected to be used.
     </span><span class="kw">pub fn </span>never_expires(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool { <span class="self">self</span>.never_expiring }
 
-    <span class="doccomment">/// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    <span class="doccomment">/// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
     </span><span class="kw">pub fn </span>builder(
         client_id: ClientId,
         client_secret: ClientSecret,
@@ -1054,9 +1066,9 @@
     <span class="kw">fn </span>scopes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[Scope] { <span class="self">self</span>.scopes.as_slice() }
 }
 
-<span class="doccomment">/// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+<span class="doccomment">/// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
 ///
-/// See [`ImplicitUserTokenBuilder`] for the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow) (does not require Client Secret)
+/// See [`ImplicitUserTokenBuilder`] for the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) (does not require Client Secret)
 </span><span class="kw">pub struct </span>UserTokenBuilder {
     <span class="kw">pub</span>(<span class="kw">crate</span>) scopes: Vec&lt;Scope&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) csrf: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::types::CsrfToken&gt;,
@@ -1107,7 +1119,7 @@
 
     <span class="doccomment">/// Generate the URL to request a code.
     ///
-    /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    /// First step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#get-the-user-to-authorize-your-app)
     </span><span class="kw">pub fn </span>generate_url(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (url::Url, <span class="kw">crate</span>::types::CsrfToken) {
         <span class="kw">let </span>csrf = <span class="kw">crate</span>::types::CsrfToken::new_random();
         <span class="self">self</span>.csrf = <span class="prelude-val">Some</span>(csrf.clone());
@@ -1208,7 +1220,7 @@
 
     <span class="doccomment">/// Generate the code with the help of the authorization code
     ///
-    /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    /// Last step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#use-the-authorization-code-to-get-a-token)
     ///
     /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `&lt;redirect_url or first defined url in dev console&gt;?error=&lt;error type&gt;&amp;error_description=&lt;description of error&gt;`
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;client&quot;</span>)]
@@ -1241,9 +1253,9 @@
     }
 }
 
-<span class="doccomment">/// Builder for [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow)
+<span class="doccomment">/// Builder for [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow)
 ///
-/// See [`UserTokenBuilder`] for the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) (requires Client Secret, generally more secure)
+/// See [`UserTokenBuilder`] for the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow) (requires Client Secret, generally more secure)
 </span><span class="kw">pub struct </span>ImplicitUserTokenBuilder {
     <span class="kw">pub</span>(<span class="kw">crate</span>) scopes: Vec&lt;Scope&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) csrf: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::types::CsrfToken&gt;,
@@ -1288,7 +1300,7 @@
 
     <span class="doccomment">/// Generate the URL to request a token.
     ///
-    /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#auth-implicit-code-flow)
+    /// First step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow)
     </span><span class="kw">pub fn </span>generate_url(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (url::Url, <span class="kw">crate</span>::types::CsrfToken) {
         <span class="kw">let </span>csrf = <span class="kw">crate</span>::types::CsrfToken::new_random();
         <span class="self">self</span>.csrf = <span class="prelude-val">Some</span>(csrf.clone());
@@ -1328,7 +1340,7 @@
     ///
     /// You can skip this method and instead use the token in the hash directly with [`UserToken::from_existing()`], but it&#39;s provided here for convenience.
     ///
-    /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow)
+    /// Last step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow)
     ///
     /// # Example
     ///
@@ -1552,5 +1564,4 @@
         <span class="macro">println!</span>(<span class="string">&quot;token: {:?} - {}&quot;</span>, token, token.access_token.secret());
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="twitch_oauth2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (50d3ba5bc 2023-02-04)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</code></pre></div></section></main></body></html>
