@@ -12,7 +12,7 @@ use crate::{
     ClientIdRef, ClientSecretRef,
 };
 
-/// An App Access Token from the [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
+/// An App Access Token from the [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow)
 ///
 /// Used for server-to-server requests. Use [`UserToken`](super::UserToken) for requests that need to be in the context of an authenticated user.
 ///
@@ -92,6 +92,11 @@ impl TwitchToken for AppAccessToken {
 impl AppAccessToken {
     /// Assemble token without checks.
     ///
+    /// This is useful if you already have an app access token and want to use it with this library. Be careful however,
+    /// as this function does not check if the token is valid or expired, nor if it is an `app access token` or `user token`.
+    ///
+    /// # Notes
+    ///
     /// If `expires_in` is `None`, we'll assume `token.is_elapsed() == true`
     pub fn from_existing_unchecked(
         access_token: AccessToken,
@@ -125,6 +130,11 @@ impl AppAccessToken {
     {
         let token = access_token;
         let validated = token.validate_token(http_client).await?;
+        if validated.user_id.is_some() {
+            return Err(ValidationError::InvalidToken(
+                "expected an app access token, got a user access token",
+            ));
+        }
         Ok(Self::from_existing_unchecked(
             token,
             refresh_token.into(),
@@ -152,7 +162,7 @@ impl AppAccessToken {
         )
     }
 
-    /// Generate app access token via [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)
+    /// Generate app access token via [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow)
     #[cfg(feature = "client")]
     pub async fn get_app_access_token<C>(
         http_client: &C,

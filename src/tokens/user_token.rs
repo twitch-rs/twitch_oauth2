@@ -11,7 +11,7 @@ use crate::{ClientSecret, ValidatedToken};
 
 use crate::types::{AccessToken, ClientId, RefreshToken};
 
-/// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-implicit-code-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-authorization-code-flow)
+/// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
 ///
 /// Used for requests that need an authenticated user. See also [`AppAccessToken`](super::AppAccessToken)
 ///
@@ -67,8 +67,12 @@ impl UserToken {
             refresh_token,
             validated.client_id,
             client_secret,
-            validated.login.ok_or(ValidationError::NoLogin)?,
-            validated.user_id.ok_or(ValidationError::NoLogin)?,
+            validated.login.ok_or(ValidationError::InvalidToken(
+                "validation did not include a `login`, token might be an app access token",
+            ))?,
+            validated.user_id.ok_or(ValidationError::InvalidToken(
+                "validation did not include a `user_id`, token might be an app access token",
+            ))?,
             validated.scopes,
             validated.expires_in,
         ))
@@ -93,6 +97,8 @@ impl UserToken {
     }
 
     /// Assemble token without checks.
+    ///
+    /// # Notes
     ///
     /// If `expires_in` is `None`, we'll assume `token.is_elapsed` is always false
     #[allow(clippy::too_many_arguments)]
@@ -143,7 +149,7 @@ impl UserToken {
     /// Hidden because it's not expected to be used.
     pub fn never_expires(&self) -> bool { self.never_expiring }
 
-    /// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    /// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
     pub fn builder(
         client_id: ClientId,
         client_secret: ClientSecret,
@@ -277,9 +283,9 @@ impl TwitchToken for UserToken {
     fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }
 }
 
-/// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+/// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
 ///
-/// See [`ImplicitUserTokenBuilder`] for the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow) (does not require Client Secret)
+/// See [`ImplicitUserTokenBuilder`] for the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) (does not require Client Secret)
 pub struct UserTokenBuilder {
     pub(crate) scopes: Vec<Scope>,
     pub(crate) csrf: Option<crate::types::CsrfToken>,
@@ -330,7 +336,7 @@ impl UserTokenBuilder {
 
     /// Generate the URL to request a code.
     ///
-    /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    /// First step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#get-the-user-to-authorize-your-app)
     pub fn generate_url(&mut self) -> (url::Url, crate::types::CsrfToken) {
         let csrf = crate::types::CsrfToken::new_random();
         self.csrf = Some(csrf.clone());
@@ -431,7 +437,7 @@ impl UserTokenBuilder {
 
     /// Generate the code with the help of the authorization code
     ///
-    /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow)
+    /// Last step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#use-the-authorization-code-to-get-a-token)
     ///
     /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `<redirect_url or first defined url in dev console>?error=<error type>&error_description=<description of error>`
     #[cfg(feature = "client")]
@@ -464,9 +470,9 @@ impl UserTokenBuilder {
     }
 }
 
-/// Builder for [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow)
+/// Builder for [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow)
 ///
-/// See [`UserTokenBuilder`] for the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) (requires Client Secret, generally more secure)
+/// See [`UserTokenBuilder`] for the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow) (requires Client Secret, generally more secure)
 pub struct ImplicitUserTokenBuilder {
     pub(crate) scopes: Vec<Scope>,
     pub(crate) csrf: Option<crate::types::CsrfToken>,
@@ -511,7 +517,7 @@ impl ImplicitUserTokenBuilder {
 
     /// Generate the URL to request a token.
     ///
-    /// Step 1. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#auth-implicit-code-flow)
+    /// First step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow)
     pub fn generate_url(&mut self) -> (url::Url, crate::types::CsrfToken) {
         let csrf = crate::types::CsrfToken::new_random();
         self.csrf = Some(csrf.clone());
@@ -551,7 +557,7 @@ impl ImplicitUserTokenBuilder {
     ///
     /// You can skip this method and instead use the token in the hash directly with [`UserToken::from_existing()`], but it's provided here for convenience.
     ///
-    /// Step 3. and 4. in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-implicit-code-flow)
+    /// Last step in the [guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow)
     ///
     /// # Example
     ///

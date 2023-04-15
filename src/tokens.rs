@@ -86,7 +86,7 @@ pub trait TwitchToken {
     }
     /// Retrieve scopes attached to the token
     fn scopes(&self) -> &[Scope];
-    /// Validate this token. Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
+    /// Validate this token. Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication/validate-tokens/>
     ///
     /// # Note
     ///
@@ -104,7 +104,7 @@ pub trait TwitchToken {
         token.validate_token(http_client).await
     }
 
-    /// Revoke the token. See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
+    /// Revoke the token. See <https://dev.twitch.tv/docs/authentication/revoke-tokens>
     #[cfg(feature = "client")]
     async fn revoke_token<'a, C>(
         self,
@@ -151,7 +151,7 @@ impl<T: TwitchToken + Send> TwitchToken for Box<T> {
 
 /// Token validation returned from `https://id.twitch.tv/oauth2/validate`
 ///
-/// See <https://dev.twitch.tv/docs/authentication#validating-requests>
+/// See <https://dev.twitch.tv/docs/authentication/validate-tokens/>
 #[derive(Debug, Clone, Deserialize)]
 pub struct ValidatedToken {
     /// Client ID associated with the token. Twitch requires this in all helix API calls

@@ -1,9 +1,10 @@
 //! Errors
 
-/// General errors for talking with twitch, used in [AppAccessToken::get_app_access_token][crate::tokens::AppAccessToken::get_app_access_token]
+/// General errors for talking with twitch, used in [`AppAccessToken::get_app_access_token`](crate::tokens::AppAccessToken::get_app_access_token)
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[cfg(feature = "client")]
+#[non_exhaustive]
 pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for token failed
     Request(#[source] RE),
@@ -13,6 +14,7 @@ pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
 
 /// Errors for [AccessToken::validate_token][crate::AccessTokenRef::validate_token] and [UserToken::from_response][crate::tokens::UserToken::from_response]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
 pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
     /// token is not authorized for use
     NotAuthorized,
@@ -20,9 +22,8 @@ pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
     RequestParseError(#[from] crate::RequestParseError),
     /// failed to request validation
     Request(#[source] RE),
-    // TODO: This should be in it's own error enum specifically for UserToken validation
-    /// validation did not return a login when it was expected
-    NoLogin,
+    /// given token is not of the correct token type: {0}
+    InvalidToken(&'static str),
 }
 
 impl ValidationError<std::convert::Infallible> {
@@ -31,7 +32,7 @@ impl ValidationError<std::convert::Infallible> {
         match self {
             ValidationError::NotAuthorized => ValidationError::NotAuthorized,
             ValidationError::RequestParseError(e) => ValidationError::RequestParseError(e),
-            ValidationError::NoLogin => ValidationError::NoLogin,
+            ValidationError::InvalidToken(s) => ValidationError::InvalidToken(s),
             ValidationError::Request(_) => unreachable!(),
         }
     }
@@ -40,6 +41,7 @@ impl ValidationError<std::convert::Infallible> {
 /// Errors for [AccessToken::revoke_token][crate::AccessTokenRef::revoke_token]
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
 #[cfg(feature = "client")]
 pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// could not parse response when revoking token
@@ -51,6 +53,7 @@ pub enum RevokeTokenError<RE: std::error::Error + Send + Sync + 'static> {
 /// Errors for [TwitchToken::refresh_token][crate::TwitchToken::refresh_token]
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
 #[cfg(feature = "client")]
 pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// request when refreshing token failed
@@ -69,6 +72,7 @@ pub enum RefreshTokenError<RE: std::error::Error + Send + Sync + 'static> {
 
 /// Errors for [`UserTokenBuilder::get_user_token`](crate::tokens::UserTokenBuilder::get_user_token) and [`UserToken::mock_token`](crate::tokens::UserToken::mock_token)
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
 #[cfg(feature = "client")]
 pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     /// request for user token failed
@@ -83,6 +87,7 @@ pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
 
 /// Errors for [ImplicitUserTokenBuilder::get_user_token][crate::tokens::ImplicitUserTokenBuilder::get_user_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
 #[cfg(feature = "client")]
 pub enum ImplicitUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     // FIXME: should be TwitchTokenErrorResponse

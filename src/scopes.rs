@@ -14,7 +14,7 @@ macro_rules! scope_impls {
     ($($(#[cfg(($cfg:meta))])* $(#[deprecated($depr:meta)])? $i:ident,scope: $rename:literal, doc: $doc:literal);* $(;)? ) => {
         #[doc = "Scopes for twitch."]
         #[doc = ""]
-        #[doc = "<https://dev.twitch.tv/docs/authentication/#scopes>"]
+        #[doc = "<https://dev.twitch.tv/docs/authentication/scopes/>"]
         #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
         #[non_exhaustive]
         #[serde(from = "String")]
