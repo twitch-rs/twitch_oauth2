@@ -325,6 +325,7 @@ pub(crate) fn parse_response<T: serde::de::DeserializeOwned, B: AsRef<[u8]>>(
 
 /// Errors from parsing responses
 #[derive(Debug, thiserror::Error, displaydoc::Display)]
+#[non_exhaustive]
 pub enum RequestParseError {
     /// deserialization failed
     DeserializeError(#[from] serde_json::Error),
