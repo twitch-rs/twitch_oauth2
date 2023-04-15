@@ -145,7 +145,7 @@ impl AccessTokenRef {
 
     /// Validate this token.
     ///
-    /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication#validating-requests>
+    /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication/validate-tokens/>
     #[cfg(feature = "client")]
     pub async fn validate_token<'a, C>(
         &self,
@@ -182,7 +182,7 @@ impl AccessTokenRef {
 
     /// Revoke the token.
     ///
-    /// See <https://dev.twitch.tv/docs/authentication#revoking-access-tokens>
+    /// See <https://dev.twitch.tv/docs/authentication/revoke-tokens/>
     #[cfg(feature = "client")]
     pub async fn revoke_token<'a, C>(
         &self,
@@ -233,7 +233,7 @@ impl RefreshTokenRef {
 
     /// Refresh the token, call if it has expired.
     ///
-    /// See <https://dev.twitch.tv/docs/authentication#refreshing-access-tokens>
+    /// See <https://dev.twitch.tv/docs/authentication/refresh-tokens>
     #[cfg(feature = "client")]
     pub async fn refresh_token<'a, C>(
         &self,

@@ -22,9 +22,8 @@ pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
     RequestParseError(#[from] crate::RequestParseError),
     /// failed to request validation
     Request(#[source] RE),
-    // TODO: This should be in it's own error enum specifically for UserToken validation
-    /// validation did not return a login when it was expected
-    NoLogin,
+    /// given token is not of the correct token type: {0}
+    InvalidToken(&'static str),
 }
 
 impl ValidationError<std::convert::Infallible> {
@@ -33,7 +32,7 @@ impl ValidationError<std::convert::Infallible> {
         match self {
             ValidationError::NotAuthorized => ValidationError::NotAuthorized,
             ValidationError::RequestParseError(e) => ValidationError::RequestParseError(e),
-            ValidationError::NoLogin => ValidationError::NoLogin,
+            ValidationError::InvalidToken(s) => ValidationError::InvalidToken(s),
             ValidationError::Request(_) => unreachable!(),
         }
     }

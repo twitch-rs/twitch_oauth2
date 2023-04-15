@@ -10,14 +10,17 @@
 
 - Added `moderator:read:followers` scope
 - Added `Scope::all_slice`, `Scope::as_static_str` to do const operations
+- Added `ValidationError::InvalidToken` to signify a invalid response for that specific token type
 
 ### Changed
 
 - Made `Scope::description` const
-
-### Changed
-
+- Made error enums non exhaustive
 - Marked `user:edit:follows` as deprecated
+
+### Removed
+
+- Removed `ValidationError::NoLogin`, replaced with `ValidationError::InvalidToken`
 
 ## [v0.11.1] - 2023-02-01
 
@@ -171,7 +174,7 @@
 - Updated deps.
 - Add an extra (optional) client secret field to `UserToken::from_existing` (thanks [Dinnerbone](https://github.com/Dinnerbone))
 - Added `channel:manage:redemptions`, `channel:read:editors`, `channel:manage:videos`, `user:read:blocked_users`, `user:manage:blocked_users`, `user:read:subscriptions` and `user:read:follows`
-- Implemented [OAuth Authorization Code Flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#oauth-authorization-code-flow) with `UserTokenBuilder`
+- Implemented [OAuth Authorization Code Flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow) with `UserTokenBuilder`
 - Added a way to suggest or infer that an user token is never expiring, making `is_elapsed` return false and `expires_in` a bogus (max) duration.
 
 ### Changed
