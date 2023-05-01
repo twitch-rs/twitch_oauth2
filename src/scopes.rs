@@ -1,4 +1,7 @@
 //! Module for all possible scopes in twitch.
+pub mod validator;
+pub use validator::Validator;
+
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
