@@ -217,6 +217,11 @@ scope_impls!(
     WhispersRead,                   scope: "whispers:read",                     doc: "View your whisper messages.";
 );
 
+impl Scope {
+    /// Get the scope as validator
+    pub const fn to_validator(self) -> Validator { Validator::scope(self) }
+}
+
 impl std::borrow::Borrow<str> for Scope {
     fn borrow(&self) -> &str { self.as_str() }
 }
