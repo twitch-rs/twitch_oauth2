@@ -1,5 +1,4 @@
 //! Provides different http clients
-//!
 
 // This module is heavily inspired (read: copied) by twitch_api2::client.
 

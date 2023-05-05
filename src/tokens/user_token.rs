@@ -174,7 +174,8 @@ impl UserToken {
     ///     "mockclientsecret".into(),
     ///     "user_id",
     ///     vec![],
-    ///     ).await?;
+    /// )
+    /// .await?;
     /// # Ok(())}
     /// # fn main() {run();}
     /// ```
@@ -643,8 +644,6 @@ impl ImplicitUserTokenBuilder {
     /// </body>
     /// </html>
     /// ```
-    ///
-    ///
     #[cfg(feature = "client")]
     pub async fn get_user_token<'a, C>(
         self,

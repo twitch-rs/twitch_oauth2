@@ -82,7 +82,7 @@ impl From<Scope> for Validator {
 /// ## Multiple scopes
 ///
 /// ```rust
-/// use twitch_oauth2::{Scope, validator};
+/// use twitch_oauth2::{validator, Scope};
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
 /// assert!(validator.matches(scopes));
@@ -92,7 +92,7 @@ impl From<Scope> for Validator {
 /// ## Multiple scopes with explicit all(...)
 ///
 /// ```rust
-/// use twitch_oauth2::{Scope, validator};
+/// use twitch_oauth2::{validator, Scope};
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(all(Scope::ChatEdit, Scope::ChatRead));
 /// assert!(validator.matches(scopes));
@@ -102,9 +102,12 @@ impl From<Scope> for Validator {
 /// ## Multiple scopes with nested any(...)
 ///
 /// ```rust
-/// use twitch_oauth2::{Scope, validator};
+/// use twitch_oauth2::{validator, Scope};
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
-/// let validator = validator!(Scope::ChatEdit, any(Scope::ChatRead, Scope::ChannelReadSubscriptions));
+/// let validator = validator!(
+///     Scope::ChatEdit,
+///     any(Scope::ChatRead, Scope::ChannelReadSubscriptions)
+/// );
 /// assert!(validator.matches(scopes));
 /// assert!(!validator.matches(&scopes[1..]));
 /// ```
@@ -112,7 +115,7 @@ impl From<Scope> for Validator {
 /// ## Not
 ///
 /// ```rust
-/// use twitch_oauth2::{Scope, validator};
+/// use twitch_oauth2::{validator, Scope};
 /// let scopes: &[Scope] = &[Scope::ChatRead];
 /// let validator = validator!(not(Scope::ChatEdit));
 /// assert!(validator.matches(scopes));
@@ -121,10 +124,16 @@ impl From<Scope> for Validator {
 /// ## Combining other validators
 ///
 /// ```
-/// use twitch_oauth2::{Scope, Validator, validator};
-/// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead, Scope::ModeratorManageAutoMod, Scope::ModerationRead];
+/// use twitch_oauth2::{validator, Scope, Validator};
+/// let scopes: &[Scope] = &[
+///     Scope::ChatEdit,
+///     Scope::ChatRead,
+///     Scope::ModeratorManageAutoMod,
+///     Scope::ModerationRead,
+/// ];
 /// const CHAT_SCOPES: Validator = validator!(all(Scope::ChatEdit, Scope::ChatRead));
-/// const MODERATOR_SCOPES: Validator = validator!(Scope::ModerationRead, Scope::ModeratorManageAutoMod);
+/// const MODERATOR_SCOPES: Validator =
+///     validator!(Scope::ModerationRead, Scope::ModeratorManageAutoMod);
 /// const COMBINED: Validator = validator!(CHAT_SCOPES, MODERATOR_SCOPES);
 /// assert!(COMBINED.matches(scopes));
 /// assert!(!COMBINED.matches(&scopes[1..]));
@@ -187,7 +196,6 @@ macro_rules! validator_logic {
 }
 
 /// Accumulator for the [validator!] macro.
-///
 // Thanks to danielhenrymantilla, the macro wizard
 #[doc(hidden)]
 #[macro_export]
