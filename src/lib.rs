@@ -40,7 +40,7 @@ use id::TwitchTokenErrorResponse;
 use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 
 #[doc(inline)]
-pub use scopes::Scope;
+pub use scopes::{Scope, Validator};
 #[doc(inline)]
 pub use tokens::{AppAccessToken, TwitchToken, UserToken, ValidatedToken};
 

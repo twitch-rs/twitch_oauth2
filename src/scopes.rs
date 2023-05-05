@@ -1,4 +1,7 @@
 //! Module for all possible scopes in twitch.
+pub mod validator;
+pub use validator::Validator;
+
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -213,6 +216,11 @@ scope_impls!(
     WhispersEdit,                   scope: "whispers:edit",                     doc: "Send whisper messages.";
     WhispersRead,                   scope: "whispers:read",                     doc: "View your whisper messages.";
 );
+
+impl Scope {
+    /// Get the scope as a [validator](Validator).
+    pub const fn to_validator(self) -> Validator { Validator::scope(self) }
+}
 
 impl std::borrow::Borrow<str> for Scope {
     fn borrow(&self) -> &str { self.as_str() }
