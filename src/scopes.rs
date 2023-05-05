@@ -218,7 +218,7 @@ scope_impls!(
 );
 
 impl Scope {
-    /// Get the scope as validator
+    /// Get the scope as a [validator](Validator).
     pub const fn to_validator(self) -> Validator { Validator::scope(self) }
 }
 

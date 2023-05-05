@@ -1,18 +1,35 @@
-#![allow(missing_docs)]
+//! Validator used for checking scopes in a token.
 use std::borrow::Cow;
 
 use super::Scope;
 
+/// A collection of validators
 pub type Validators = Cow<'static, [Validator]>;
 
 /// A [validator](Validator) is a way to check if an array of scopes matches a predicate.
 ///
 /// Can be constructed easily with the [validator!](crate::validator) macro.
+///
+/// # Examples
+///
+/// ```rust, no_run
+/// use twitch_oauth2::{validator, AppAccessToken, Scope, TwitchToken as _};
+///
+/// let token: AppAccessToken = token();
+/// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+/// assert!(validator.matches(token.scopes()));
+///
+/// # pub fn token() -> AppAccessToken { todo!() }
+/// ```
 #[derive(Clone)]
 pub enum Validator {
+    /// A scope
     Scope(Scope),
+    /// Matches true if all validators passed inside return true
     All(Sized<Validators>),
+    /// Matches true if **any** validator passed inside returns true
     Any(Sized<Validators>),
+    /// Matches true if all validators passed inside matches false
     Not(Sized<Validators>),
 }
 
@@ -28,6 +45,18 @@ impl std::fmt::Debug for Validator {
 }
 
 impl Validator {
+    /// Checks if the given scopes match the predicate.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use twitch_oauth2::{validator, Scope};
+    ///
+    /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
+    /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+    /// assert!(validator.matches(scopes));
+    /// assert!(!validator.matches(&scopes[..1]));
+    /// ```
     #[must_use]
     pub fn matches(&self, scopes: &[Scope]) -> bool {
         match &self {
@@ -38,24 +67,35 @@ impl Validator {
         }
     }
 
+    /// Create a [Validator] which matches if the scope is present.
     pub const fn scope(scope: Scope) -> Self { Validator::Scope(scope) }
 
+    /// Create a [Validator] which matches if all validators passed inside matches true.
     pub const fn all_multiple(ands: &'static [Validator]) -> Self {
         Validator::All(Sized(Cow::Borrowed(ands)))
     }
 
+    /// Create a [Validator] which matches if **any** validator passed inside matches true.
     pub const fn any_multiple(anys: &'static [Validator]) -> Self {
         Validator::Any(Sized(Cow::Borrowed(anys)))
     }
 
+    /// Create a [Validator] which matches if all validators passed inside matches false.
     pub const fn not(not: &'static Validator) -> Self {
         Validator::Not(Sized(Cow::Borrowed(std::slice::from_ref(not))))
     }
 
+    /// Convert [Self] to [Self]
+    ///
+    /// # Notes
+    ///
+    /// This function doesn't do anything, but it powers the [validator!] macro
+    #[doc(hidden)]
     pub const fn to_validator(self) -> Self { self }
 }
 
 // https://github.com/rust-lang/rust/issues/47032#issuecomment-568784919
+/// Hack for making `T: Sized`
 #[derive(Debug, Clone)]
 #[repr(transparent)]
 pub struct Sized<T>(pub T);
@@ -79,10 +119,21 @@ impl From<Scope> for Validator {
 ///
 /// # Examples
 ///
+/// ```rust, no_run
+/// use twitch_oauth2::{validator, AppAccessToken, Scope, TwitchToken as _};
+///
+/// let token: AppAccessToken = token();
+/// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+/// assert!(validator.matches(token.scopes()));
+///
+/// # pub fn token() -> AppAccessToken { todo!() }
+/// ```
+///
 /// ## Multiple scopes
 ///
 /// ```rust
 /// use twitch_oauth2::{validator, Scope};
+///
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
 /// assert!(validator.matches(scopes));
@@ -93,6 +144,7 @@ impl From<Scope> for Validator {
 ///
 /// ```rust
 /// use twitch_oauth2::{validator, Scope};
+///
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(all(Scope::ChatEdit, Scope::ChatRead));
 /// assert!(validator.matches(scopes));
@@ -103,6 +155,7 @@ impl From<Scope> for Validator {
 ///
 /// ```rust
 /// use twitch_oauth2::{validator, Scope};
+///
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(
 ///     Scope::ChatEdit,
@@ -116,6 +169,7 @@ impl From<Scope> for Validator {
 ///
 /// ```rust
 /// use twitch_oauth2::{validator, Scope};
+///
 /// let scopes: &[Scope] = &[Scope::ChatRead];
 /// let validator = validator!(not(Scope::ChatEdit));
 /// assert!(validator.matches(scopes));
@@ -125,6 +179,7 @@ impl From<Scope> for Validator {
 ///
 /// ```
 /// use twitch_oauth2::{validator, Scope, Validator};
+///
 /// let scopes: &[Scope] = &[
 ///     Scope::ChatEdit,
 ///     Scope::ChatRead,
@@ -145,6 +200,7 @@ impl From<Scope> for Validator {
 ///
 /// ```compile_fail
 /// use twitch_oauth2::{Scope, validator};
+///
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(not(Scope::ChatEdit, Scope::ChatRead));
 /// assert!(validator.matches(scopes));
@@ -154,6 +210,7 @@ impl From<Scope> for Validator {
 ///
 /// ```compile_fail
 /// use twitch_oauth2::{Scope, validator};
+///
 /// let scopes: &[Scope] = &[Scope::ChatEdit, Scope::ChatRead];
 /// let validator = validator!(xor(Scope::ChatEdit, Scope::ChatRead));
 /// assert!(validator.matches(scopes));
