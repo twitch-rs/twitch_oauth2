@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.0...Unreleased)
 
+### Added
+
+- Added `Validator` and `validator!` for validating tokens.
+
 ## [v0.12.0] - 2023-05-01
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.11.1...v0.12.0)
