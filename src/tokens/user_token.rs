@@ -56,6 +56,8 @@ impl std::fmt::Debug for UserToken {
 
 impl UserToken {
     /// Create a new token
+    ///
+    /// See [`UserToken::from_token`] and [`UserToken::from_existing`] for more ways to create a [`UserToken`]
     pub fn new(
         access_token: AccessToken,
         refresh_token: Option<RefreshToken>,
@@ -78,9 +80,63 @@ impl UserToken {
         ))
     }
 
-    /// Assemble token and validate it. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
+    /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
     ///
     /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use twitch_oauth2::{AccessToken, UserToken};
+    /// // Make sure you enable the feature "reqwest" for twitch_oauth2 if you want to use reqwest
+    /// # async {let client = twitch_oauth2::client::DummyClient; stringify!(
+    /// let client = reqwest::Client::builder()
+    ///     .redirect(reqwest::redirect::Policy::none())
+    ///     .build()?;
+    /// # );
+    /// let token = UserToken::from_existing(
+    ///     &client,
+    ///     AccessToken::new("my_access_token".into()),
+    ///     None,
+    ///     None,
+    /// )
+    /// .await?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())};
+    /// ```
+    #[cfg(feature = "client")]
+    pub async fn from_token<C>(
+        http_client: &C,
+        access_token: AccessToken,
+    ) -> Result<UserToken, ValidationError<<C as Client>::Error>>
+    where
+        C: Client,
+    {
+        Self::from_existing(http_client, access_token, None, None).await
+    }
+
+    /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
+    ///
+    /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use twitch_oauth2::{AccessToken, UserToken};
+    /// // Make sure you enable the feature "reqwest" for twitch_oauth2 if you want to use reqwest
+    /// # async {let client = twitch_oauth2::client::DummyClient; stringify!(
+    /// let client = reqwest::Client::builder()
+    ///     .redirect(reqwest::redirect::Policy::none())
+    ///     .build()?;
+    /// # );
+    /// let token = UserToken::from_existing(
+    ///     &client,
+    ///     AccessToken::new("my_access_token".into()),
+    ///     None,
+    ///     None,
+    /// )
+    /// .await?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())};
+    /// ```
     #[cfg(feature = "client")]
     pub async fn from_existing<C>(
         http_client: &C,
@@ -100,7 +156,7 @@ impl UserToken {
     ///
     /// # Notes
     ///
-    /// If `expires_in` is `None`, we'll assume `token.is_elapsed` is always false
+    /// If `expires_in` is `None`, we'll assume [`token.is_elapsed`](TwitchToken::is_elapsed) is always false
     #[allow(clippy::too_many_arguments)]
     pub fn from_existing_unchecked(
         access_token: impl Into<AccessToken>,
@@ -119,10 +175,7 @@ impl UserToken {
             login,
             user_id,
             refresh_token: refresh_token.into(),
-            expires_in: expires_in.unwrap_or_else(|| {
-                // TODO: Use Duration::MAX
-                std::time::Duration::new(u64::MAX, 1_000_000_000 - 1)
-            }),
+            expires_in: expires_in.unwrap_or(std::time::Duration::MAX),
             struct_created: std::time::Instant::now(),
             scopes: scopes.unwrap_or_default(),
             never_expiring: expires_in.is_none(),
@@ -276,8 +329,7 @@ impl TwitchToken for UserToken {
                 .unwrap_or_default()
         } else {
             // We don't return an option here because it's not expected to use this if the token is known to be unexpiring.
-            // TODO: Use Duration::MAX
-            std::time::Duration::new(u64::MAX, 1_000_000_000 - 1)
+            std::time::Duration::MAX
         }
     }
 

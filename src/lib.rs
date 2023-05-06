@@ -14,18 +14,17 @@
 //! <h5>OAuth2 for Twitch endpoints</h5>
 //!
 //! ```rust,no_run
-//! # use twitch_oauth2::{TwitchToken, UserToken, AccessToken, tokens::errors::ValidationError};
-//! # #[tokio::main]
-//! # async fn run() {
-//! # let reqwest_http_client = twitch_oauth2::client::DummyClient; // This is only here to fool doc tests
-//!     let token = AccessToken::new("sometokenherewhichisvalidornot".to_string());
-//!
-//!     match UserToken::from_existing(&reqwest_http_client, token, None, None).await {
-//!         Ok(t) => println!("user_token: {}", t.token().secret()),
-//!         Err(e) => panic!("got error: {}", e),
-//!     }
-//! # }
-//! # fn main() {run()}
+//! use twitch_oauth2::{tokens::errors::ValidationError, AccessToken, TwitchToken, UserToken};
+//! // Make sure you enable the feature "reqwest" for twitch_oauth2 if you want to use reqwest
+//! # async {let client = twitch_oauth2::client::DummyClient; stringify!(
+//! let client = reqwest::Client::builder()
+//!     .redirect(reqwest::redirect::Policy::none())
+//!     .build()?;
+//! # );
+//! let token = AccessToken::new("sometokenherewhichisvalidornot".to_string());
+//! let token = UserToken::from_token(&client, token).await?;
+//! println!("token: {:?}", token.token()); // prints `[redacted access token]`
+//! # Ok::<(), Box<dyn std::error::Error>>(())};
 //! ```
 #[cfg(feature = "client")]
 pub mod client;
