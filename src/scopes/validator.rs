@@ -194,6 +194,16 @@ impl From<Scope> for Validator {
 /// assert!(!COMBINED.matches(&scopes[1..]));
 /// ```
 ///
+/// ## Empty
+///
+/// ```rust
+/// use twitch_oauth2::{validator, Scope};
+///
+/// let scopes: &[Scope] = &[Scope::ChatRead];
+/// let validator = validator!();
+/// assert!(validator.matches(scopes));
+/// ```
+///
 /// ## Invalid examples
 ///
 /// ### Invalid usage of not(...)
@@ -225,6 +235,9 @@ macro_rules! validator {
     }};
     ($($all:tt)+) => {{
         $crate::validator_logic!(@all $($all)*)
+    }};
+    () => {{
+        $crate::Validator::all_multiple(&[])
     }};
 }
 
