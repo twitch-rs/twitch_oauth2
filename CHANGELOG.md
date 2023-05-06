@@ -4,7 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.1...Unreleased)
+
+## [v0.12.1] - 2023-05-06
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.0...v0.12.1)
+
+### Added
+
+- Added `Validator` and `validator!` for validating tokens.
 
 ## [v0.12.0] - 2023-05-01
 
