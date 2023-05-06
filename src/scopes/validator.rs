@@ -22,6 +22,7 @@ pub type Validators = Cow<'static, [Validator]>;
 /// # pub fn token() -> AppAccessToken { todo!() }
 /// ```
 #[derive(Clone)]
+#[non_exhaustive]
 pub enum Validator {
     /// A scope
     Scope(Scope),
