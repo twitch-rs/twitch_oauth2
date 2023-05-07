@@ -3,10 +3,11 @@ env:
   CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
 on:
   pull_request:
-    branches: [main]
     types: [opened, reopened, synchronize]
   push:
-    branches: [main, staging, trying]
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
 jobs:
   ci:
     name: CI
