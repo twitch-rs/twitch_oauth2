@@ -1,5 +1,4 @@
-Twitch OAuth2 | OAuth2 for Twitch endpoints
-============================================
+# Twitch OAuth2 | OAuth2 for Twitch endpoints
 
 [![github]](https://github.com/twitch-rs/twitch_oauth2)&ensp;[![crates-io]](https://crates.io/crates/twitch_oauth2)&ensp;[![docs-rs]](https://docs.rs/twitch_oauth2/0.12.2/twitch_oauth2)
 
@@ -9,12 +8,11 @@ Twitch OAuth2 | OAuth2 for Twitch endpoints
 
 See [documentation](https://docs.rs/twitch_oauth2) for more info.
 
-You can see current unpublished docs here:  [![local-docs]](https://twitch-rs.github.io/twitch_oauth2/twitch_oauth2)
+You can see current unpublished docs here: [![local-docs]](https://twitch-rs.github.io/twitch_oauth2/twitch_oauth2)
 
 See [examples](./examples) for examples.
 
 This is a library to interface with [Twitch Authentication](https://dev.twitch.tv/docs/authentication).
-
 
 See also <https://github.com/twitch-rs/twitch_api>
 
