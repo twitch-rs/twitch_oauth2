@@ -2,6 +2,6 @@
   "rust-analyzer.checkOnSave.allTargets": false,
   "rust-analyzer.checkOnSave.features": ["all"],
   "rust-analyzer.checkOnSave.enable": true,
-  "rust-analyzer.cargo.features": ["all", "mock_api"],
+  "rust-analyzer.cargo.features": "all",
   "rust-analyzer.procMacro.attributes.enable": true
 }

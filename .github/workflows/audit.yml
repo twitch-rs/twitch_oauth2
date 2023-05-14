@@ -1,5 +1,6 @@
 name: Audit
-
+env:
+  MSRV: 1.66.1
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -35,7 +36,7 @@ jobs:
           submodules: recursive
       - uses: EmbarkStudios/cargo-deny-action@v1
         with:
-          rust-version: "1.66.1"
+          rust-version: ${{ env.MSRV }}
           command: check ${{ matrix.checks }} -s
           arguments: --all-features
           log-level: warn

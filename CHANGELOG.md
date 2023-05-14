@@ -62,7 +62,7 @@
 ### Breaking
 
 - Updated `twitch_types` to `0.4.0`
-- MSRV bumped to ``1.66.1`
+- MSRV bumped to `1.66.1`
 
 ## [v0.10.0] - 2022-12-19
 
