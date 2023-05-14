@@ -61,6 +61,16 @@ jobs:
           components: rustfmt
       - name: Run fmt --all -- --check
         run: cargo fmt --all -- --check
+  prettier:
+    name: Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check formatting with Prettier
+        # Explicit commit, because this isn't tagged yet.
+        uses: actionsx/prettier@e90ec5455552f0f640781bdd5f5d2415acb52f1a
+        with:
+          args: -c .
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
