@@ -339,6 +339,104 @@ impl TwitchToken for UserToken {
 /// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
 ///
 /// See [`ImplicitUserTokenBuilder`] for the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) (does not require Client Secret)
+///
+/// # Examples
+///
+/// See also [the auth flow example](https://github.com/twitch-rs/twitch_oauth2/blob/main/examples/auth_flow.rs)
+///
+/// To generate a user token with this auth flow, you need to:
+///
+/// 1. Initialize the [`UserTokenBuilder`] with [`UserTokenBuilder::new()`](UserTokenBuilder::new), providing your client id, client secret, and a redirect URL.
+/// Use [`set_scopes(vec![])`](UserTokenBuilder::set_scopes) to add any necessary scopes to the request. You can also use [`force_verify()`](UserTokenBuilder::force_verify) to force the user to
+/// re-authorize your app’s access to their resources.
+///
+///     Make sure you've added the redirect URL to the app settings on [the Twitch Developer Console](https://dev.twitch.tv/console).
+///
+///     ```rust
+///     use twitch_oauth2::{id::TwitchTokenResponse, tokens::UserTokenBuilder, Scope};
+///     use url::Url;
+///
+///     // This is the URL the user will be redirected to after authorizing your application
+///     let redirect_url = Url::parse("http://localhost/twitch/register")?;
+///     let mut builder = UserTokenBuilder::new("myclientid", "myclientsecret", redirect_url);
+///     builder = builder.set_scopes(vec![Scope::ChatRead, Scope::ChatEdit]);
+///     builder = builder.force_verify(true); // Defaults to false
+///     # Ok::<(), Box<dyn std::error::Error>>(())
+///     ```
+///
+/// 2. Generate a URL for the user to visit using [`generate_url()`](UserTokenBuilder::generate_url). This method also returns a CSRF token that you need to save for later validation.
+///
+///     ```rust
+///     # use twitch_oauth2::{id::TwitchTokenResponse, tokens::UserTokenBuilder, Scope};
+///     # use url::Url;
+///     # let redirect_url = Url::parse("http://localhost/twitch/register")?;
+///     # let mut builder = UserTokenBuilder::new("myclientid", "myclientsecret", redirect_url);
+///     let (url, csrf_token) = builder.generate_url();
+///     // Make your user navigate to this URL, for example
+///     println!("Visit this URL to authorize Twitch access: {}", url);
+///     # Ok::<(), Box<dyn std::error::Error>>(())
+///     ```
+///
+/// 3. Have the user visit the generated URL. They will be asked to authorize your application if they haven't previously done so
+///    or if you've set [`force_verify`](UserTokenBuilder::force_verify) to `true`.
+///
+///      You can do this by providing the link in [a web page](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), have the user [be directed](https://developer.mozilla.org/en-US/docs/Web/API/Location/assign),
+///      the console, or by [opening it](https://docs.rs/webbrowser/0.8.10/webbrowser/) in a browser.
+///
+///      If this is a web server, you should store the [UserTokenBuilder] somewhere you can retrieve it later. A good place to store it is in a [`Cache`](https://docs.rs/retainer/0.3.0/retainer/cache/struct.Cache.html)
+///      or a [`HashMap`](std::collections::HashMap) with the CSRF token as the key.
+///
+/// 4. When the user has been redirected to the redirect URL by twitch, extract the `state` and `code` query parameters from the URL.
+///
+///     ```rust
+///     use std::borrow::Cow;
+///     use std::collections::BTreeMap;
+///
+///     fn extract_pair<'a>(
+///         query: &BTreeMap<Cow<'a, str>, Cow<'a, str>>,
+///         key1: &str,
+///         key2: &str,
+///     ) -> Option<(Cow<'a, str>, Cow<'a, str>)> {
+///         Some((query.get(key1)?.clone(), query.get(key2)?.clone()))
+///     }
+///
+///     /// Extract the state and code from the URL a user was redirected to after authorizing the application.
+///     fn extract_url<'a>(
+///         url: &'a url::Url,
+///     ) -> Result<(Cow<'a, str>, Cow<'a, str>), Option<(Cow<'a, str>, Cow<'a, str>)>> {
+///         let query: BTreeMap<_, _> = url.query_pairs().collect();
+///         if let Some((error, error_description)) = extract_pair(&query, "error", "error_description") {
+///             Err(Some((error, error_description)))
+///         } else if let Some((state, code)) = extract_pair(&query, "state", "code") {
+///             Ok((state, code))
+///         } else {
+///             Err(None)
+///         }
+///     }
+///     ```
+/// 5. Finally, call [`get_user_token`](UserTokenBuilder::get_user_token) with the `state` and `code` query parameters to get the user's access token.
+///
+///     ```rust
+///     # async move {
+///     # use twitch_oauth2::{id::TwitchTokenResponse, tokens::UserTokenBuilder, Scope};
+///     # use url::Url;
+///     # use std::borrow::Cow;
+///     # let redirect_url = Url::parse("http://localhost/twitch/register")?;
+///     # let mut builder = UserTokenBuilder::new("myclientid", "myclientsecret", redirect_url);
+///     # let (url, csrf_token) = builder.generate_url();
+///     # fn extract_url<'a>(_: &'a url::Url) -> Result<(Cow<'a, str>, Cow<'a, str>), std::io::Error> { Ok((Cow::default(), Cow::default())) }
+///     # let url = url::Url::parse("http://localhost/twitch/register?code=code&state=state")?;
+///     # let client = twitch_oauth2::client::DummyClient; stringify!(
+///     let client = reqwest::Client::builder()
+///         .redirect(reqwest::redirect::Policy::none())
+///         .build()?;
+///     # );
+///     let (state, code) = extract_url(&url)?;
+///     let token = builder.get_user_token(&client, code.as_ref(), state.as_ref()).await?;
+///     println!("User token: {:?}", token);
+///     # Ok::<(), Box<dyn std::error::Error>>(())
+///     # };
+///     ```
 pub struct UserTokenBuilder {
     pub(crate) scopes: Vec<Scope>,
     pub(crate) csrf: Option<crate::types::CsrfToken>,
@@ -352,6 +450,8 @@ impl UserTokenBuilder {
     /// Create a [`UserTokenBuilder`]
     ///
     /// # Notes
+    ///
+    /// The `redirect_url` must be present, verbatim, on [the Twitch Developer Console](https://dev.twitch.tv/console).
     ///
     /// The `url` crate converts empty paths into "/" (such as `https://example.com` into `https://example.com/`),
     /// which means that you'll need to add `https://example.com/` to your redirect URIs (note the "trailing" slash) if you want to use an empty path.
@@ -538,6 +638,8 @@ impl ImplicitUserTokenBuilder {
     /// Create a [`ImplicitUserTokenBuilder`]
     ///
     /// # Notes
+    ///
+    /// The `redirect_url` must be present, verbatim, on [the Twitch Developer Console](https://dev.twitch.tv/console).
     ///
     /// The `url` crate converts empty paths into "/" (such as `https://example.com` into `https://example.com/`),
     /// which means that you'll need to add `https://example.com/` to your redirect URIs (note the "trailing" slash) if you want to use an empty path.
