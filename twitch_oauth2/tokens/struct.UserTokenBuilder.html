@@ -5,8 +5,8 @@
 <p>To generate a user token with this auth flow, you need to:</p>
 <ol>
 <li>
-<p>Initialize the <a href="struct.UserTokenBuilder.html" title="struct twitch_oauth2::tokens::UserTokenBuilder"><code>UserTokenBuilder</code></a> with <a href="struct.UserTokenBuilder.html#method.new" title="associated function twitch_oauth2::tokens::UserTokenBuilder::new"><code>UserTokenBuilder::new()</code></a>, providing your client id, client secret, and a redirect URL.
-Use <a href="struct.UserTokenBuilder.html#method.set_scopes" title="method twitch_oauth2::tokens::UserTokenBuilder::set_scopes"><code>set_scopes(vec![])</code></a> to add any necessary scopes to the request. You can also use <a href="struct.UserTokenBuilder.html#method.force_verify" title="method twitch_oauth2::tokens::UserTokenBuilder::force_verify"><code>force_verify()</code></a> to force the user to
+<p>Initialize the <a href="struct.UserTokenBuilder.html" title="struct twitch_oauth2::tokens::UserTokenBuilder"><code>UserTokenBuilder</code></a> with <a href="struct.UserTokenBuilder.html#method.new" title="associated function twitch_oauth2::tokens::UserTokenBuilder::new"><code>UserTokenBuilder::new</code></a>, providing your client id, client secret, and a redirect URL.
+Use <a href="struct.UserTokenBuilder.html#method.set_scopes" title="method twitch_oauth2::tokens::UserTokenBuilder::set_scopes"><code>set_scopes(vec![])</code></a> to add any necessary scopes to the request. You can also use <a href="struct.UserTokenBuilder.html#method.force_verify" title="method twitch_oauth2::tokens::UserTokenBuilder::force_verify"><code>force_verify(true)</code></a> to force the user to
 re-authorize your app’s access to their resources.</p>
 <p>Make sure you’ve added the redirect URL to the app settings on <a href="https://dev.twitch.tv/console">the Twitch Developer Console</a>.</p>
 
@@ -69,7 +69,7 @@ or a <a href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.
     .redirect(reqwest::redirect::Policy::none())
     .build()<span class="question-mark">?</span>;
 <span class="kw">let </span>(state, code) = extract_url(<span class="kw-2">&amp;</span>url)<span class="question-mark">?</span>;
-<span class="kw">let </span>token = builder.get_user_token(<span class="kw-2">&amp;</span>client, code.as_ref(), state.as_ref()).<span class="kw">await</span><span class="question-mark">?</span>;
+<span class="kw">let </span>token = builder.get_user_token(<span class="kw-2">&amp;</span>client, state.as_ref(), code.as_ref()).<span class="kw">await</span><span class="question-mark">?</span>;
 <span class="macro">println!</span>(<span class="string">&quot;User token: {:?}&quot;</span>, token);</code></pre></div>
 </li>
 </ol>
