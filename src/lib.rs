@@ -41,7 +41,10 @@ use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 #[doc(inline)]
 pub use scopes::{Scope, Validator};
 #[doc(inline)]
-pub use tokens::{AppAccessToken, TwitchToken, UserToken, ValidatedToken};
+pub use tokens::{
+    AppAccessToken, ImplicitUserTokenBuilder, TwitchToken, UserToken, UserTokenBuilder,
+    ValidatedToken,
+};
 
 pub use url;
 
