@@ -432,7 +432,7 @@ impl TwitchToken for UserToken {
 ///         .build()?;
 ///     # );
 ///     let (state, code) = extract_url(&url)?;
-///     let token = builder.get_user_token(&client, code.as_ref(), state.as_ref()).await?;
+///     let token = builder.get_user_token(&client, state.as_ref(), code.as_ref()).await?;
 ///     println!("User token: {:?}", token);
 ///     # Ok::<(), Box<dyn std::error::Error>>(())
 ///     # };
