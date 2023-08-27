@@ -1,6 +1,7 @@
 name: CI
 env:
   CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
+  MSRV: 1.66.1
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -39,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        rust: [1.66.1, nightly]
+        rust: ["", nightly]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -47,10 +48,10 @@ jobs:
       - name: Install rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: ${{ matrix.rust || env.MSRV }}
       - uses: Swatinem/rust-cache@v2
       - name: Test twitch_oauth2
-        run: cargo test --all-targets --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}" --workspace
+        run: cargo test --all-targets --features "${{ env.CI_TWITCH_OAUTH2_FEATURES }}" ${{matrix.rust == 'nightly' && '--workspace'}}
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
