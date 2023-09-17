@@ -2,7 +2,7 @@
 pub mod validator;
 pub use validator::Validator;
 
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 macro_rules! scope_impls {

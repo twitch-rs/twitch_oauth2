@@ -4,7 +4,11 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.4...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.5...Unreleased)
+
+## [v0.12.5] - 2023-09-17
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.4...v0.12.5)
 
 ## [v0.12.4] - 2023-05-29
 

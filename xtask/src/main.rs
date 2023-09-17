@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use clap::Parser;
 use once_cell::sync::OnceCell;
-use serde::Deserialize;
+use serde_derive::Deserialize;
 use xshell::{cmd, Shell};
 
 static RUSTDOCFLAGS: &[&str] = &["--cfg", "nightly"];
