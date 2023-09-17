@@ -928,12 +928,6 @@
 <a href="#928" id="928">928</a>
 <a href="#929" id="929">929</a>
 <a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
 <span class="kw">use </span><span class="kw">super</span>::errors::ValidationError;
@@ -1030,13 +1024,7 @@
     ///     .redirect(reqwest::redirect::Policy::none())
     ///     .build()?;
     /// # );
-    /// let token = UserToken::from_existing(
-    ///     &amp;client,
-    ///     AccessToken::new(&quot;my_access_token&quot;.into()),
-    ///     None,
-    ///     None,
-    /// )
-    /// .await?;
+    /// let token = UserToken::from_token(&amp;client, AccessToken::from(&quot;my_access_token&quot;)).await?;
     /// # Ok::&lt;(), Box&lt;dyn std::error::Error&gt;&gt;(())};
     /// ```
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;client&quot;</span>)]
@@ -1057,7 +1045,7 @@
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use twitch_oauth2::{AccessToken, UserToken};
+    /// use twitch_oauth2::{AccessToken, ClientSecret, RefreshToken, UserToken};
     /// // Make sure you enable the feature &quot;reqwest&quot; for twitch_oauth2 if you want to use reqwest
     /// # async {let client = twitch_oauth2::client::DummyClient; stringify!(
     /// let client = reqwest::Client::builder()
@@ -1066,9 +1054,9 @@
     /// # );
     /// let token = UserToken::from_existing(
     ///     &amp;client,
-    ///     AccessToken::new(&quot;my_access_token&quot;.into()),
-    ///     None,
-    ///     None,
+    ///     AccessToken::from(&quot;my_access_token&quot;),
+    ///     RefreshToken::from(&quot;my_refresh_token&quot;),
+    ///     ClientSecret::from(&quot;my_client_secret&quot;),
     /// )
     /// .await?;
     /// # Ok::&lt;(), Box&lt;dyn std::error::Error&gt;&gt;(())};
