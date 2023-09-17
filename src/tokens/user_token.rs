@@ -94,13 +94,7 @@ impl UserToken {
     ///     .redirect(reqwest::redirect::Policy::none())
     ///     .build()?;
     /// # );
-    /// let token = UserToken::from_existing(
-    ///     &client,
-    ///     AccessToken::new("my_access_token".into()),
-    ///     None,
-    ///     None,
-    /// )
-    /// .await?;
+    /// let token = UserToken::from_token(&client, AccessToken::from("my_access_token")).await?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())};
     /// ```
     #[cfg(feature = "client")]
@@ -121,7 +115,7 @@ impl UserToken {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use twitch_oauth2::{AccessToken, UserToken};
+    /// use twitch_oauth2::{AccessToken, ClientSecret, RefreshToken, UserToken};
     /// // Make sure you enable the feature "reqwest" for twitch_oauth2 if you want to use reqwest
     /// # async {let client = twitch_oauth2::client::DummyClient; stringify!(
     /// let client = reqwest::Client::builder()
@@ -130,9 +124,9 @@ impl UserToken {
     /// # );
     /// let token = UserToken::from_existing(
     ///     &client,
-    ///     AccessToken::new("my_access_token".into()),
-    ///     None,
-    ///     None,
+    ///     AccessToken::from("my_access_token"),
+    ///     RefreshToken::from("my_refresh_token"),
+    ///     ClientSecret::from("my_client_secret"),
     /// )
     /// .await?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())};

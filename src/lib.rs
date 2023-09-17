@@ -26,6 +26,34 @@
 //! println!("token: {:?}", token.token()); // prints `[redacted access token]`
 //! # Ok::<(), Box<dyn std::error::Error>>(())};
 //! ```
+//!
+//! # About
+//!
+//! ## Scopes
+//!
+//! The library contains all known twitch oauth2 scopes in [`Scope`].
+//!
+//! ## User Access Tokens
+//!
+//! For most basic use cases with user authorization, [`UserToken::from_token`] will be your main way
+//! to create user tokens in this library.
+//!
+//! Things like [`UserTokenBuilder`] can be used to create a token from scratch, via the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
+//!
+//! ## App access token
+//!
+//! Similar to [`UserToken`], a token with authorization as the twitch application can be created with
+//! [`AppAccessToken::get_app_access_token`].
+//!
+//! ## HTTP Requests
+//!
+//! To enable client features with a supported http library, enable the http library feature in `twitch_oauth2`, like `twitch_oauth2 = { features = ["reqwest"], version = "0.12.5" }`.
+//! If you're using [twitch_api](https://crates.io/crates/twitch_api), you can use its [`HelixClient`](https://docs.rs/twitch_api/latest/twitch_api/struct.HelixClient.html) instead of the underlying http client.
+//!
+//!
+//! This library can be used without any specific http client library (like if you don't want to use `await`),
+//! using methods like [`AppAccessToken::from_response`] and [`AppAccessToken::get_app_access_token_request`]
+//! or [`UserTokenBuilder::get_user_token_request`] and [`UserToken::from_response`]
 #[cfg(feature = "client")]
 pub mod client;
 pub mod id;
