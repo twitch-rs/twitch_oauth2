@@ -17,7 +17,7 @@ use errors::ValidationError;
 use errors::{RefreshTokenError, RevokeTokenError};
 
 use crate::types::{AccessToken, ClientId};
-use serde::Deserialize;
+use serde_derive::Deserialize;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 /// Types of bearer tokens
@@ -170,6 +170,7 @@ pub struct ValidatedToken {
 fn expires_in<'a, D: serde::de::Deserializer<'a>>(
     d: D,
 ) -> Result<Option<std::time::Duration>, D::Error> {
+    use serde::Deserialize;
     let num = u64::deserialize(d)?;
     if num == 0 {
         Ok(None)

@@ -31,7 +31,8 @@ all = ["surf_client_curl", "reqwest"]
 [dependencies]
 thiserror = "1.0.40"
 displaydoc = "0.2.4"
-serde = { version = "1.0.163", features = ["derive"] }
+serde = { version = "1.0.163" }
+serde_derive = { version = "1.0.163" }
 serde_json = "1.0.96"
 async-trait = { version = "0.1.68", optional = true }
 http = "0.2.9"
@@ -43,7 +44,7 @@ aliri_braid = "0.4.0"
 url = "2.3.1"
 base64 = "0.21.2"
 rand = "0.8.5"
-twitch_types = {version = "0.4.1", features = ["serde"] }
+twitch_types = { version = "0.4.3", features = ["serde"] }
 
 [dev-dependencies]
 tokio = { version = "1.28.2", features = [

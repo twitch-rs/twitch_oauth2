@@ -1,6 +1,6 @@
 //! Representation of oauth2 flow in `id.twitch.tv`
 
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 use crate::{AccessToken, RequestParseError};
 use std::time::Duration;
