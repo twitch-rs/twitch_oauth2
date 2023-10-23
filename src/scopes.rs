@@ -213,8 +213,8 @@ scope_impls!(
     UserManageChatColor,            scope: "user:manage:chat_color",            doc: "Update the color used for the user’s name in chat.Update User Chat Color";
     UserManageWhispers,             scope: "user:manage:whispers",              doc: "Read whispers that you send and receive, and send whispers on your behalf.";
     UserReadBlockedUsers,           scope: "user:read:blocked_users",           doc: "View the block list of a user.";
-    UserReadChat,                   scope: "user:read:chat",                    doc: "View live stream chat and room messages.";
     UserReadBroadcast,              scope: "user:read:broadcast",               doc: "View a user’s broadcasting configuration, including Extension configurations.";
+    UserReadChat,                   scope: "user:read:chat",                    doc: "View live stream chat and room messages.";
     UserReadEmail,                  scope: "user:read:email",                   doc: "View a user’s email address.";
     UserReadFollows,                scope: "user:read:follows",                 doc: "View the list of channels a user follows.";
     UserReadSubscriptions,          scope: "user:read:subscriptions",           doc: "View if an authorized user is subscribed to specific channels.";
