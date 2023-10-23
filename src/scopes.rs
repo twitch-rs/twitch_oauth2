@@ -157,7 +157,9 @@ scope_impls!(
     AnalyticsReadExtensions,        scope: "analytics:read:extensions",         doc: "View analytics data for the Twitch Extensions owned by the authenticated account.";
     AnalyticsReadGames,             scope: "analytics:read:games",              doc: "View analytics data for the games owned by the authenticated account.";
     BitsRead,                       scope: "bits:read",                         doc: "View Bits information for a channel.";
+    ChannelBot,                     scope: "channel:bot",                       doc: "Allows the client’s bot users access to a channel.";
     ChannelEditCommercial,          scope: "channel:edit:commercial",           doc: "Run commercials on a channel.";
+    ChannelManageAds,               scope: "channel:manage:ads",                doc: "Manage ads schedule on a channel.";
     ChannelManageBroadcast,         scope: "channel:manage:broadcast",          doc: "Manage a channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
     ChannelManageExtensions,        scope: "channel:manage:extensions",         doc: "Manage a channel’s Extension configuration, including activating Extensions.";
     ChannelManageModerators,        scope: "channel:manage:moderators",         doc: "Add or remove the moderator role from users in your channel.";
@@ -169,6 +171,7 @@ scope_impls!(
     ChannelManageVideos,            scope: "channel:manage:videos",             doc: "Manage a channel’s videos, including deleting videos.";
     ChannelManageVips,              scope: "channel:manage:vips",               doc: "Add or remove the VIP role from users in your channel.";
     ChannelModerate,                scope: "channel:moderate",                  doc: "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
+    ChannelReadAds,                 scope: "channel:read:ads",                  doc: "Read the ads schedule and details on your channel.";
     ChannelReadCharity,             scope: "channel:read:charity",              doc: "Read charity campaign details and user donations on your channel.";
     ChannelReadEditors,             scope: "channel:read:editors",              doc: "View a list of users with the editor role for a channel.";
     ChannelReadGoals,               scope: "channel:read:goals",                doc: "View Creator Goals for a channel.";
@@ -201,6 +204,7 @@ scope_impls!(
     ModeratorReadFollowers,         scope: "moderator:read:followers",          doc: "Read the followers of a broadcaster.";
     ModeratorReadShieldMode,        scope: "moderator:read:shield_mode",        doc: "View a broadcaster’s Shield Mode status.";
     ModeratorReadShoutouts,         scope: "moderator:read:shoutouts",          doc: "View a broadcaster’s shoutouts.";
+    UserBot,                        scope: "user:bot",                          doc: "Allows client’s bot to act as this user.";
     UserEdit,                       scope: "user:edit",                         doc: "Manage a user object.";
     UserEditBroadcast,              scope: "user:edit:broadcast",               doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
     #[deprecated(note = "Not used anymore, see https://discuss.dev.twitch.tv/t/deprecation-of-create-and-delete-follows-api-endpoints/32351")]
@@ -209,6 +213,7 @@ scope_impls!(
     UserManageChatColor,            scope: "user:manage:chat_color",            doc: "Update the color used for the user’s name in chat.Update User Chat Color";
     UserManageWhispers,             scope: "user:manage:whispers",              doc: "Read whispers that you send and receive, and send whispers on your behalf.";
     UserReadBlockedUsers,           scope: "user:read:blocked_users",           doc: "View the block list of a user.";
+    UserReadChat,                   scope: "user:read:chat",                    doc: "View live stream chat and room messages.";
     UserReadBroadcast,              scope: "user:read:broadcast",               doc: "View a user’s broadcasting configuration, including Extension configurations.";
     UserReadEmail,                  scope: "user:read:email",                   doc: "View a user’s email address.";
     UserReadFollows,                scope: "user:read:follows",                 doc: "View the list of channels a user follows.";
