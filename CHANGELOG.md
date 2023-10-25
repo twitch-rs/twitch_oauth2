@@ -4,7 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.6...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.7...Unreleased)
+
+## [v0.12.7] - 2023-10-23
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.6...v0.12.7)
+
+### Added
+
+- Added new scopes `channel:bot`, `user:bot`, `user:read:chat`, `channel:manage:ads` and `channel:read:ads`.
 
 ## [v0.12.6] - 2023-09-17
 

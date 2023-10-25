@@ -1,8 +1,7 @@
 pre-release-commit-message = "release {{crate_name}} {{version}}"
-disable-tag = true
-disable-push = true
-disable-publish = true
-no-dev-version = true
+tag = false
+push = false
+publish = false
 enable-features = ["all", "unsupported"]
 consolidate-commits = false
 pre-release-replacements = [
