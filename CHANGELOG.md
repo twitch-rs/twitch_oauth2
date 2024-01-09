@@ -4,7 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.7...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.8...Unreleased)
+
+## [v0.12.8] - 2024-01-09
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.7...v0.12.8)
+
+### Added
+
+- Added new scope `user:read:moderated_channels`
 
 ## [v0.12.7] - 2023-10-23
 
