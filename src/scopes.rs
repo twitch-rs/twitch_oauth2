@@ -217,6 +217,7 @@ scope_impls!(
     UserReadChat,                   scope: "user:read:chat",                    doc: "View live stream chat and room messages.";
     UserReadEmail,                  scope: "user:read:email",                   doc: "View a user’s email address.";
     UserReadFollows,                scope: "user:read:follows",                 doc: "View the list of channels a user follows.";
+    UserReadModeratedChannels,      scope: "user:read:moderated_channels",      doc: "Read the list of channels you have moderator privileges in.";
     UserReadSubscriptions,          scope: "user:read:subscriptions",           doc: "View if an authorized user is subscribed to specific channels.";
     WhispersEdit,                   scope: "whispers:edit",                     doc: "Send whisper messages.";
     WhispersRead,                   scope: "whispers:read",                     doc: "View your whisper messages.";
