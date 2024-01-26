@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.8...Unreleased)
 
+### Added
+
+- Added new scope `user:write:chat`
+
 ## [v0.12.8] - 2024-01-09
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.7...v0.12.8)
