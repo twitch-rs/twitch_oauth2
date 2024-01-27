@@ -2264,7 +2264,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "twitch_oauth2"
-version = "0.12.8"
+version = "0.12.9"
 dependencies = [
  "aliri_braid",
  "anyhow",
