@@ -268,6 +268,7 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module for all possible scopes in twitch.
 </span><span class="kw">pub mod </span>validator;
 <span class="kw">pub use </span>validator::Validator;
@@ -489,6 +490,7 @@
     UserReadFollows,                scope: <span class="string">"user:read:follows"</span>,                 doc: <span class="string">"View the list of channels a user follows."</span>;
     UserReadModeratedChannels,      scope: <span class="string">"user:read:moderated_channels"</span>,      doc: <span class="string">"Read the list of channels you have moderator privileges in."</span>;
     UserReadSubscriptions,          scope: <span class="string">"user:read:subscriptions"</span>,           doc: <span class="string">"View if an authorized user is subscribed to specific channels."</span>;
+    UserWriteChat,                  scope: <span class="string">"user:write:chat"</span>,                   doc: <span class="string">"Send messages in a chat room."</span>;
     WhispersEdit,                   scope: <span class="string">"whispers:edit"</span>,                     doc: <span class="string">"Send whisper messages."</span>;
     WhispersRead,                   scope: <span class="string">"whispers:read"</span>,                     doc: <span class="string">"View your whisper messages."</span>;
 );
