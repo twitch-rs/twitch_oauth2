@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.9...Unreleased)
 
+### Changed
+
+- **BREAKING:** Updated `http` to `1.1.0` and `reqwest` to `0.12.2`
+
 ## [v0.12.9] - 2024-01-27
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.8...v0.12.9)
