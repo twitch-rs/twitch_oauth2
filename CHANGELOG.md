@@ -4,7 +4,15 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.9...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.13.0...Unreleased)
+
+## [v0.13.0] - 2024-04-04
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.9...v0.13.0)
+
+### Changed
+
+- **BREAKING:** Updated `http` to `1.1.0` and `reqwest` to `0.12.2`
 
 ## [v0.12.9] - 2024-01-27
 

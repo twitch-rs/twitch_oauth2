@@ -1,12 +1,12 @@
 [package]
 name = "twitch_oauth2"
-version = "0.12.9"
+version = "0.13.0"
 edition = "2021"
 repository = "https://github.com/twitch-rs/twitch_oauth2"
 license = "MIT OR Apache-2.0"
 description = "Oauth2 for Twitch endpoints"
 keywords = ["oauth", "twitch", "async", "asynchronous"]
-documentation = "https://docs.rs/twitch_oauth2/0.12.9"
+documentation = "https://docs.rs/twitch_oauth2/0.13.0"
 readme = "README.md"
 include = [
     "src/*",
@@ -35,9 +35,9 @@ serde = { version = "1.0.163" }
 serde_derive = { version = "1.0.163" }
 serde_json = "1.0.96"
 async-trait = { version = "0.1.68", optional = true }
-http = "0.2.9"
+http = "1.1.0"
 surf = { version = "2.3.2", optional = true, default-features = false }
-reqwest = { version = "0.11.18", optional = true, default-features = false }
+reqwest = { version = "0.12.2", optional = true, default-features = false }
 http-types = { version = "2.12.0", optional = true }
 once_cell = "1.17.1"
 aliri_braid = "0.4.0"
@@ -54,7 +54,7 @@ tokio = { version = "1.28.2", features = [
 ] }
 dotenv = "0.15.0"
 anyhow = "1.0.71"
-reqwest = "0.11.18"
+reqwest = "0.12.2"
 surf = "2.3.2"
 rpassword = "7.2.0"
 
