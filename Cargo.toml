@@ -92,3 +92,6 @@ features = ["all", "mock_api"]
 rustc-args = ["--cfg", "nightly"]
 rustdoc-args = ["--cfg", "nightly"]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(_internal_never)', 'cfg(nightly)'] }
