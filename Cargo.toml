@@ -30,7 +30,7 @@ all = ["surf_client_curl", "reqwest"]
 
 [dependencies]
 thiserror = "1.0.40"
-displaydoc = "0.2.4"
+displaydoc = "0.2.5"
 serde = { version = "1.0.163" }
 serde_derive = { version = "1.0.163" }
 serde_json = "1.0.96"
@@ -92,3 +92,6 @@ features = ["all", "mock_api"]
 rustc-args = ["--cfg", "nightly"]
 rustdoc-args = ["--cfg", "nightly"]
 cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(_internal_never)', 'cfg(nightly)'] }
