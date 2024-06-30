@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.13.0...Unreleased)
 
+### Changed
+
+- Added new scopes `moderator:read:warnings` and `moderator:manage:warnings`
+
 ## [v0.13.0] - 2024-04-04
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.12.9...v0.13.0)

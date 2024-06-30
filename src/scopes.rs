@@ -197,6 +197,7 @@ scope_impls!(
     ModeratorManageChatSettings,    scope: "moderator:manage:chat_settings",    doc: "View a broadcaster’s chat room settings.";
     ModeratorManageShieldMode,      scope: "moderator:manage:shield_mode",      doc: "Manage a broadcaster’s Shield Mode status.";
     ModeratorManageShoutouts,       scope: "moderator:manage:shoutouts",        doc: "Manage a broadcaster’s shoutouts.";
+    ModeratorManageWarnings,        scope: "moderator:manage:warnings",         doc: "Manage a broadcaster’s chat warnings.";
     ModeratorReadAutomodSettings,   scope: "moderator:read:automod_settings",   doc: "View a broadcaster’s AutoMod settings.";
     ModeratorReadBlockedTerms,      scope: "moderator:read:blocked_terms",      doc: "View a broadcaster’s list of blocked terms.";
     ModeratorReadChatSettings,      scope: "moderator:read:chat_settings",      doc: "View a broadcaster’s chat room settings.";
@@ -204,6 +205,7 @@ scope_impls!(
     ModeratorReadFollowers,         scope: "moderator:read:followers",          doc: "Read the followers of a broadcaster.";
     ModeratorReadShieldMode,        scope: "moderator:read:shield_mode",        doc: "View a broadcaster’s Shield Mode status.";
     ModeratorReadShoutouts,         scope: "moderator:read:shoutouts",          doc: "View a broadcaster’s shoutouts.";
+    ModeratorReadWarnings,          scope: "moderator:read:warnings",           doc: "View a broadcaster’s chat warnings.";
     UserBot,                        scope: "user:bot",                          doc: "Allows client’s bot to act as this user.";
     UserEdit,                       scope: "user:edit",                         doc: "Manage a user object.";
     UserEditBroadcast,              scope: "user:edit:broadcast",               doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
