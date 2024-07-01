@@ -32,7 +32,7 @@ jobs:
           - licenses
           - sources
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: EmbarkStudios/cargo-deny-action@v1
