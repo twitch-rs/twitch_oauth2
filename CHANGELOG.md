@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.13.0...Unreleased)
 
+### Breaking
+
+- MSRV bumped to `1.70.0`
+
 ### Changed
 
 - Added new scopes `moderator:read:warnings` and `moderator:manage:warnings`
