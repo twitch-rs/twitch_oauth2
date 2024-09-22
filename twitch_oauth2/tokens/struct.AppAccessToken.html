@@ -20,7 +20,7 @@ the specific Client ID</p>
 as this function does not check if the token is valid or expired, nor if it is an <code>app access token</code> or <code>user token</code>.</p>
 <h5 id="notes"><a class="doc-anchor" href="#notes">§</a>Notes</h5>
 <p>If <code>expires_in</code> is <code>None</code>, we’ll assume <code>token.is_elapsed() == true</code></p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.from_existing" class="method"><a class="src rightside" href="../../src/twitch_oauth2/tokens/app_access_token.rs.html#122-146">source</a><h4 class="code-header">pub async fn <a href="#method.from_existing" class="fn">from_existing</a>&lt;RE, C&gt;(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.from_existing" class="method"><a class="src rightside" href="../../src/twitch_oauth2/tokens/app_access_token.rs.html#122-146">source</a><h4 class="code-header">pub async fn <a href="#method.from_existing" class="fn">from_existing</a>&lt;C&gt;(
     http_client: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;C</a>,
     access_token: <a class="struct" href="../types/struct.AccessToken.html" title="struct twitch_oauth2::types::AccessToken">AccessToken</a>,
     refresh_token: impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../types/struct.RefreshToken.html" title="struct twitch_oauth2::types::RefreshToken">RefreshToken</a>&gt;&gt;,

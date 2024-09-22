@@ -357,7 +357,7 @@
 
     <span class="doccomment">/// Assemble token and validate it. Retrieves [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
     </span><span class="attr">#[cfg(feature = <span class="string">"client"</span>)]
-    </span><span class="kw">pub async fn </span>from_existing&lt;RE, C&gt;(
+    </span><span class="kw">pub async fn </span>from_existing&lt;C&gt;(
         http_client: <span class="kw-2">&amp;</span>C,
         access_token: AccessToken,
         refresh_token: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;RefreshToken&gt;&gt;,
