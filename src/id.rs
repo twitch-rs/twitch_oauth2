@@ -97,7 +97,7 @@ pub mod scope {
         if let Some(scopes) = scopes {
             match scopes {
                 scopes if scopes.is_empty() || scopes.len() > 1 => Ok(Some(scopes)),
-                scopes if scopes.len() == 1 && scopes.get(0).unwrap().as_str() == "" => Ok(None),
+                scopes if scopes.len() == 1 && scopes.first().unwrap().as_str() == "" => Ok(None),
                 _ => Ok(Some(scopes)),
             }
         } else {

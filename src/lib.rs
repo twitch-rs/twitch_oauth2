@@ -310,9 +310,7 @@ where
     url.query_pairs_mut().extend_pairs(params);
     let url: String = url.into();
     let mut req = http::Request::builder().method(method).uri(url);
-    req.headers_mut()
-        .map(|h| h.extend(headers.into_iter()))
-        .unwrap();
+    req.headers_mut().map(|h| h.extend(headers)).unwrap();
     req.headers_mut()
         .map(|h| {
             if !h.contains_key(http::header::ACCEPT) {
