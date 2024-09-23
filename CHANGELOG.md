@@ -10,6 +10,10 @@
 
 - MSRV bumped to `1.70.0`
 
+### Added
+
+- Added new scopes `channel:manage:guest_star`, `channel:read:guest_star`, `moderator:manage:guest_star`, `moderator:manage:unban_requests`, `moderator:read:banned_users`, `moderator:read:chat_messages`, `moderator:read:guest_star`, `moderator:read:moderators`, `moderator:read:suspicious_users`, `moderator:read:unban_requests`, `moderator:read:vips`, `user:read:emotes`.
+
 ### Changed
 
 - Added new scopes `moderator:read:warnings` and `moderator:manage:warnings`
