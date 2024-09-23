@@ -47,7 +47,7 @@
 //!
 //! ## HTTP Requests
 //!
-//! To enable client features with a supported http library, enable the http library feature in `twitch_oauth2`, like `twitch_oauth2 = { features = ["reqwest"], version = "0.13.0" }`.
+//! To enable client features with a supported http library, enable the http library feature in `twitch_oauth2`, like `twitch_oauth2 = { features = ["reqwest"], version = "0.14.0" }`.
 //! If you're using [twitch_api](https://crates.io/crates/twitch_api), you can use its [`HelixClient`](https://docs.rs/twitch_api/latest/twitch_api/struct.HelixClient.html) instead of the underlying http client.
 //!
 //!
@@ -310,9 +310,7 @@ where
     url.query_pairs_mut().extend_pairs(params);
     let url: String = url.into();
     let mut req = http::Request::builder().method(method).uri(url);
-    req.headers_mut()
-        .map(|h| h.extend(headers.into_iter()))
-        .unwrap();
+    req.headers_mut().map(|h| h.extend(headers)).unwrap();
     req.headers_mut()
         .map(|h| {
             if !h.contains_key(http::header::ACCEPT) {

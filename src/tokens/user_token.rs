@@ -11,6 +11,7 @@ use crate::{ClientSecret, ValidatedToken};
 
 use crate::types::{AccessToken, ClientId, RefreshToken};
 
+#[allow(clippy::too_long_first_doc_paragraph)] // clippy bug - https://github.com/rust-lang/rust-clippy/issues/13315
 /// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
 ///
 /// Used for requests that need an authenticated user. See also [`AppAccessToken`](super::AppAccessToken)
@@ -341,8 +342,8 @@ impl TwitchToken for UserToken {
 /// To generate a user token with this auth flow, you need to:
 ///
 /// 1. Initialize the [`UserTokenBuilder`] with [`UserTokenBuilder::new`](UserTokenBuilder::new), providing your client id, client secret, and a redirect URL.
-/// Use [`set_scopes(vec![])`](UserTokenBuilder::set_scopes) to add any necessary scopes to the request. You can also use [`force_verify(true)`](UserTokenBuilder::force_verify) to force the user to
-/// re-authorize your app’s access to their resources.
+///    Use [`set_scopes(vec![])`](UserTokenBuilder::set_scopes) to add any necessary scopes to the request. You can also use [`force_verify(true)`](UserTokenBuilder::force_verify) to force the user to
+///    re-authorize your app’s access to their resources.
 ///
 ///     Make sure you've added the redirect URL to the app settings on [the Twitch Developer Console](https://dev.twitch.tv/console).
 ///

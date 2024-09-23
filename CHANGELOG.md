@@ -4,15 +4,23 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.13.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.14.0...Unreleased)
+
+## [v0.14.0] - 2024-09-23
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.13.0...v0.14.0)
 
 ### Breaking
 
 - MSRV bumped to `1.70.0`
 
-### Changed
+### Added
 
-- Added new scopes `moderator:read:warnings` and `moderator:manage:warnings`
+- Added new scopes `channel:manage:guest_star`, `channel:read:guest_star`, `moderator:manage:guest_star`, `moderator:manage:unban_requests`, `moderator:manage:warnings`, `moderator:read:banned_users`, `moderator:read:chat_messages`, `moderator:read:guest_star`, `moderator:read:moderators`, `moderator:read:suspicious_users`, `moderator:read:unban_requests`, `moderator:read:vips`, `moderator:read:warnings`, `user:read:emotes`
+
+### Fixed
+
+- Removed unused generic in `AppAccessToken::from_existing`
 
 ## [v0.13.0] - 2024-04-04
 
