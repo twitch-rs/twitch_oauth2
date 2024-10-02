@@ -311,6 +311,7 @@ impl TwitchToken for UserToken {
             self.access_token = access_token;
             self.expires_in = expires;
             self.refresh_token = refresh_token;
+            self.struct_created = std::time::Instant::now();
             Ok(())
         } else {
             return Err(RefreshTokenError::NoClientSecretFound);
