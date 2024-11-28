@@ -197,7 +197,7 @@ scope_impls!(
     ModeratorManageBlockedTerms,    scope: "moderator:manage:blocked_terms",    doc: "Manage a broadcaster’s list of blocked terms.";
     ModeratorManageChatMessages,    scope: "moderator:manage:chat_messages",    doc: "Delete chat messages in channels where you have the moderator role";
     ModeratorManageChatSettings,    scope: "moderator:manage:chat_settings",    doc: "View a broadcaster’s chat room settings.";
-    ModeratorManageGuestStart,      scope: "moderator:manage:guest_star",       doc: "Manage Guest Star for channels where you are a Guest Star moderator.";
+    ModeratorManageGuestStar,       scope: "moderator:manage:guest_star",       doc: "Manage Guest Star for channels where you are a Guest Star moderator.";
     ModeratorManageShieldMode,      scope: "moderator:manage:shield_mode",      doc: "Manage a broadcaster’s Shield Mode status.";
     ModeratorManageShoutouts,       scope: "moderator:manage:shoutouts",        doc: "Manage a broadcaster’s shoutouts.";
     ModeratorManageUnbanRequests,   scope: "moderator:manage:unban_requests",   doc: "Manage a broadcaster’s unban requests.";
