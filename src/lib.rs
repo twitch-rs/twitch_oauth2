@@ -70,8 +70,8 @@ use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 pub use scopes::{Scope, Validator};
 #[doc(inline)]
 pub use tokens::{
-    AppAccessToken, ImplicitUserTokenBuilder, TwitchToken, UserToken, UserTokenBuilder,
-    ValidatedToken,
+    AppAccessToken, DeviceUserTokenBuilder, ImplicitUserTokenBuilder, TwitchToken, UserToken,
+    UserTokenBuilder, ValidatedToken,
 };
 
 pub use url;
@@ -125,6 +125,17 @@ pub static AUTH_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAU
 pub static TOKEN_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAUTH2_TOKEN_URL", {
     TWITCH_OAUTH2_URL.to_string() + "token"
 },);
+/// Device URL (`https://id.twitch.tv/oauth2/device`) for `id.twitch.tv`
+///
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_DEVICE_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
+///
+/// # Examples
+///
+/// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
+pub static DEVICE_URL: once_cell::sync::Lazy<url::Url> =
+    mock_env_url!("TWITCH_OAUTH2_DEVICE_URL", {
+        TWITCH_OAUTH2_URL.to_string() + "device"
+    },);
 /// Validation URL (`https://id.twitch.tv/oauth2/validate`) for `id.twitch.tv`
 ///
 /// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_VALIDATE_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
@@ -261,6 +272,28 @@ impl RefreshTokenRef {
         )
     }
 
+    /// Get the request needed to refresh this token.
+    ///
+    /// Parse the response from this endpoint with [TwitchTokenResponse::from_response](crate::id::TwitchTokenResponse::from_response)
+    // FIXME: This is a hack that should be removed on next breaking change
+    pub fn refresh_token_no_secret_request(&self, client_id: &ClientId) -> http::Request<Vec<u8>> {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+
+        let mut params = HashMap::new();
+        params.insert("client_id", client_id.as_str());
+        params.insert("grant_type", "refresh_token");
+        params.insert("refresh_token", self.secret());
+
+        construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        )
+    }
+
     /// Refresh the token, call if it has expired.
     ///
     /// See <https://dev.twitch.tv/docs/authentication/refresh-tokens>
@@ -278,6 +311,37 @@ impl RefreshTokenRef {
         C: Client,
     {
         let req = self.refresh_token_request(client_id, client_secret);
+
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(RefreshTokenError::RequestError)?;
+        let res = id::TwitchTokenResponse::from_response(&resp)?;
+
+        let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
+        let refresh_token = res.refresh_token;
+        let access_token = res.access_token;
+        Ok((access_token, expires_in, refresh_token))
+    }
+
+    /// Refresh the token without a secret, call if it has expired.
+    ///
+    /// Only  possible on `Public` client types
+    /// See <https://dev.twitch.tv/docs/authentication/refresh-tokens>
+    // FIXME: This is a hack that should be removed on next breaking change
+    #[cfg(feature = "client")]
+    pub async fn refresh_token_no_secret<'a, C>(
+        &self,
+        http_client: &'a C,
+        client_id: &ClientId,
+    ) -> Result<
+        (AccessToken, std::time::Duration, Option<RefreshToken>),
+        RefreshTokenError<<C as Client>::Error>,
+    >
+    where
+        C: Client,
+    {
+        let req = self.refresh_token_no_secret_request(client_id);
 
         let resp = http_client
             .req(req)

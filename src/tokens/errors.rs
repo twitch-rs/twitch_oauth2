@@ -103,3 +103,42 @@ pub enum ImplicitUserTokenExchangeError<RE: std::error::Error + Send + Sync + 's
     /// could not get validation for token
     ValidationError(#[from] ValidationError<RE>),
 }
+/// Errors for [`DeviceUserTokenBuilder`][crate::tokens::DeviceUserTokenBuilder]
+#[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
+#[cfg(feature = "client")]
+pub enum DeviceUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
+    /// request for exchange token failed
+    DeviceExchangeRequestError(#[source] RE),
+    /// could not parse response when getting exchange token
+    DeviceExchangeParseError(#[source] crate::RequestParseError),
+    /// request for user token failed
+    TokenRequestError(#[source] RE),
+    /// could not parse response when getting user token
+    TokenParseError(#[source] crate::RequestParseError),
+    // FIXME: should be TwitchTokenErrorResponse
+    /// twitch returned an error: {error:?} - {description:?}
+    TwitchError {
+        /// Error type
+        error: Option<String>,
+        /// Description of error
+        description: Option<String>,
+    },
+    /// could not get validation for token
+    ValidationError(#[from] ValidationError<RE>),
+    /// no device code found, exchange not started
+    NoDeviceCode,
+}
+
+#[cfg(feature = "client")]
+impl<RE: std::error::Error + Send + Sync + 'static> DeviceUserTokenExchangeError<RE> {
+    /// Check if the error is due to the authorization request being pending
+    pub fn is_pending(&self) -> bool {
+        matches!(self, DeviceUserTokenExchangeError::TokenParseError(
+                crate::RequestParseError::TwitchError(crate::id::TwitchTokenErrorResponse {
+                    message,
+                    ..
+                }),
+            ) if message == "authorization_pending")
+    }
+}

@@ -2,7 +2,10 @@ use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
 use super::errors::ValidationError;
 #[cfg(feature = "client")]
-use super::errors::{ImplicitUserTokenExchangeError, RefreshTokenError, UserTokenExchangeError};
+use super::errors::{
+    DeviceUserTokenExchangeError, ImplicitUserTokenExchangeError, RefreshTokenError,
+    UserTokenExchangeError,
+};
 #[cfg(feature = "client")]
 use crate::client::Client;
 
@@ -195,7 +198,9 @@ impl UserToken {
     /// Returns true if this token is never expiring.
     ///
     /// Hidden because it's not expected to be used.
-    pub fn never_expires(&self) -> bool { self.never_expiring }
+    pub fn never_expires(&self) -> bool {
+        self.never_expiring
+    }
 
     /// Create a [`UserTokenBuilder`] to get a token with the [OAuth Authorization Code](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
     pub fn builder(
@@ -275,20 +280,32 @@ impl UserToken {
     }
 
     /// Set the client secret
-    pub fn set_secret(&mut self, secret: Option<ClientSecret>) { self.client_secret = secret }
+    pub fn set_secret(&mut self, secret: Option<ClientSecret>) {
+        self.client_secret = secret
+    }
 }
 
 #[cfg_attr(feature = "client", async_trait::async_trait)]
 impl TwitchToken for UserToken {
-    fn token_type() -> super::BearerTokenType { super::BearerTokenType::UserToken }
+    fn token_type() -> super::BearerTokenType {
+        super::BearerTokenType::UserToken
+    }
 
-    fn client_id(&self) -> &ClientId { &self.client_id }
+    fn client_id(&self) -> &ClientId {
+        &self.client_id
+    }
 
-    fn token(&self) -> &AccessToken { &self.access_token }
+    fn token(&self) -> &AccessToken {
+        &self.access_token
+    }
 
-    fn login(&self) -> Option<&UserNameRef> { Some(&self.login) }
+    fn login(&self) -> Option<&UserNameRef> {
+        Some(&self.login)
+    }
 
-    fn user_id(&self) -> Option<&UserIdRef> { Some(&self.user_id) }
+    fn user_id(&self) -> Option<&UserIdRef> {
+        Some(&self.user_id)
+    }
 
     #[cfg(feature = "client")]
     async fn refresh_token<'a, C>(
@@ -314,7 +331,29 @@ impl TwitchToken for UserToken {
             self.struct_created = std::time::Instant::now();
             Ok(())
         } else {
-            return Err(RefreshTokenError::NoClientSecretFound);
+            // FIXME: This is a hack that should be removed on next breaking change, ideally refresh would be one method.
+            let (access_token, expires, refresh_token) =
+                if let Some(token) = self.refresh_token.take() {
+                    let resp = token
+                        .refresh_token_no_secret(http_client, &self.client_id)
+                        .await;
+                    match resp {
+                        Err(RefreshTokenError::RequestParseError(
+                            crate::RequestParseError::TwitchError(
+                                crate::TwitchTokenErrorResponse { message, .. },
+                            ),
+                        )) if message == "missing client secret" => {
+                            return Err(RefreshTokenError::NoClientSecretFound);
+                        }
+                        _ => resp?,
+                    }
+                } else {
+                    return Err(RefreshTokenError::NoRefreshToken);
+                };
+            self.access_token = access_token;
+            self.expires_in = expires;
+            self.refresh_token = refresh_token;
+            Ok(())
         }
     }
 
@@ -329,7 +368,9 @@ impl TwitchToken for UserToken {
         }
     }
 
-    fn scopes(&self) -> &[Scope] { self.scopes.as_slice() }
+    fn scopes(&self) -> &[Scope] {
+        self.scopes.as_slice()
+    }
 }
 
 /// Builder for [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
@@ -475,7 +516,9 @@ impl UserTokenBuilder {
     }
 
     /// Add a single scope to request
-    pub fn add_scope(&mut self, scope: Scope) { self.scopes.push(scope); }
+    pub fn add_scope(&mut self, scope: Scope) {
+        self.scopes.push(scope);
+    }
 
     /// Enable or disable function to make the user able to switch accounts if needed.
     pub fn force_verify(mut self, b: bool) -> Self {
@@ -516,7 +559,9 @@ impl UserTokenBuilder {
     ///
     /// Hidden because you should preferably not use this.
     #[doc(hidden)]
-    pub fn set_csrf(&mut self, csrf: crate::types::CsrfToken) { self.csrf = Some(csrf); }
+    pub fn set_csrf(&mut self, csrf: crate::types::CsrfToken) {
+        self.csrf = Some(csrf);
+    }
 
     /// Check if the CSRF is valid
     pub fn csrf_is_valid(&self, csrf: &str) -> bool {
@@ -658,7 +703,9 @@ impl ImplicitUserTokenBuilder {
     }
 
     /// Add a single scope to request
-    pub fn add_scope(&mut self, scope: Scope) { self.scopes.push(scope); }
+    pub fn add_scope(&mut self, scope: Scope) {
+        self.scopes.push(scope);
+    }
 
     /// Enable or disable function to make the user able to switch accounts if needed.
     pub fn force_verify(mut self, b: bool) -> Self {
@@ -827,6 +874,154 @@ impl ImplicitUserTokenBuilder {
                 Err(ImplicitUserTokenExchangeError::TwitchError { error, description })
             }
         }
+    }
+}
+
+/// Builder for [OAuth device code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#device-flow)
+///
+/// # Examples
+///
+/// ```rust
+/// # async move {
+/// # use twitch_oauth2::{id::TwitchTokenResponse, UserToken, tokens::DeviceUserTokenBuilder, Scope};
+/// # use url::Url;
+/// # use std::borrow::Cow;
+/// # let client = twitch_oauth2::client::DummyClient; stringify!(
+/// let client = reqwest::Client::builder()
+///     .redirect(reqwest::redirect::Policy::none())
+///     .build()?;
+/// # );
+/// # let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
+/// let code = builder.start(&client).await?;
+/// println!("Please go to {}", code.verification_uri);
+/// let mut finish = builder.finish(&client).await;
+/// while finish.as_ref().is_err_and(|e| e.is_pending()) {
+///     // wait a bit
+///     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+///     finish = builder.finish(&client).await;
+/// }
+/// let token: UserToken = finish?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// # };
+/// ```
+pub struct DeviceUserTokenBuilder {
+    client_id: ClientId,
+    client_secret: Option<ClientSecret>,
+    scopes: Vec<Scope>,
+    response: Option<crate::id::DeviceCodeResponse>,
+}
+
+impl DeviceUserTokenBuilder {
+    /// Create a [`DeviceUserTokenBuilder`]
+    pub fn new(client_id: impl Into<ClientId>, scopes: Vec<Scope>) -> Self {
+        Self {
+            client_id: client_id.into(),
+            client_secret: None,
+            scopes,
+            response: None,
+        }
+    }
+
+    /// Set the client secret, only necessary if you have one
+    pub fn set_secret(&mut self, secret: Option<ClientSecret>) {
+        self.client_secret = secret;
+    }
+
+    /// Get the request for getting a [`DeviceCodeResponse`](crate::id::DeviceCodeResponse)
+    pub fn get_exchange_device_code_request(&self) -> http::Request<Vec<u8>> {
+        // the equivalent of curl --location 'https://id.twitch.tv/oauth2/device' \
+        // --form 'client_id="<clientID>"' \
+        // --form 'scopes="<scopes>"'
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let mut params = HashMap::new();
+        params.insert("client_id", self.client_id.as_str());
+        let scopes = self.scopes.as_slice().join(" ");
+        if !scopes.is_empty() {
+            params.insert("scopes", &scopes);
+        }
+        crate::construct_request(
+            &crate::DEVICE_URL,
+            params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        )
+    }
+
+    /// Parse the response from the device code request
+    pub fn parse_exchange_device_code_response(
+        &mut self,
+        response: http::Response<Vec<u8>>,
+    ) -> Result<&crate::id::DeviceCodeResponse, crate::RequestParseError> {
+        let response = crate::parse_response(&response)?;
+        self.response = Some(response);
+        Ok(self.response.as_ref().unwrap())
+    }
+
+    /// Start the device code flow
+    #[cfg(feature = "client")]
+    pub async fn start<'a, 's, C>(
+        &'s mut self,
+        http_client: &'a C,
+    ) -> Result<&'s crate::id::DeviceCodeResponse, DeviceUserTokenExchangeError<C::Error>>
+    where
+        C: Client,
+    {
+        let req = self.get_exchange_device_code_request();
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(DeviceUserTokenExchangeError::DeviceExchangeRequestError)?;
+        self.parse_exchange_device_code_response(resp)
+            .map_err(DeviceUserTokenExchangeError::DeviceExchangeParseError)
+    }
+
+    /// Get the request for getting a [`TwitchTokenResponse`](crate::id::TwitchTokenResponse), to be used in [UserToken::from_response].
+    ///
+    /// Returns None if there is no `device_code`
+    pub fn get_user_token_request(&self) -> Option<http::Request<Vec<u8>>> {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let Some(response) = &self.response else {
+            return None;
+        };
+        let mut params = HashMap::new();
+        params.insert("client_id", self.client_id.as_str());
+        params.insert("device_code", &response.device_code);
+        params.insert("grant_type", "urn:ietf:params:oauth:grant-type:device_code");
+
+        Some(crate::construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        ))
+    }
+
+    /// Finish the device code flow, gramting you a token if the user has authorized the app
+    #[cfg(feature = "client")]
+    pub async fn finish<'a, C>(
+        &self,
+        http_client: &'a C,
+    ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
+    where
+        C: Client,
+    {
+        let req = self
+            .get_user_token_request()
+            .ok_or(DeviceUserTokenExchangeError::NoDeviceCode)?;
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(DeviceUserTokenExchangeError::TokenRequestError)?;
+        let response = crate::id::TwitchTokenResponse::from_response(&resp)
+            .map_err(DeviceUserTokenExchangeError::TokenParseError)?;
+        let validated = response.access_token.validate_token(http_client).await?;
+        // FIXME: get rid of the clone
+        UserToken::from_response(response, validated, self.client_secret.clone())
+            .map_err(|v| v.into_other().into())
     }
 }
 
