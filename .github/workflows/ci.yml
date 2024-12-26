@@ -1,7 +1,7 @@
 name: CI
 env:
   CI_TWITCH_OAUTH2_FEATURES: "all mock_api"
-  MSRV: 1.70.0
+  MSRV: 1.71.1
 on:
   pull_request:
     types: [opened, reopened, synchronize]

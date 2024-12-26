@@ -8,6 +8,7 @@
 
 ### Breaking
 
+- MSRV bumped to `1.71.1`
 - Fixed a typo in `ModeratorManageGuestStart` (now: `ModeratorManageGuestStar`)
 
 ### Fixed
