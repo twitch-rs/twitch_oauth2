@@ -69,7 +69,7 @@ impl TwitchToken for AppAccessToken {
         let (access_token, expires_in, refresh_token) =
             if let Some(token) = self.refresh_token.take() {
                 token
-                    .refresh_token(http_client, &self.client_id, &self.client_secret)
+                    .refresh_token(http_client, &self.client_id, Some(&self.client_secret))
                     .await?
             } else {
                 return Err(RefreshTokenError::NoRefreshToken);

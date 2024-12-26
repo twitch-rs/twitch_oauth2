@@ -39,6 +39,7 @@
 //! to create user tokens in this library.
 //!
 //! Things like [`UserTokenBuilder`] can be used to create a token from scratch, via the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
+//! You can also use the newer [OAuth device code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#device-code-grant-flow) with [`DeviceUserTokenBuilder`].
 //!
 //! ## App access token
 //!
@@ -252,36 +253,16 @@ impl RefreshTokenRef {
     pub fn refresh_token_request(
         &self,
         client_id: &ClientId,
-        client_secret: &ClientSecret,
+        client_secret: Option<&ClientSecret>,
     ) -> http::Request<Vec<u8>> {
         use http::{HeaderMap, Method};
         use std::collections::HashMap;
 
         let mut params = HashMap::new();
         params.insert("client_id", client_id.as_str());
-        params.insert("client_secret", client_secret.secret());
-        params.insert("grant_type", "refresh_token");
-        params.insert("refresh_token", self.secret());
-
-        construct_request(
-            &crate::TOKEN_URL,
-            &params,
-            HeaderMap::new(),
-            Method::POST,
-            vec![],
-        )
-    }
-
-    /// Get the request needed to refresh this token.
-    ///
-    /// Parse the response from this endpoint with [TwitchTokenResponse::from_response](crate::id::TwitchTokenResponse::from_response)
-    // FIXME: This is a hack that should be removed on next breaking change
-    pub fn refresh_token_no_secret_request(&self, client_id: &ClientId) -> http::Request<Vec<u8>> {
-        use http::{HeaderMap, Method};
-        use std::collections::HashMap;
-
-        let mut params = HashMap::new();
-        params.insert("client_id", client_id.as_str());
+        if let Some(client_secret) = client_secret {
+            params.insert("client_secret", client_secret.secret());
+        }
         params.insert("grant_type", "refresh_token");
         params.insert("refresh_token", self.secret());
 
@@ -302,7 +283,7 @@ impl RefreshTokenRef {
         &self,
         http_client: &'a C,
         client_id: &ClientId,
-        client_secret: &ClientSecret,
+        client_secret: Option<&ClientSecret>,
     ) -> Result<
         (AccessToken, std::time::Duration, Option<RefreshToken>),
         RefreshTokenError<<C as Client>::Error>,
@@ -311,37 +292,6 @@ impl RefreshTokenRef {
         C: Client,
     {
         let req = self.refresh_token_request(client_id, client_secret);
-
-        let resp = http_client
-            .req(req)
-            .await
-            .map_err(RefreshTokenError::RequestError)?;
-        let res = id::TwitchTokenResponse::from_response(&resp)?;
-
-        let expires_in = res.expires_in().ok_or(RefreshTokenError::NoExpiration)?;
-        let refresh_token = res.refresh_token;
-        let access_token = res.access_token;
-        Ok((access_token, expires_in, refresh_token))
-    }
-
-    /// Refresh the token without a secret, call if it has expired.
-    ///
-    /// Only  possible on `Public` client types
-    /// See <https://dev.twitch.tv/docs/authentication/refresh-tokens>
-    // FIXME: This is a hack that should be removed on next breaking change
-    #[cfg(feature = "client")]
-    pub async fn refresh_token_no_secret<'a, C>(
-        &self,
-        http_client: &'a C,
-        client_id: &ClientId,
-    ) -> Result<
-        (AccessToken, std::time::Duration, Option<RefreshToken>),
-        RefreshTokenError<<C as Client>::Error>,
-    >
-    where
-        C: Client,
-    {
-        let req = self.refresh_token_no_secret_request(client_id);
 
         let resp = http_client
             .req(req)

@@ -128,12 +128,15 @@ pub enum DeviceUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'sta
     ValidationError(#[from] ValidationError<RE>),
     /// no device code found, exchange not started
     NoDeviceCode,
+    /// the device code has expired
+    Expired,
 }
 
 #[cfg(feature = "client")]
 impl<RE: std::error::Error + Send + Sync + 'static> DeviceUserTokenExchangeError<RE> {
     /// Check if the error is due to the authorization request being pending
     pub fn is_pending(&self) -> bool {
+        dbg!(self);
         matches!(self, DeviceUserTokenExchangeError::TokenParseError(
                 crate::RequestParseError::TwitchError(crate::id::TwitchTokenErrorResponse {
                     message,

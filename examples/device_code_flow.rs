@@ -17,27 +17,23 @@ async fn main() -> anyhow::Result<()> {
         .map(twitch_oauth2::ClientId::new)
         .expect("Please set env: TWITCH_CLIENT_ID or pass client id as an argument");
 
+    // Create the builder!
     let mut builder = DeviceUserTokenBuilder::new(client_id, Default::default());
 
-    // Start the device code flow. This will return a code that the user must enter on
+    // Start the device code flow. This will return a code that the user must enter on Twitch
     let code = builder.start(&reqwest).await?;
 
     println!("Please go to {0}", code.verification_uri);
-    println!("Waiting for user to authorize");
+    println!(
+        "Waiting for user to authorize, time left: {0}",
+        code.expires_in
+    );
 
-    // Finish the auth with finish, this will return a token if the user has authorized the app
-    let mut finish = builder.finish(&reqwest).await;
-    // on the error type for `finish`, there's a convenience function to check if the request is pending.
-    while finish.as_ref().is_err_and(|e| e.is_pending()) {
-        // wait a bit for next check
-        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-        finish = builder.finish(&reqwest).await;
-    }
-    let token = finish?;
+    // Finish the auth with wait_for_code, this will return a token if the user has authorized the app
+    let mut token = builder.wait_for_code(&reqwest, tokio::time::sleep).await?;
 
-    println!("{:?}", token);
-    dbg!(token.is_elapsed());
-    // we can also refresh this token, even without a client secret.
+    println!("{:?}\nrefresing token", token);
+    // we can also refresh this token, even without a client secret (if the application was created as a public client type in the twitch dashboard).
     token.refresh_token(&reqwest).await?;
     println!("{:?}", token);
     Ok(())

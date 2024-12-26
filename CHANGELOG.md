@@ -10,6 +10,7 @@
 
 - MSRV bumped to `1.71.1`
 - Fixed a typo in `ModeratorManageGuestStart` (now: `ModeratorManageGuestStar`)
+- `RefreshToken::refresh_token` takes an optional secret to allow public clients to refresh tokens.
 
 ### Added
 
