@@ -6,6 +6,11 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.14.0...Unreleased)
 
+### Breaking
+
+- MSRV bumped to `1.71.1`
+- Fixed a typo in `ModeratorManageGuestStart` (now: `ModeratorManageGuestStar`)
+
 ### Fixed
 
 - `AppAccessToken` and `UserToken` now return the correct duration in `expires_in` after refreshing.

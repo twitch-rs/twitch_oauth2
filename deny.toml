@@ -28,7 +28,11 @@ ignore = [
     # https://rustsec.org/advisories/RUSTSEC-2021-0060
     # `aes-soft` has been merged into the `aes` crate
     # Dependent on via surf (and http-types)
-    "RUSTSEC-2021-0060"
+    "RUSTSEC-2021-0060",
+    # https://rustsec.org/advisories/RUSTSEC-2024-0384
+    # `instant` is unmaintained
+    # Dependent on via surf (and http-types)
+    "RUSTSEC-2024-0384",
 ]
 
 # This section is considered when running `cargo deny check licenses`
@@ -47,6 +51,7 @@ allow = [
     "ISC",
     "OpenSSL",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
 ]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
