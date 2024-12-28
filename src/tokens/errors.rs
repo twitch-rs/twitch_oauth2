@@ -136,7 +136,6 @@ pub enum DeviceUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'sta
 impl<RE: std::error::Error + Send + Sync + 'static> DeviceUserTokenExchangeError<RE> {
     /// Check if the error is due to the authorization request being pending
     pub fn is_pending(&self) -> bool {
-        dbg!(self);
         matches!(self, DeviceUserTokenExchangeError::TokenParseError(
                 crate::RequestParseError::TwitchError(crate::id::TwitchTokenErrorResponse {
                     message,
