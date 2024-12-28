@@ -6,7 +6,9 @@ mod user_token;
 
 pub use app_access_token::AppAccessToken;
 use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
-pub use user_token::{ImplicitUserTokenBuilder, UserToken, UserTokenBuilder};
+pub use user_token::{
+    DeviceUserTokenBuilder, ImplicitUserTokenBuilder, UserToken, UserTokenBuilder,
+};
 
 #[cfg(feature = "client")]
 use crate::client::Client;

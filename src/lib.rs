@@ -39,6 +39,7 @@
 //! to create user tokens in this library.
 //!
 //! Things like [`UserTokenBuilder`] can be used to create a token from scratch, via the [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
+//! You can also use the newer [OAuth device code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#device-code-grant-flow) with [`DeviceUserTokenBuilder`].
 //!
 //! ## App access token
 //!
@@ -70,8 +71,8 @@ use tokens::errors::{RefreshTokenError, RevokeTokenError, ValidationError};
 pub use scopes::{Scope, Validator};
 #[doc(inline)]
 pub use tokens::{
-    AppAccessToken, ImplicitUserTokenBuilder, TwitchToken, UserToken, UserTokenBuilder,
-    ValidatedToken,
+    AppAccessToken, DeviceUserTokenBuilder, ImplicitUserTokenBuilder, TwitchToken, UserToken,
+    UserTokenBuilder, ValidatedToken,
 };
 
 pub use url;
@@ -125,6 +126,17 @@ pub static AUTH_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAU
 pub static TOKEN_URL: once_cell::sync::Lazy<url::Url> = mock_env_url!("TWITCH_OAUTH2_TOKEN_URL", {
     TWITCH_OAUTH2_URL.to_string() + "token"
 },);
+/// Device URL (`https://id.twitch.tv/oauth2/device`) for `id.twitch.tv`
+///
+/// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_DEVICE_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
+///
+/// # Examples
+///
+/// Set the environment variable `TWITCH_OAUTH2_URL` to `http://localhost:8080/auth/` to use [`twitch-cli` mock](https://github.com/twitchdev/twitch-cli/blob/main/docs/mock-api.md) endpoints.
+pub static DEVICE_URL: once_cell::sync::Lazy<url::Url> =
+    mock_env_url!("TWITCH_OAUTH2_DEVICE_URL", {
+        TWITCH_OAUTH2_URL.to_string() + "device"
+    },);
 /// Validation URL (`https://id.twitch.tv/oauth2/validate`) for `id.twitch.tv`
 ///
 /// Can be overridden when feature `mock_api` is enabled with environment variable `TWITCH_OAUTH2_URL` to set the root path, or with `TWITCH_OAUTH2_VALIDATE_URL` to override the base (`https://id.twitch.tv/oauth2/`) url.
@@ -241,14 +253,16 @@ impl RefreshTokenRef {
     pub fn refresh_token_request(
         &self,
         client_id: &ClientId,
-        client_secret: &ClientSecret,
+        client_secret: Option<&ClientSecret>,
     ) -> http::Request<Vec<u8>> {
         use http::{HeaderMap, Method};
         use std::collections::HashMap;
 
         let mut params = HashMap::new();
         params.insert("client_id", client_id.as_str());
-        params.insert("client_secret", client_secret.secret());
+        if let Some(client_secret) = client_secret {
+            params.insert("client_secret", client_secret.secret());
+        }
         params.insert("grant_type", "refresh_token");
         params.insert("refresh_token", self.secret());
 
@@ -269,7 +283,7 @@ impl RefreshTokenRef {
         &self,
         http_client: &'a C,
         client_id: &ClientId,
-        client_secret: &ClientSecret,
+        client_secret: Option<&ClientSecret>,
     ) -> Result<
         (AccessToken, std::time::Duration, Option<RefreshToken>),
         RefreshTokenError<<C as Client>::Error>,

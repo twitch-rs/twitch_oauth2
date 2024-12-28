@@ -33,6 +33,18 @@ impl TwitchTokenResponse {
     ) -> Result<TwitchTokenResponse, RequestParseError> {
         crate::parse_response(response)
     }
+
+    /// Get the access token from this response
+    pub fn access_token(&self) -> &crate::AccessTokenRef { &self.access_token }
+
+    /// Get the expires in from this response
+    pub fn expires_in(&self) -> Option<Duration> { self.expires_in.map(Duration::from_secs) }
+
+    /// Get the refresh token from this response
+    pub fn refresh_token(&self) -> Option<&crate::RefreshTokenRef> { self.refresh_token.as_deref() }
+
+    /// Get the scopes from this response
+    pub fn scopes(&self) -> Option<&[crate::Scope]> { self.scopes.as_deref() }
 }
 
 /// Twitch's representation of the oauth flow for errors
@@ -59,6 +71,20 @@ impl std::fmt::Display for TwitchTokenErrorResponse {
             message = self.message
         )
     }
+}
+/// Response from the device code flow
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DeviceCodeResponse {
+    /// The identifier for a given user.
+    pub device_code: String,
+    /// Time until the code is no longer valid
+    pub expires_in: u64,
+    /// Time until another valid code can be requested
+    pub interval: u64,
+    /// The code that the user will use to authenticate
+    pub user_code: String,
+    /// The address you will send users to, to authenticate
+    pub verification_uri: String,
 }
 
 #[doc(hidden)]
@@ -104,18 +130,4 @@ pub mod scope {
             Ok(None)
         }
     }
-}
-
-impl TwitchTokenResponse {
-    /// Get the access token from this response
-    pub fn access_token(&self) -> &crate::AccessTokenRef { &self.access_token }
-
-    /// Get the expires in from this response
-    pub fn expires_in(&self) -> Option<Duration> { self.expires_in.map(Duration::from_secs) }
-
-    /// Get the refresh token from this response
-    pub fn refresh_token(&self) -> Option<&crate::RefreshTokenRef> { self.refresh_token.as_deref() }
-
-    /// Get the scopes from this response
-    pub fn scopes(&self) -> Option<&[crate::Scope]> { self.scopes.as_deref() }
 }

@@ -10,10 +10,16 @@
 
 - MSRV bumped to `1.71.1`
 - Fixed a typo in `ModeratorManageGuestStart` (now: `ModeratorManageGuestStar`)
+- `RefreshToken::refresh_token` takes an optional secret to allow public clients to refresh tokens.
+
+### Added
+
+- Added support for Device Code Flow with `DeviceUserTokenBuilder`
 
 ### Fixed
 
 - `AppAccessToken` and `UserToken` now return the correct duration in `expires_in` after refreshing.
+- It's now possible to refresh a token without a client secret if the token supports it (e.g public client type).
 
 ## [v0.14.0] - 2024-09-23
 
