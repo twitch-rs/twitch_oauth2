@@ -2,7 +2,10 @@ use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
 use super::errors::ValidationError;
 #[cfg(feature = "client")]
-use super::errors::{ImplicitUserTokenExchangeError, RefreshTokenError, UserTokenExchangeError};
+use super::errors::{
+    DeviceUserTokenExchangeError, ImplicitUserTokenExchangeError, RefreshTokenError,
+    UserTokenExchangeError,
+};
 #[cfg(feature = "client")]
 use crate::client::Client;
 
@@ -299,23 +302,19 @@ impl TwitchToken for UserToken {
         Self: Sized,
         C: Client,
     {
-        if let Some(client_secret) = self.client_secret.clone() {
-            let (access_token, expires, refresh_token) =
-                if let Some(token) = self.refresh_token.take() {
-                    token
-                        .refresh_token(http_client, &self.client_id, &client_secret)
-                        .await?
-                } else {
-                    return Err(RefreshTokenError::NoRefreshToken);
-                };
-            self.access_token = access_token;
-            self.expires_in = expires;
-            self.refresh_token = refresh_token;
-            self.struct_created = std::time::Instant::now();
-            Ok(())
+        let (access_token, expires, refresh_token) = if let Some(token) = self.refresh_token.take()
+        {
+            token
+                .refresh_token(http_client, &self.client_id, self.client_secret.as_ref())
+                .await?
         } else {
-            return Err(RefreshTokenError::NoClientSecretFound);
-        }
+            return Err(RefreshTokenError::NoRefreshToken);
+        };
+        self.access_token = access_token;
+        self.expires_in = expires;
+        self.refresh_token = refresh_token;
+        self.struct_created = std::time::Instant::now();
+        Ok(())
     }
 
     fn expires_in(&self) -> std::time::Duration {
@@ -827,6 +826,236 @@ impl ImplicitUserTokenBuilder {
                 Err(ImplicitUserTokenExchangeError::TwitchError { error, description })
             }
         }
+    }
+}
+
+/// Builder for [OAuth device code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#device-flow)
+///
+/// # Examples
+///
+/// ```rust
+/// # async move {
+/// # use twitch_oauth2::{id::TwitchTokenResponse, UserToken, tokens::DeviceUserTokenBuilder, Scope};
+/// # use url::Url;
+/// # use std::borrow::Cow;
+/// # let client = twitch_oauth2::client::DummyClient; stringify!(
+/// let client = reqwest::Client::builder()
+///     .redirect(reqwest::redirect::Policy::none())
+///     .build()?;
+/// # );
+/// let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
+/// let code = builder.start(&client).await?;
+/// println!("Please go to {}", code.verification_uri);
+/// let token = builder.wait_for_code(&client, tokio::time::sleep).await?;
+/// println!("Token: {:?}", token);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// # };
+/// ```
+pub struct DeviceUserTokenBuilder {
+    client_id: ClientId,
+    client_secret: Option<ClientSecret>,
+    scopes: Vec<Scope>,
+    response: Option<(std::time::Instant, crate::id::DeviceCodeResponse)>,
+}
+
+impl DeviceUserTokenBuilder {
+    /// Create a [`DeviceUserTokenBuilder`]
+    pub fn new(client_id: impl Into<ClientId>, scopes: Vec<Scope>) -> Self {
+        Self {
+            client_id: client_id.into(),
+            client_secret: None,
+            scopes,
+            response: None,
+        }
+    }
+
+    /// Set the client secret, only necessary if you have one
+    pub fn set_secret(&mut self, secret: Option<ClientSecret>) { self.client_secret = secret; }
+
+    /// Get the request for getting a [`DeviceCodeResponse`](crate::id::DeviceCodeResponse)
+    pub fn get_exchange_device_code_request(&self) -> http::Request<Vec<u8>> {
+        // the equivalent of curl --location 'https://id.twitch.tv/oauth2/device' \
+        // --form 'client_id="<clientID>"' \
+        // --form 'scopes="<scopes>"'
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let mut params = HashMap::new();
+        params.insert("client_id", self.client_id.as_str());
+        let scopes = self.scopes.as_slice().join(" ");
+        if !scopes.is_empty() {
+            params.insert("scopes", &scopes);
+        }
+        crate::construct_request(
+            &crate::DEVICE_URL,
+            params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        )
+    }
+
+    /// Parse the response from the device code request
+    pub fn parse_exchange_device_code_response(
+        &mut self,
+        response: http::Response<Vec<u8>>,
+    ) -> Result<&crate::id::DeviceCodeResponse, crate::RequestParseError> {
+        let response = crate::parse_response(&response)?;
+        self.response = Some((std::time::Instant::now(), response));
+        Ok(&self.response.as_ref().unwrap().1)
+    }
+
+    /// Start the device code flow
+    ///
+    /// # Notes
+    ///
+    /// Use [`DeviceCodeResponse::verification_uri`](crate::id::DeviceCodeResponse::verification_uri) to get the URL the user needs to visit.
+    #[cfg(feature = "client")]
+    pub async fn start<'a, 's, C>(
+        &'s mut self,
+        http_client: &'a C,
+    ) -> Result<&'s crate::id::DeviceCodeResponse, DeviceUserTokenExchangeError<C::Error>>
+    where
+        C: Client,
+    {
+        let req = self.get_exchange_device_code_request();
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(DeviceUserTokenExchangeError::DeviceExchangeRequestError)?;
+        self.parse_exchange_device_code_response(resp)
+            .map_err(DeviceUserTokenExchangeError::DeviceExchangeParseError)
+    }
+
+    /// Get the request for getting a [`TwitchTokenResponse`](crate::id::TwitchTokenResponse), to be used in [UserToken::from_response].
+    ///
+    /// Returns None if there is no `device_code`
+    pub fn get_user_token_request(&self) -> Option<http::Request<Vec<u8>>> {
+        use http::{HeaderMap, Method};
+        use std::collections::HashMap;
+        let Some((_, response)) = &self.response else {
+            return None;
+        };
+        let mut params = HashMap::new();
+        params.insert("client_id", self.client_id.as_str());
+        params.insert("device_code", &response.device_code);
+        params.insert("grant_type", "urn:ietf:params:oauth:grant-type:device_code");
+
+        Some(crate::construct_request(
+            &crate::TOKEN_URL,
+            &params,
+            HeaderMap::new(),
+            Method::POST,
+            vec![],
+        ))
+    }
+
+    /// Finish the device code flow by waiting for the user to authorize, granting you a token if the user has authorized the app.
+    ///
+    /// Will return [`DeviceUserTokenExchangeError::Expired`] if the user has not authorized the app within the [`expires_in`](crate::id::DeviceCodeResponse::expires_in) time.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # async move {
+    /// # use twitch_oauth2::{id::TwitchTokenResponse, UserToken, tokens::DeviceUserTokenBuilder, Scope};
+    /// # use url::Url;
+    /// # use std::borrow::Cow;
+    /// # let client = twitch_oauth2::client::DummyClient; stringify!(
+    /// let client = reqwest::Client::builder()
+    ///     .redirect(reqwest::redirect::Policy::none())
+    ///     .build()?;
+    /// # );
+    /// let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
+    /// let code = builder.start(&client).await?;
+    /// println!("Please go to {}", code.verification_uri);
+    /// let token = builder.wait_for_code(&client, tokio::time::sleep).await?;
+    /// println!("Token: {:?}", token);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// # };
+    /// ```
+    #[cfg(feature = "client")]
+    pub async fn wait_for_code<'a, C, Fut>(
+        &mut self,
+        client: &'a C,
+        wait_fn: impl Fn(std::time::Duration) -> Fut,
+    ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
+    where
+        C: Client,
+        Fut: std::future::Future<Output = ()>,
+    {
+        let (created, response) = self
+            .response
+            .as_ref()
+            .ok_or(DeviceUserTokenExchangeError::NoDeviceCode)?;
+        let mut finish = self.try_finish(client).await;
+        while finish.as_ref().is_err_and(|e| e.is_pending()) {
+            wait_fn(std::time::Duration::from_secs(response.interval)).await;
+            finish = self.try_finish(client).await;
+            if created.elapsed() > std::time::Duration::from_secs(response.expires_in) {
+                return Err(DeviceUserTokenExchangeError::Expired);
+            }
+        }
+
+        let token = finish?;
+        Ok(token)
+    }
+
+    /// Finish the device code flow, granting you a token if the user has authorized the app.
+    /// Consider using the [`wait_for_code`](Self::wait_for_code) method instead.
+    ///
+    /// # Notes
+    ///
+    /// Must be called after [`start`](Self::start) and will return an error if not.
+    /// The error could be that the user has not authorized the app yet, in which case you should wait for [`interval`](crate::id::DeviceCodeResponse::interval) seconds and try again.
+    /// To check for this condition, use the [`is_pending`](DeviceUserTokenExchangeError::is_pending) method.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # async move {
+    /// # use twitch_oauth2::{id::TwitchTokenResponse, UserToken, tokens::DeviceUserTokenBuilder, Scope};
+    /// # use url::Url;
+    /// # use std::borrow::Cow;
+    /// # let client = twitch_oauth2::client::DummyClient; stringify!(
+    /// let client = reqwest::Client::builder()
+    ///     .redirect(reqwest::redirect::Policy::none())
+    ///     .build()?;
+    /// # );
+    /// # let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
+    /// let code = builder.start(&client).await?;
+    /// println!("Please go to {}", code.verification_uri);
+    /// let mut interval = tokio::time::interval(std::time::Duration::from_secs(code.interval));
+    /// let mut finish = builder.try_finish(&client).await;
+    /// while finish.as_ref().is_err_and(|e| e.is_pending()) {
+    ///     // wait a bit
+    ///     interval.tick().await;
+    ///     finish = builder.try_finish(&client).await;
+    /// }
+    /// let token: UserToken = finish?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// # };
+    /// ```
+    #[cfg(feature = "client")]
+    pub async fn try_finish<'a, C>(
+        &self,
+        http_client: &'a C,
+    ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
+    where
+        C: Client,
+    {
+        let req = self
+            .get_user_token_request()
+            .ok_or(DeviceUserTokenExchangeError::NoDeviceCode)?;
+        let resp = http_client
+            .req(req)
+            .await
+            .map_err(DeviceUserTokenExchangeError::TokenRequestError)?;
+        let response = crate::id::TwitchTokenResponse::from_response(&resp)
+            .map_err(DeviceUserTokenExchangeError::TokenParseError)?;
+        let validated = response.access_token.validate_token(http_client).await?;
+        // FIXME: get rid of the clone
+        UserToken::from_response(response, validated, self.client_secret.clone())
+            .map_err(|v| v.into_other().into())
     }
 }
 

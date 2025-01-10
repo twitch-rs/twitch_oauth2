@@ -87,6 +87,11 @@ name = "mock_user"
 path = "examples/mock_user.rs"
 required-features = ["reqwest", "mock_api"]
 
+[[example]]
+name = "device_code_flow"
+path = "examples/device_code_flow.rs"
+required-features = ["reqwest", "client"]
+
 [package.metadata.docs.rs]
 features = ["all", "mock_api"]
 rustc-args = ["--cfg", "nightly"]

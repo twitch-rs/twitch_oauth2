@@ -1,6 +1,9 @@
 //! This is an example of the Authorization code grant flow using `twitch_oauth2`
 //!
 //! See https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow
+//!
+//! See also the `device_code_flow` example for possibly easier integration.
+
 use anyhow::Context;
 use twitch_oauth2::tokens::UserTokenBuilder;
 
