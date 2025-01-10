@@ -1,5 +1,5 @@
 //! Example of how to create a user token using device code flow.
-//! This example only works properly on a public client type.
+//! The device code flow can be used on confidential and public clients.
 use twitch_oauth2::{DeviceUserTokenBuilder, TwitchToken, UserToken};
 
 #[tokio::main]
@@ -32,10 +32,12 @@ async fn main() -> anyhow::Result<()> {
     // Finish the auth with wait_for_code, this will return a token if the user has authorized the app
     let mut token = builder.wait_for_code(&reqwest, tokio::time::sleep).await?;
 
-    println!("{:?}\nrefresing token", token);
-    // we can also refresh this token, even without a client secret (if the application was created as a public client type in the twitch dashboard).
+    println!("token: {:?}\nTrying to refresh the token", token);
+    // we can also refresh this token, even without a client secret
+    // if the application was created as a public client type in the twitch dashboard this will work,
+    // if the application is a confidential client type, this refresh will fail because it needs the client secret.
     token.refresh_token(&reqwest).await?;
-    println!("{:?}", token);
+    println!("refreshed token: {:?}", token);
     Ok(())
 }
 

@@ -116,14 +116,6 @@ pub enum DeviceUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'sta
     TokenRequestError(#[source] RE),
     /// could not parse response when getting user token
     TokenParseError(#[source] crate::RequestParseError),
-    // FIXME: should be TwitchTokenErrorResponse
-    /// twitch returned an error: {error:?} - {description:?}
-    TwitchError {
-        /// Error type
-        error: Option<String>,
-        /// Description of error
-        description: Option<String>,
-    },
     /// could not get validation for token
     ValidationError(#[from] ValidationError<RE>),
     /// no device code found, exchange not started
@@ -136,7 +128,6 @@ pub enum DeviceUserTokenExchangeError<RE: std::error::Error + Send + Sync + 'sta
 impl<RE: std::error::Error + Send + Sync + 'static> DeviceUserTokenExchangeError<RE> {
     /// Check if the error is due to the authorization request being pending
     pub fn is_pending(&self) -> bool {
-        dbg!(self);
         matches!(self, DeviceUserTokenExchangeError::TokenParseError(
                 crate::RequestParseError::TwitchError(crate::id::TwitchTokenErrorResponse {
                     message,

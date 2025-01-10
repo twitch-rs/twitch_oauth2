@@ -840,8 +840,8 @@ impl ImplicitUserTokenBuilder {
 /// # use std::borrow::Cow;
 /// # let client = twitch_oauth2::client::DummyClient; stringify!(
 /// let client = reqwest::Client::builder()
-///    .redirect(reqwest::redirect::Policy::none())
-///   .build()?;
+///     .redirect(reqwest::redirect::Policy::none())
+///     .build()?;
 /// # );
 /// let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
 /// let code = builder.start(&client).await?;
@@ -851,7 +851,6 @@ impl ImplicitUserTokenBuilder {
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// # };
 /// ```
-
 pub struct DeviceUserTokenBuilder {
     client_id: ClientId,
     client_secret: Option<ClientSecret>,
@@ -909,7 +908,7 @@ impl DeviceUserTokenBuilder {
     ///
     /// # Notes
     ///
-    /// Use [`DeviceCodeResponse::verification_uri`](crate::id::DeviceCodeResponse::verification_uri) to get the user token.
+    /// Use [`DeviceCodeResponse::verification_uri`](crate::id::DeviceCodeResponse::verification_uri) to get the URL the user needs to visit.
     #[cfg(feature = "client")]
     pub async fn start<'a, 's, C>(
         &'s mut self,
@@ -963,8 +962,8 @@ impl DeviceUserTokenBuilder {
     /// # use std::borrow::Cow;
     /// # let client = twitch_oauth2::client::DummyClient; stringify!(
     /// let client = reqwest::Client::builder()
-    ///    .redirect(reqwest::redirect::Policy::none())
-    ///   .build()?;
+    ///     .redirect(reqwest::redirect::Policy::none())
+    ///     .build()?;
     /// # );
     /// let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
     /// let code = builder.start(&client).await?;
@@ -1001,7 +1000,8 @@ impl DeviceUserTokenBuilder {
         Ok(token)
     }
 
-    /// Finish the device code flow, granting you a token if the user has authorized the app
+    /// Finish the device code flow, granting you a token if the user has authorized the app.
+    /// Consider using the [`wait_for_code`](Self::wait_for_code) method instead.
     ///
     /// # Notes
     ///
@@ -1011,7 +1011,7 @@ impl DeviceUserTokenBuilder {
     ///
     /// # Examples
     ///
-    /// /// ```rust
+    /// ```rust
     /// # async move {
     /// # use twitch_oauth2::{id::TwitchTokenResponse, UserToken, tokens::DeviceUserTokenBuilder, Scope};
     /// # use url::Url;
@@ -1024,11 +1024,11 @@ impl DeviceUserTokenBuilder {
     /// # let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
     /// let code = builder.start(&client).await?;
     /// println!("Please go to {}", code.verification_uri);
-    /// let mut finish = builder.finish(&client).await;
+    /// let mut finish = builder.try_finish(&client).await;
     /// while finish.as_ref().is_err_and(|e| e.is_pending()) {
     ///     // wait a bit
-    ///     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-    ///     finish = builder.finish(&client).await;
+    ///     tokio::time::sleep(std::time::Duration::from_secs(code.interval)).await;
+    ///     finish = builder.try_finish(&client).await;
     /// }
     /// let token: UserToken = finish?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
