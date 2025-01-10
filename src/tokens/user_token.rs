@@ -1024,10 +1024,11 @@ impl DeviceUserTokenBuilder {
     /// # let mut builder = DeviceUserTokenBuilder::new("myclientid", vec![Scope::ChatRead, Scope::ChatEdit]);
     /// let code = builder.start(&client).await?;
     /// println!("Please go to {}", code.verification_uri);
+    /// let mut interval = tokio::time::interval(std::time::Duration::from_secs(code.interval));
     /// let mut finish = builder.try_finish(&client).await;
     /// while finish.as_ref().is_err_and(|e| e.is_pending()) {
     ///     // wait a bit
-    ///     tokio::time::sleep(std::time::Duration::from_secs(code.interval)).await;
+    ///     interval.tick().await;
     ///     finish = builder.try_finish(&client).await;
     /// }
     /// let token: UserToken = finish?;
