@@ -45,6 +45,45 @@ impl std::fmt::Debug for Validator {
     }
 }
 
+impl std::fmt::Display for Validator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // dont allocate if we can avoid it, instead we map over the validators, and use write!
+        match self {
+            Validator::Scope(scope) => scope.fmt(f),
+            Validator::All(Sized(all)) => {
+                write!(f, "(")?;
+                for (i, v) in all.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, " and ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, ")")
+            }
+            Validator::Any(Sized(any)) => {
+                write!(f, "(")?;
+                for (i, v) in any.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, " or ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, ")")
+            }
+            Validator::Not(Sized(not)) => {
+                write!(f, "not(")?;
+                for (i, v) in not.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, ")")
+            }
+        }
+    }
+}
+
 impl Validator {
     /// Checks if the given scopes match the predicate.
     ///
@@ -77,8 +116,8 @@ impl Validator {
     /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
     ///
     /// let scopes = &[Scope::ChatEdit];
-    /// if let Some(v) = !validator.missing(scopes) {
-    ///    println!("Missing scopes: {:?}", v);
+    /// if let Some(v) = validator.missing(scopes) {
+    ///     println!("Missing scopes: {}", v);
     /// }
     /// ```
     ///
@@ -465,8 +504,18 @@ mod tests {
         dbg!(&VALIDATOR);
         let missing = VALIDATOR.missing(scopes).unwrap();
         dbg!(&missing);
-        assert!(missing.matches(&[Scope::UserEdit]));
-        assert!(missing.matches(&[Scope::ChatRead]));
-        assert!(!missing.matches(&[Scope::ModerationRead, Scope::ChatEdit]));
+        assert_eq!(format!("{}", missing), "(chat:read or user:edit)");
+    }
+
+    #[test]
+    fn display() {
+        const COMPLEX_VALIDATOR: Validator = validator!(
+            Scope::ChatEdit,
+            any(Scope::ChatRead, all(Scope::ModerationRead, Scope::UserEdit))
+        );
+        assert_eq!(
+            format!("{}", COMPLEX_VALIDATOR),
+            "(chat:edit and (chat:read or (moderation:read and user:edit)))"
+        );
     }
 }

@@ -6,6 +6,11 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.1...Unreleased)
 
+### Added
+
+- Added a way to see what scopes are missing in a `validator!()` with `Validator::missing`.
+- Added pretty printing for `validator!()`.
+
 ## [v0.15.1] - 2025-01-12
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.0...v0.15.1)
