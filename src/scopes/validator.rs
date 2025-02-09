@@ -68,6 +68,99 @@ impl Validator {
         }
     }
 
+    /// Returns a validator only containing the unmatched scopes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{validator, Scope};
+    /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+    ///
+    /// let scopes = &[Scope::ChatEdit];
+    /// if let Some(v) = !validator.missing(scopes) {
+    ///    println!("Missing scopes: {:?}", v);
+    /// }
+    /// ```
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{validator, Scope};
+    /// let validator = validator!(
+    ///     any(
+    ///         Scope::ModeratorReadBlockedTerms,
+    ///         Scope::ModeratorManageBlockedTerms
+    ///     ),
+    ///     any(
+    ///         Scope::ModeratorReadChatSettings,
+    ///         Scope::ModeratorManageChatSettings
+    ///     )
+    /// );
+    /// let scopes = &[Scope::ModeratorReadBlockedTerms];
+    /// let missing = validator.missing(scopes).unwrap();
+    /// // We're missing either of the chat settings scopes
+    /// assert!(missing.matches(&[Scope::ModeratorReadChatSettings]));
+    /// assert!(missing.matches(&[Scope::ModeratorManageChatSettings]));
+    /// ```
+    pub fn missing(&self, scopes: &[Scope]) -> Option<Validator> {
+        if self.matches(scopes) {
+            return None;
+        }
+        // a recursive prune approach, if a validator matches, we prune it.
+        // TODO: There's a bit of allocation going on here, maybe we can remove it with some kind of descent
+        match &self {
+            Validator::Scope(scope) => {
+                if scopes.contains(scope) {
+                    None
+                } else {
+                    Some(Validator::Scope(scope.clone()))
+                }
+            }
+            Validator::All(Sized(validators)) => {
+                let mut missing = validators
+                    .iter()
+                    .filter_map(|v| v.missing(scopes))
+                    .collect::<Vec<_>>();
+
+                if missing.is_empty() {
+                    None
+                } else if missing.len() == 1 {
+                    Some(missing.remove(0))
+                } else {
+                    Some(Validator::All(Sized(Cow::Owned(missing))))
+                }
+            }
+            Validator::Any(Sized(validators)) => {
+                let mut missing = validators
+                    .iter()
+                    .filter(|v| !v.matches(scopes))
+                    .filter_map(|v| v.missing(scopes))
+                    .collect::<Vec<_>>();
+
+                if missing.is_empty() {
+                    None
+                } else if missing.len() == 1 {
+                    Some(missing.remove(0))
+                } else {
+                    Some(Validator::Any(Sized(Cow::Owned(missing))))
+                }
+            }
+            Validator::Not(Sized(validators)) => {
+                let mut missing = validators
+                    .iter()
+                    .filter(|v| v.matches(scopes))
+                    .filter_map(|v| v.missing(scopes))
+                    .collect::<Vec<_>>();
+
+                if missing.is_empty() {
+                    None
+                } else if missing.len() == 1 {
+                    Some(missing.remove(0))
+                } else {
+                    Some(Validator::All(Sized(Cow::Owned(missing))))
+                }
+            }
+        }
+    }
+
     /// Create a [Validator] which matches if the scope is present.
     pub const fn scope(scope: Scope) -> Self { Validator::Scope(scope) }
 
@@ -360,5 +453,20 @@ mod tests {
         dbg!(&VALIDATOR);
         assert!(VALIDATOR.matches(scopes));
         assert!(!VALIDATOR.matches(scopes_1));
+    }
+
+    #[test]
+    fn missing() {
+        let scopes = &[Scope::ChatEdit, Scope::ModerationRead];
+        const VALIDATOR: Validator = validator!(
+            Scope::ChatEdit,
+            any(Scope::ChatRead, all(Scope::ModerationRead, Scope::UserEdit))
+        );
+        dbg!(&VALIDATOR);
+        let missing = VALIDATOR.missing(scopes).unwrap();
+        dbg!(&missing);
+        assert!(missing.matches(&[Scope::UserEdit]));
+        assert!(missing.matches(&[Scope::ChatRead]));
+        assert!(!missing.matches(&[Scope::ModerationRead, Scope::ChatEdit]));
     }
 }
