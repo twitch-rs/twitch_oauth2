@@ -21,7 +21,7 @@ pub type Validators = Cow<'static, [Validator]>;
 ///
 /// # pub fn token() -> AppAccessToken { todo!() }
 /// ```
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 #[non_exhaustive]
 pub enum Validator {
     /// A scope
@@ -245,7 +245,7 @@ impl Validator {
 
 // https://github.com/rust-lang/rust/issues/47032#issuecomment-568784919
 /// Hack for making `T: Sized`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[repr(transparent)]
 pub struct Sized<T>(pub T);
 
