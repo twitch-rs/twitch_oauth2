@@ -113,6 +113,16 @@ impl Validator {
     ///
     /// ```rust
     /// use twitch_oauth2::{validator, Scope};
+    ///
+    /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+    ///
+    /// let scopes = &[Scope::ChatEdit, Scope::ChatRead];
+    /// assert_eq!(validator.missing(scopes), None);
+    /// ```
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{validator, Scope};
+    ///
     /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
     ///
     /// let scopes = &[Scope::ChatEdit];
@@ -123,6 +133,7 @@ impl Validator {
     ///
     /// ```rust
     /// use twitch_oauth2::{validator, Scope};
+    ///
     /// let validator = validator!(
     ///     any(
     ///         Scope::ModeratorReadBlockedTerms,
@@ -133,6 +144,7 @@ impl Validator {
     ///         Scope::ModeratorManageChatSettings
     ///     )
     /// );
+    ///
     /// let scopes = &[Scope::ModeratorReadBlockedTerms];
     /// let missing = validator.missing(scopes).unwrap();
     /// // We're missing either of the chat settings scopes
@@ -183,18 +195,22 @@ impl Validator {
                 }
             }
             Validator::Not(Sized(validators)) => {
-                let mut missing = validators
+                // not is special, it's a negation, so a match is a failure.
+                // we find out if the validators inside matches (e.g the scopes exists),
+                // if they exist they are bad.
+                // a validator should preferably not use not, because scopes are additive.
+
+                let matching = validators
                     .iter()
                     .filter(|v| v.matches(scopes))
-                    .filter_map(|v| v.missing(scopes))
                     .collect::<Vec<_>>();
 
-                if missing.is_empty() {
+                if matching.is_empty() {
                     None
-                } else if missing.len() == 1 {
-                    Some(missing.remove(0))
                 } else {
-                    Some(Validator::All(Sized(Cow::Owned(missing))))
+                    Some(Validator::Not(Sized(Cow::Owned(
+                        matching.into_iter().cloned().collect(),
+                    ))))
                 }
             }
         }
@@ -505,6 +521,19 @@ mod tests {
         let missing = VALIDATOR.missing(scopes).unwrap();
         dbg!(&missing);
         assert_eq!(format!("{}", missing), "(chat:read or user:edit)");
+
+        const NOT_VALIDATOR: Validator = validator!(all(
+            not(all(Scope::ChatEdit, Scope::ModerationRead)), // we don't want both of these
+            Scope::ChatRead,
+            Scope::UserEdit,
+            any(Scope::ModerationRead, not(Scope::UserEdit)) // we don't want user:edit or we want moderation:read
+        ));
+        let missing = NOT_VALIDATOR.missing(scopes).unwrap();
+        dbg!(&missing);
+        assert_eq!(
+            format!("{}", missing),
+            "(not((chat:edit and moderation:read)) and chat:read and user:edit)"
+        );
     }
 
     #[test]
