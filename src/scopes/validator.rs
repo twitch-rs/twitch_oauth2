@@ -21,7 +21,7 @@ pub type Validators = Cow<'static, [Validator]>;
 ///
 /// # pub fn token() -> AppAccessToken { todo!() }
 /// ```
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 #[non_exhaustive]
 pub enum Validator {
     /// A scope
@@ -41,6 +41,45 @@ impl std::fmt::Debug for Validator {
             Validator::All(Sized(all)) => f.debug_tuple("All").field(all).finish(),
             Validator::Any(Sized(any)) => f.debug_tuple("Any").field(any).finish(),
             Validator::Not(Sized(not)) => f.debug_tuple("Not").field(not).finish(),
+        }
+    }
+}
+
+impl std::fmt::Display for Validator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // dont allocate if we can avoid it, instead we map over the validators, and use write!
+        match self {
+            Validator::Scope(scope) => scope.fmt(f),
+            Validator::All(Sized(all)) => {
+                write!(f, "(")?;
+                for (i, v) in all.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, " and ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, ")")
+            }
+            Validator::Any(Sized(any)) => {
+                write!(f, "(")?;
+                for (i, v) in any.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, " or ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, ")")
+            }
+            Validator::Not(Sized(not)) => {
+                write!(f, "not(")?;
+                for (i, v) in not.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, ")")
+            }
         }
     }
 }
@@ -65,6 +104,115 @@ impl Validator {
             Validator::All(Sized(validators)) => validators.iter().all(|v| v.matches(scopes)),
             Validator::Any(Sized(validators)) => validators.iter().any(|v| v.matches(scopes)),
             Validator::Not(Sized(validator)) => !validator.iter().any(|v| v.matches(scopes)),
+        }
+    }
+
+    /// Returns a validator only containing the unmatched scopes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{validator, Scope};
+    ///
+    /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+    ///
+    /// let scopes = &[Scope::ChatEdit, Scope::ChatRead];
+    /// assert_eq!(validator.missing(scopes), None);
+    /// ```
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{validator, Scope};
+    ///
+    /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
+    ///
+    /// let scopes = &[Scope::ChatEdit];
+    /// if let Some(v) = validator.missing(scopes) {
+    ///     println!("Missing scopes: {}", v);
+    /// }
+    /// ```
+    ///
+    /// ```rust
+    /// use twitch_oauth2::{validator, Scope};
+    ///
+    /// let validator = validator!(
+    ///     any(
+    ///         Scope::ModeratorReadBlockedTerms,
+    ///         Scope::ModeratorManageBlockedTerms
+    ///     ),
+    ///     any(
+    ///         Scope::ModeratorReadChatSettings,
+    ///         Scope::ModeratorManageChatSettings
+    ///     )
+    /// );
+    ///
+    /// let scopes = &[Scope::ModeratorReadBlockedTerms];
+    /// let missing = validator.missing(scopes).unwrap();
+    /// // We're missing either of the chat settings scopes
+    /// assert!(missing.matches(&[Scope::ModeratorReadChatSettings]));
+    /// assert!(missing.matches(&[Scope::ModeratorManageChatSettings]));
+    /// ```
+    pub fn missing(&self, scopes: &[Scope]) -> Option<Validator> {
+        if self.matches(scopes) {
+            return None;
+        }
+        // a recursive prune approach, if a validator matches, we prune it.
+        // TODO: There's a bit of allocation going on here, maybe we can remove it with some kind of descent
+        match &self {
+            Validator::Scope(scope) => {
+                if scopes.contains(scope) {
+                    None
+                } else {
+                    Some(Validator::Scope(scope.clone()))
+                }
+            }
+            Validator::All(Sized(validators)) => {
+                let mut missing = validators
+                    .iter()
+                    .filter_map(|v| v.missing(scopes))
+                    .collect::<Vec<_>>();
+
+                if missing.is_empty() {
+                    None
+                } else if missing.len() == 1 {
+                    Some(missing.remove(0))
+                } else {
+                    Some(Validator::All(Sized(Cow::Owned(missing))))
+                }
+            }
+            Validator::Any(Sized(validators)) => {
+                let mut missing = validators
+                    .iter()
+                    .filter(|v| !v.matches(scopes))
+                    .filter_map(|v| v.missing(scopes))
+                    .collect::<Vec<_>>();
+
+                if missing.is_empty() {
+                    None
+                } else if missing.len() == 1 {
+                    Some(missing.remove(0))
+                } else {
+                    Some(Validator::Any(Sized(Cow::Owned(missing))))
+                }
+            }
+            Validator::Not(Sized(validators)) => {
+                // not is special, it's a negation, so a match is a failure.
+                // we find out if the validators inside matches (e.g the scopes exists),
+                // if they exist they are bad.
+                // a validator should preferably not use not, because scopes are additive.
+
+                let matching = validators
+                    .iter()
+                    .filter(|v| v.matches(scopes))
+                    .collect::<Vec<_>>();
+
+                if matching.is_empty() {
+                    None
+                } else {
+                    Some(Validator::Not(Sized(Cow::Owned(
+                        matching.into_iter().cloned().collect(),
+                    ))))
+                }
+            }
         }
     }
 
@@ -97,7 +245,7 @@ impl Validator {
 
 // https://github.com/rust-lang/rust/issues/47032#issuecomment-568784919
 /// Hack for making `T: Sized`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[repr(transparent)]
 pub struct Sized<T>(pub T);
 
@@ -360,5 +508,43 @@ mod tests {
         dbg!(&VALIDATOR);
         assert!(VALIDATOR.matches(scopes));
         assert!(!VALIDATOR.matches(scopes_1));
+    }
+
+    #[test]
+    fn missing() {
+        let scopes = &[Scope::ChatEdit, Scope::ModerationRead];
+        const VALIDATOR: Validator = validator!(
+            Scope::ChatEdit,
+            any(Scope::ChatRead, all(Scope::ModerationRead, Scope::UserEdit))
+        );
+        dbg!(&VALIDATOR);
+        let missing = VALIDATOR.missing(scopes).unwrap();
+        dbg!(&missing);
+        assert_eq!(format!("{}", missing), "(chat:read or user:edit)");
+
+        const NOT_VALIDATOR: Validator = validator!(all(
+            not(all(Scope::ChatEdit, Scope::ModerationRead)), // we don't want both of these
+            Scope::ChatRead,
+            Scope::UserEdit,
+            any(Scope::ModerationRead, not(Scope::UserEdit)) // we don't want user:edit or we want moderation:read
+        ));
+        let missing = NOT_VALIDATOR.missing(scopes).unwrap();
+        dbg!(&missing);
+        assert_eq!(
+            format!("{}", missing),
+            "(not((chat:edit and moderation:read)) and chat:read and user:edit)"
+        );
+    }
+
+    #[test]
+    fn display() {
+        const COMPLEX_VALIDATOR: Validator = validator!(
+            Scope::ChatEdit,
+            any(Scope::ChatRead, all(Scope::ModerationRead, Scope::UserEdit))
+        );
+        assert_eq!(
+            format!("{}", COMPLEX_VALIDATOR),
+            "(chat:edit and (chat:read or (moderation:read and user:edit)))"
+        );
     }
 }
