@@ -38,6 +38,17 @@ impl ValidationError<std::convert::Infallible> {
     }
 }
 
+/// Errors for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token]
+#[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[non_exhaustive]
+#[cfg(feature = "client")]
+pub enum RetrieveTokenError<RE: std::error::Error + Send + Sync + 'static> {
+    /// could not validate token
+    ValidationError(#[from] ValidationError<RE>),
+    /// could not refresh token
+    RefreshTokenError(#[from] RefreshTokenError<RE>),
+}
+
 /// Errors for [AccessToken::revoke_token][crate::AccessTokenRef::revoke_token]
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]

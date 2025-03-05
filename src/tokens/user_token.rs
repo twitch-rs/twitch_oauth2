@@ -4,7 +4,7 @@ use super::errors::ValidationError;
 #[cfg(feature = "client")]
 use super::errors::{
     DeviceUserTokenExchangeError, ImplicitUserTokenExchangeError, RefreshTokenError,
-    UserTokenExchangeError,
+    RetrieveTokenError, UserTokenExchangeError,
 };
 #[cfg(feature = "client")]
 use crate::client::Client;
@@ -112,9 +112,34 @@ impl UserToken {
         Self::from_existing(http_client, access_token, None, None).await
     }
 
-    /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes)
+    /// Creates a [UserToken] using a refresh token. Retrieves the [`login`](TwitchToken::login) and [`scopes`](TwitchToken::scopes).
     ///
-    /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`]
+    /// If an active user token is associated with the provided refresh token, this function will invalidate that existing user token.
+    #[cfg(feature = "client")]
+    pub async fn from_refresh_token<C>(
+        http_client: &C,
+        refresh_token: RefreshToken,
+        client_id: ClientId,
+        client_secret: impl Into<Option<ClientSecret>>,
+    ) -> Result<UserToken, RetrieveTokenError<<C as Client>::Error>>
+    where
+        C: Client,
+    {
+        let client_secret: Option<ClientSecret> = client_secret.into();
+        let (access_token, _, refresh_token) = refresh_token
+            .refresh_token(http_client, &client_id, client_secret.as_ref())
+            .await?;
+        Self::from_existing(http_client, access_token, refresh_token, client_secret)
+            .await
+            .map_err(Into::into)
+    }
+
+    /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login) and [`scopes`](TwitchToken::scopes)
+    ///
+    /// If the token is already expired, this function will fail to produce a [`UserToken`] and return [`ValidationError::NotAuthorized`].
+    /// If you have a refresh token, you can use [`UserToken::from_refresh_token`] to refresh the token if was expired.
+    ///
+    /// Consider using [`UserToken::from_existing_or_refresh_token`] to automatically refresh the token if it is expired.
     ///
     /// # Examples
     ///
@@ -148,6 +173,47 @@ impl UserToken {
         let validated = access_token.validate_token(http_client).await?;
         Self::new(access_token, refresh_token.into(), validated, client_secret)
             .map_err(|e| e.into_other())
+    }
+
+    /// Create a [UserToken] from an existing active user token or refresh token if the access token is expired. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use twitch_oauth2::{AccessToken, ClientId, ClientSecret, RefreshToken, UserToken};
+    /// // Make sure you enable the feature "reqwest" for twitch_oauth2 if you want to use reqwest
+    /// # async {let client = twitch_oauth2::client::DummyClient; stringify!(
+    /// let client = reqwest::Client::builder()
+    ///    .redirect(reqwest::redirect::Policy::none())
+    ///    .build()?;
+    /// # );
+    /// let token = UserToken::from_existing_or_refresh_token(
+    ///     &client,
+    ///     AccessToken::from("my_access_token"),
+    ///     RefreshToken::from("my_refresh_token"),
+    ///     ClientId::from("my_client_id"),
+    ///     ClientSecret::from("my_optional_client_secret"),
+    /// ).await?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())};
+    #[cfg(feature = "client")]
+    pub async fn from_existing_or_refresh_token<C>(
+        http_client: &C,
+        access_token: AccessToken,
+        refresh_token: RefreshToken,
+        client_id: ClientId,
+        client_secret: impl Into<Option<ClientSecret>>,
+    ) -> Result<UserToken, RetrieveTokenError<<C as Client>::Error>>
+    where
+        C: Client,
+    {
+        match access_token.validate_token(http_client).await {
+            Ok(v) => Self::new(access_token, Some(refresh_token), v, client_secret)
+                .map_err(|e| e.into_other().into()),
+            Err(ValidationError::NotAuthorized) => {
+                Self::from_refresh_token(http_client, refresh_token, client_id, client_secret).await
+            }
+            Err(e) => return Err(e.into()),
+        }
     }
 
     /// Assemble token without checks.

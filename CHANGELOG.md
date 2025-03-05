@@ -10,6 +10,7 @@
 
 - Added a way to see what scopes are missing in a `validator!()` with `Validator::missing`.
 - Added pretty printing for `validator!()`.
+- Added `UserToken::from_refresh_token` and `UserToken::from_existing_or_refresh_token`
 
 ## [v0.15.1] - 2025-01-12
 
