@@ -4,12 +4,17 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.1...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.2...Unreleased)
+
+## [v0.15.2] - 2025-03-05
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.1...v0.15.2)
 
 ### Added
 
 - Added a way to see what scopes are missing in a `validator!()` with `Validator::missing`.
 - Added pretty printing for `validator!()`.
+- Added `UserToken::from_refresh_token` and `UserToken::from_existing_or_refresh_token`
 
 ## [v0.15.1] - 2025-01-12
 
