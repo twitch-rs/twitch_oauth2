@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.2...Unreleased)
 
+### Changed
+
+- Send refresh-token request in HTTP POST body
+
 ## [v0.15.2] - 2025-03-05
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.1...v0.15.2)

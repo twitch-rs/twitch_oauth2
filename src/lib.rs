@@ -255,8 +255,14 @@ impl RefreshTokenRef {
         client_id: &ClientId,
         client_secret: Option<&ClientSecret>,
     ) -> http::Request<Vec<u8>> {
-        use http::{HeaderMap, Method};
+        use http::{HeaderMap, HeaderValue, Method};
         use std::collections::HashMap;
+
+        let mut headers = HeaderMap::new();
+        headers.append(
+            "Content-Type",
+            HeaderValue::from_static("application/x-www-form-urlencoded"),
+        );
 
         let mut params = HashMap::new();
         params.insert("client_id", client_id.as_str());
@@ -265,13 +271,15 @@ impl RefreshTokenRef {
         }
         params.insert("grant_type", "refresh_token");
         params.insert("refresh_token", self.secret());
-
-        construct_request(
+        construct_request::<&[(String, String)], _, _>(
             &crate::TOKEN_URL,
-            &params,
-            HeaderMap::new(),
+            &[],
+            headers,
             Method::POST,
-            vec![],
+            url::form_urlencoded::Serializer::new(String::new())
+                .extend_pairs(params)
+                .finish()
+                .into_bytes(),
         )
     }
 
