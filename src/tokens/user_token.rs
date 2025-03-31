@@ -1,5 +1,11 @@
 use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+use std::time::Instant;
+
+#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+use web_time::Instant;
+
 use super::errors::ValidationError;
 #[cfg(feature = "client")]
 use super::errors::{
@@ -35,7 +41,7 @@ pub struct UserToken {
     /// Expiration from when the response was generated.
     expires_in: std::time::Duration,
     /// When this struct was created, not when token was created.
-    struct_created: std::time::Instant,
+    struct_created: Instant,
     scopes: Vec<Scope>,
     /// Token will never expire
     ///
@@ -240,7 +246,7 @@ impl UserToken {
             user_id,
             refresh_token: refresh_token.into(),
             expires_in: expires_in.unwrap_or(std::time::Duration::MAX),
-            struct_created: std::time::Instant::now(),
+            struct_created: Instant::now(),
             scopes: scopes.unwrap_or_default(),
             never_expiring: expires_in.is_none(),
         }
@@ -379,7 +385,7 @@ impl TwitchToken for UserToken {
         self.access_token = access_token;
         self.expires_in = expires;
         self.refresh_token = refresh_token;
-        self.struct_created = std::time::Instant::now();
+        self.struct_created = Instant::now();
         Ok(())
     }
 
@@ -921,7 +927,7 @@ pub struct DeviceUserTokenBuilder {
     client_id: ClientId,
     client_secret: Option<ClientSecret>,
     scopes: Vec<Scope>,
-    response: Option<(std::time::Instant, crate::id::DeviceCodeResponse)>,
+    response: Option<(Instant, crate::id::DeviceCodeResponse)>,
 }
 
 impl DeviceUserTokenBuilder {
@@ -966,7 +972,7 @@ impl DeviceUserTokenBuilder {
         response: http::Response<Vec<u8>>,
     ) -> Result<&crate::id::DeviceCodeResponse, crate::RequestParseError> {
         let response = crate::parse_response(&response)?;
-        self.response = Some((std::time::Instant::now(), response));
+        self.response = Some((Instant::now(), response));
         Ok(&self.response.as_ref().unwrap().1)
     }
 
