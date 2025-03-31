@@ -1,5 +1,11 @@
 use twitch_types::{UserIdRef, UserNameRef};
 
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+use std::time::Instant;
+
+#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+use web_time::Instant;
+
 #[cfg(feature = "client")]
 use super::errors::{AppAccessTokenError, ValidationError};
 #[cfg(feature = "client")]
@@ -27,7 +33,7 @@ pub struct AppAccessToken {
     /// Expiration from when the response was generated.
     expires_in: std::time::Duration,
     /// When this struct was created, not when token was created.
-    struct_created: std::time::Instant,
+    struct_created: Instant,
     client_id: ClientId,
     client_secret: ClientSecret,
     scopes: Vec<Scope>,
@@ -77,7 +83,7 @@ impl TwitchToken for AppAccessToken {
         self.access_token = access_token;
         self.expires_in = expires_in;
         self.refresh_token = refresh_token;
-        self.struct_created = std::time::Instant::now();
+        self.struct_created = Instant::now();
         Ok(())
     }
 
@@ -113,7 +119,7 @@ impl AppAccessToken {
             client_id: client_id.into(),
             client_secret: client_secret.into(),
             expires_in: expires_in.unwrap_or_default(),
-            struct_created: std::time::Instant::now(),
+            struct_created: Instant::now(),
             scopes: scopes.unwrap_or_default(),
         }
     }
