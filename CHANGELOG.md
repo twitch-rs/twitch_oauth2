@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.2...Unreleased)
 
+### Added
+
+- Added `Hash` derive to `Scopes`.
+
 ### Changed
 
 - Send refresh-token request in HTTP POST body

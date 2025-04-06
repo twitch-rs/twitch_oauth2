@@ -18,7 +18,7 @@ macro_rules! scope_impls {
         #[doc = "Scopes for twitch."]
         #[doc = ""]
         #[doc = "<https://dev.twitch.tv/docs/authentication/scopes/>"]
-        #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+        #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
         #[non_exhaustive]
         #[serde(from = "String")]
         #[serde(into = "String")]
