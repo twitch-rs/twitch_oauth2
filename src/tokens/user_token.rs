@@ -73,18 +73,40 @@ impl UserToken {
         refresh_token: Option<RefreshToken>,
         validated: ValidatedToken,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<std::convert::Infallible>> {
+    ) -> Result<
+        UserToken,
+        (
+            AccessToken,
+            Option<RefreshToken>,
+            ValidationError<std::convert::Infallible>,
+        ),
+    > {
+        let Some(login) = validated.login else {
+            return Err((
+                access_token,
+                refresh_token,
+                ValidationError::InvalidToken(
+                    "validation did not include a `login`, token might be an app access token",
+                ),
+            ));
+        };
+        let Some(user_id) = validated.user_id else {
+            return Err((
+                access_token,
+                refresh_token,
+                ValidationError::InvalidToken(
+                    "validation did not include a `user_id`, token might be an app access token",
+                ),
+            ));
+        };
+
         Ok(UserToken::from_existing_unchecked(
             access_token,
             refresh_token,
             validated.client_id,
             client_secret,
-            validated.login.ok_or(ValidationError::InvalidToken(
-                "validation did not include a `login`, token might be an app access token",
-            ))?,
-            validated.user_id.ok_or(ValidationError::InvalidToken(
-                "validation did not include a `user_id`, token might be an app access token",
-            ))?,
+            login,
+            user_id,
             validated.scopes,
             validated.expires_in,
         ))
@@ -111,11 +133,13 @@ impl UserToken {
     pub async fn from_token<C>(
         http_client: &C,
         access_token: AccessToken,
-    ) -> Result<UserToken, ValidationError<<C as Client>::Error>>
+    ) -> Result<UserToken, (AccessToken, ValidationError<<C as Client>::Error>)>
     where
         C: Client,
     {
-        Self::from_existing(http_client, access_token, None, None).await
+        Self::from_existing(http_client, access_token, None, None)
+            .await
+            .map_err(|(access_token, _, err)| (access_token, err))
     }
 
     /// Creates a [UserToken] using a refresh token. Retrieves the [`login`](TwitchToken::login) and [`scopes`](TwitchToken::scopes).
@@ -134,10 +158,13 @@ impl UserToken {
         let client_secret: Option<ClientSecret> = client_secret.into();
         let (access_token, _, refresh_token) = refresh_token
             .refresh_token(http_client, &client_id, client_secret.as_ref())
-            .await?;
+            .await
+            .map_err(|err| RetrieveTokenError::from_refresh(err.into(), Some(refresh_token)))?;
         Self::from_existing(http_client, access_token, refresh_token, client_secret)
             .await
-            .map_err(Into::into)
+            .map_err(|(access_token, refresh_token, err)| {
+                RetrieveTokenError::from_kind(err.into(), access_token, refresh_token)
+            })
     }
 
     /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login) and [`scopes`](TwitchToken::scopes)
@@ -172,13 +199,27 @@ impl UserToken {
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<<C as Client>::Error>>
+    ) -> Result<
+        UserToken,
+        (
+            AccessToken,
+            Option<RefreshToken>,
+            ValidationError<<C as Client>::Error>,
+        ),
+    >
     where
         C: Client,
     {
-        let validated = access_token.validate_token(http_client).await?;
-        Self::new(access_token, refresh_token.into(), validated, client_secret)
-            .map_err(|e| e.into_other())
+        let validation_result = access_token.validate_token(http_client).await;
+        let validated = match validation_result {
+            Ok(validated) => validated,
+            Err(e) => return Err((access_token, refresh_token.into(), e.into())),
+        };
+        Self::new(access_token, refresh_token.into(), validated, client_secret).map_err(
+            |(access_token, refresh_token, error)| {
+                (access_token, refresh_token, error.into_other())
+            },
+        )
     }
 
     /// Create a [UserToken] from an existing active user token or refresh token if the access token is expired. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
@@ -213,12 +254,23 @@ impl UserToken {
         C: Client,
     {
         match access_token.validate_token(http_client).await {
-            Ok(v) => Self::new(access_token, Some(refresh_token), v, client_secret)
-                .map_err(|e| e.into_other().into()),
+            Ok(v) => Self::new(access_token, Some(refresh_token), v, client_secret).map_err(
+                |(access_token, refresh_token, error)| {
+                    RetrieveTokenError::from_kind(
+                        error.into_other().into(),
+                        access_token,
+                        refresh_token,
+                    )
+                },
+            ),
             Err(ValidationError::NotAuthorized) => {
                 Self::from_refresh_token(http_client, refresh_token, client_id, client_secret).await
             }
-            Err(e) => return Err(e.into()),
+            Err(e) => Err(RetrieveTokenError::from_kind(
+                e.into(),
+                access_token,
+                Some(refresh_token),
+            )),
         }
     }
 
@@ -257,7 +309,14 @@ impl UserToken {
         response: crate::id::TwitchTokenResponse,
         validated: ValidatedToken,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<std::convert::Infallible>> {
+    ) -> Result<
+        UserToken,
+        (
+            AccessToken,
+            Option<RefreshToken>,
+            ValidationError<std::convert::Infallible>,
+        ),
+    > {
         Self::new(
             response.access_token,
             response.refresh_token,
@@ -686,7 +745,7 @@ impl UserTokenBuilder {
         let validated = response.access_token.validate_token(http_client).await?;
 
         UserToken::from_response(response, validated, self.client_secret)
-            .map_err(|v| v.into_other().into())
+            .map_err(|v| v.2.into_other().into())
     }
 }
 
@@ -889,7 +948,7 @@ impl ImplicitUserTokenBuilder {
                 None,
             )
             .await
-            .map_err(Into::into),
+            .map_err(|e| e.2.into()),
             (_, error, description) => {
                 let (error, description) = (
                     error.map(|s| s.to_string()),
@@ -1127,7 +1186,7 @@ impl DeviceUserTokenBuilder {
         let validated = response.access_token.validate_token(http_client).await?;
         // FIXME: get rid of the clone
         UserToken::from_response(response, validated, self.client_secret.clone())
-            .map_err(|v| v.into_other().into())
+            .map_err(|v| v.2.into_other().into())
     }
 }
 

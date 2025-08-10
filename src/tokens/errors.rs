@@ -1,5 +1,8 @@
 //! Errors
 
+#[cfg(feature = "client")]
+use crate::{AccessToken, RefreshToken};
+
 /// General errors for talking with twitch, used in [`AppAccessToken::get_app_access_token`](crate::tokens::AppAccessToken::get_app_access_token)
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
@@ -38,11 +41,46 @@ impl ValidationError<std::convert::Infallible> {
     }
 }
 
-/// Errors for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token]
+/// Errors for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token] with used tokens
+#[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[cfg(feature = "client")]
+pub struct RetrieveTokenError<RE: std::error::Error + Send + Sync + 'static> {
+    access_token: Option<AccessToken>,
+    refresh_token: Option<RefreshToken>,
+    kind: RetrieveTokenErrorKind<RE>,
+}
+
+#[cfg(feature = "client")]
+impl<RE: std::error::Error + Send + Sync + 'static> RetrieveTokenError<RE> {
+    pub(crate) fn from_refresh(
+        kind: RetrieveTokenErrorKind<RE>,
+        refresh_token: Option<RefreshToken>,
+    ) -> Self {
+        Self {
+            access_token: None,
+            refresh_token,
+            kind,
+        }
+    }
+
+    pub(crate) fn from_kind(
+        kind: RetrieveTokenErrorKind<RE>,
+        access_token: AccessToken,
+        refresh_token: Option<RefreshToken>,
+    ) -> Self {
+        Self {
+            access_token: Some(access_token),
+            refresh_token,
+            kind,
+        }
+    }
+}
+
+/// Error kinds for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[non_exhaustive]
 #[cfg(feature = "client")]
-pub enum RetrieveTokenError<RE: std::error::Error + Send + Sync + 'static> {
+pub enum RetrieveTokenErrorKind<RE: std::error::Error + Send + Sync + 'static> {
     /// could not validate token
     ValidationError(#[from] ValidationError<RE>),
     /// could not refresh token
