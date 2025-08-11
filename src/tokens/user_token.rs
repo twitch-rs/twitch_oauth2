@@ -159,12 +159,19 @@ impl UserToken {
         let (access_token, _, refresh_token) = refresh_token
             .refresh_token(http_client, &client_id, client_secret.as_ref())
             .await
-            .map_err(|err| RetrieveTokenError::from_refresh(err.into(), Some(refresh_token)))?;
+            .map_err(|error| RetrieveTokenError::RefreshTokenError {
+                error,
+                refresh_token,
+            })?;
         Self::from_existing(http_client, access_token, refresh_token, client_secret)
             .await
-            .map_err(|(access_token, refresh_token, err)| {
-                RetrieveTokenError::from_kind(err.into(), access_token, refresh_token)
-            })
+            .map_err(
+                |(access_token, refresh_token, error)| RetrieveTokenError::ValidationError {
+                    error,
+                    access_token,
+                    refresh_token,
+                },
+            )
     }
 
     /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login) and [`scopes`](TwitchToken::scopes)
@@ -213,7 +220,7 @@ impl UserToken {
         let validation_result = access_token.validate_token(http_client).await;
         let validated = match validation_result {
             Ok(validated) => validated,
-            Err(e) => return Err((access_token, refresh_token.into(), e.into())),
+            Err(e) => return Err((access_token, refresh_token.into(), e)),
         };
         Self::new(access_token, refresh_token.into(), validated, client_secret).map_err(
             |(access_token, refresh_token, error)| {
@@ -255,22 +262,20 @@ impl UserToken {
     {
         match access_token.validate_token(http_client).await {
             Ok(v) => Self::new(access_token, Some(refresh_token), v, client_secret).map_err(
-                |(access_token, refresh_token, error)| {
-                    RetrieveTokenError::from_kind(
-                        error.into_other().into(),
-                        access_token,
-                        refresh_token,
-                    )
+                |(access_token, refresh_token, error)| RetrieveTokenError::ValidationError {
+                    error: error.into_other(),
+                    access_token,
+                    refresh_token,
                 },
             ),
             Err(ValidationError::NotAuthorized) => {
                 Self::from_refresh_token(http_client, refresh_token, client_id, client_secret).await
             }
-            Err(e) => Err(RetrieveTokenError::from_kind(
-                e.into(),
+            Err(error) => Err(RetrieveTokenError::ValidationError {
+                error,
                 access_token,
-                Some(refresh_token),
-            )),
+                refresh_token: Some(refresh_token),
+            }),
         }
     }
 
@@ -405,7 +410,7 @@ impl UserToken {
             client_secret,
         )
         .await
-        .map_err(Into::into)
+        .map_err(|v| v.2.into())
     }
 
     /// Set the client secret
@@ -506,11 +511,11 @@ impl TwitchToken for UserToken {
 /// 3. Have the user visit the generated URL. They will be asked to authorize your application if they haven't previously done so
 ///    or if you've set [`force_verify`](UserTokenBuilder::force_verify) to `true`.
 ///
-///      You can do this by providing the link in [a web page](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), have the user [be directed](https://developer.mozilla.org/en-US/docs/Web/API/Location/assign),
-///      the console, or by [opening it](https://docs.rs/webbrowser/0.8.10/webbrowser/) in a browser.
+///    You can do this by providing the link in [a web page](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), have the user [be directed](https://developer.mozilla.org/en-US/docs/Web/API/Location/assign),
+///    the console, or by [opening it](https://docs.rs/webbrowser/0.8.10/webbrowser/) in a browser.
 ///
-///      If this is a web server, you should store the [UserTokenBuilder] somewhere you can retrieve it later. A good place to store it is in a [`Cache`](https://docs.rs/retainer/0.3.0/retainer/cache/struct.Cache.html)
-///      or a [`HashMap`](std::collections::HashMap) with the CSRF token as the key.
+///    If this is a web server, you should store the [UserTokenBuilder] somewhere you can retrieve it later. A good place to store it is in a [`Cache`](https://docs.rs/retainer/0.3.0/retainer/cache/struct.Cache.html)
+///    or a [`HashMap`](std::collections::HashMap) with the CSRF token as the key.
 ///
 /// 4. When the user has been redirected to the redirect URL by twitch, extract the `state` and `code` query parameters from the URL.
 ///
@@ -720,9 +725,9 @@ impl UserTokenBuilder {
     ///
     /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `<redirect_url or first defined url in dev console>?error=<error type>&error_description=<description of error>`
     #[cfg(feature = "client")]
-    pub async fn get_user_token<'a, C>(
+    pub async fn get_user_token<C>(
         self,
-        http_client: &'a C,
+        http_client: &C,
         state: &str,
         // TODO: Should be either str or AuthorizationCode
         code: &str,
@@ -925,9 +930,9 @@ impl ImplicitUserTokenBuilder {
     /// </html>
     /// ```
     #[cfg(feature = "client")]
-    pub async fn get_user_token<'a, C>(
+    pub async fn get_user_token<C>(
         self,
-        http_client: &'a C,
+        http_client: &C,
         state: Option<&str>,
         access_token: Option<&str>,
         error: Option<&str>,
@@ -1041,9 +1046,9 @@ impl DeviceUserTokenBuilder {
     ///
     /// Use [`DeviceCodeResponse::verification_uri`](crate::id::DeviceCodeResponse::verification_uri) to get the URL the user needs to visit.
     #[cfg(feature = "client")]
-    pub async fn start<'a, 's, C>(
+    pub async fn start<'s, C>(
         &'s mut self,
-        http_client: &'a C,
+        http_client: &C,
     ) -> Result<&'s crate::id::DeviceCodeResponse, DeviceUserTokenExchangeError<C::Error>>
     where
         C: Client,
@@ -1105,9 +1110,9 @@ impl DeviceUserTokenBuilder {
     /// # };
     /// ```
     #[cfg(feature = "client")]
-    pub async fn wait_for_code<'a, C, Fut>(
+    pub async fn wait_for_code<C, Fut>(
         &mut self,
-        client: &'a C,
+        client: &C,
         wait_fn: impl Fn(std::time::Duration) -> Fut,
     ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
     where
@@ -1167,9 +1172,9 @@ impl DeviceUserTokenBuilder {
     /// # };
     /// ```
     #[cfg(feature = "client")]
-    pub async fn try_finish<'a, C>(
+    pub async fn try_finish<C>(
         &self,
-        http_client: &'a C,
+        http_client: &C,
     ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
     where
         C: Client,
