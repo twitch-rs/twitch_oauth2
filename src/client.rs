@@ -161,7 +161,7 @@ impl Client for SurfClient {
                 })
                 .collect::<Result<_, SurfError>>()?;
 
-            let _ = std::mem::replace(&mut result.headers_mut(), Some(&mut response_headers));
+            let _ = result.headers_mut().replace(&mut response_headers);
             let result = if let Some(v) = response.version() {
                 result.version(match v {
                     surf::http::Version::Http0_9 => http::Version::HTTP_09,

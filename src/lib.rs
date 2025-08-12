@@ -189,9 +189,9 @@ impl AccessTokenRef {
     ///
     /// Should be checked on regularly, according to <https://dev.twitch.tv/docs/authentication/validate-tokens/>
     #[cfg(feature = "client")]
-    pub async fn validate_token<'a, C>(
+    pub async fn validate_token<C>(
         &self,
-        client: &'a C,
+        client: &C,
     ) -> Result<ValidatedToken, ValidationError<<C as Client>::Error>>
     where
         C: Client,
@@ -226,9 +226,9 @@ impl AccessTokenRef {
     ///
     /// See <https://dev.twitch.tv/docs/authentication/revoke-tokens/>
     #[cfg(feature = "client")]
-    pub async fn revoke_token<'a, C>(
+    pub async fn revoke_token<C>(
         &self,
-        http_client: &'a C,
+        http_client: &C,
         client_id: &ClientId,
     ) -> Result<(), RevokeTokenError<<C as Client>::Error>>
     where
@@ -287,9 +287,9 @@ impl RefreshTokenRef {
     ///
     /// See <https://dev.twitch.tv/docs/authentication/refresh-tokens>
     #[cfg(feature = "client")]
-    pub async fn refresh_token<'a, C>(
+    pub async fn refresh_token<C>(
         &self,
-        http_client: &'a C,
+        http_client: &C,
         client_id: &ClientId,
         client_secret: Option<&ClientSecret>,
     ) -> Result<

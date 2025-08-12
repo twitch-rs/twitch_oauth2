@@ -1,6 +1,6 @@
 //! Example of how to create a user token using device code flow.
 //! The device code flow can be used on confidential and public clients.
-use twitch_oauth2::{DeviceUserTokenBuilder, TwitchToken, UserToken};
+use twitch_oauth2::{DeviceUserTokenBuilder, TwitchToken};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
