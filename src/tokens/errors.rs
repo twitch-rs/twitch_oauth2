@@ -41,7 +41,8 @@ impl ValidationError<std::convert::Infallible> {
 }
 
 /// Errors for [`UserToken::new`][crate::tokens::UserToken::new], [`UserToken::from_token`][crate::tokens::UserToken::from_token], [`UserToken::from_existing`][crate::tokens::UserToken::from_existing] and [`UserToken::from_response`][crate::tokens::UserToken::from_response]
-#[derive(thiserror::Error, Debug, displaydoc::Display)]
+#[derive(thiserror::Error, Debug)]
+#[error("creation of token failed")]
 pub struct CreationError<RE: std::error::Error + Send + Sync + 'static> {
     /// Access token passed to the function
     pub access_token: AccessToken,
@@ -70,7 +71,7 @@ impl<RE: std::error::Error + Send + Sync + 'static>
     }
 }
 
-/// Error kinds for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token]
+/// Errors for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[non_exhaustive]
 #[cfg(feature = "client")]
