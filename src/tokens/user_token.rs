@@ -6,7 +6,6 @@ use std::time::Instant;
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
 use web_time::Instant;
 
-use super::errors::ValidationError;
 #[cfg(feature = "client")]
 use super::errors::{
     DeviceUserTokenExchangeError, ImplicitUserTokenExchangeError, RefreshTokenError,
@@ -14,11 +13,14 @@ use super::errors::{
 };
 #[cfg(feature = "client")]
 use crate::client::Client;
-
-use crate::tokens::{Scope, TwitchToken};
-use crate::{ClientSecret, ValidatedToken};
-
-use crate::types::{AccessToken, ClientId, RefreshToken};
+use crate::{
+    tokens::{
+        errors::{CreationError, ValidationError},
+        Scope, TwitchToken,
+    },
+    types::{AccessToken, ClientId, RefreshToken},
+    ClientSecret, ValidatedToken,
+};
 
 #[allow(clippy::too_long_first_doc_paragraph)] // clippy bug - https://github.com/rust-lang/rust-clippy/issues/13315
 /// An User Token from the [OAuth implicit code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#implicit-grant-flow) or [OAuth authorization code flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow)
@@ -73,18 +75,33 @@ impl UserToken {
         refresh_token: Option<RefreshToken>,
         validated: ValidatedToken,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<std::convert::Infallible>> {
+    ) -> Result<UserToken, CreationError<std::convert::Infallible>> {
+        let Some(login) = validated.login else {
+            return Err(CreationError::from((
+                access_token,
+                refresh_token,
+                ValidationError::InvalidToken(
+                    "validation did not include a `login`, token might be an app access token",
+                ),
+            )));
+        };
+        let Some(user_id) = validated.user_id else {
+            return Err(CreationError::from((
+                access_token,
+                refresh_token,
+                ValidationError::InvalidToken(
+                    "validation did not include a `user_id`, token might be an app access token",
+                ),
+            )));
+        };
+
         Ok(UserToken::from_existing_unchecked(
             access_token,
             refresh_token,
             validated.client_id,
             client_secret,
-            validated.login.ok_or(ValidationError::InvalidToken(
-                "validation did not include a `login`, token might be an app access token",
-            ))?,
-            validated.user_id.ok_or(ValidationError::InvalidToken(
-                "validation did not include a `user_id`, token might be an app access token",
-            ))?,
+            login,
+            user_id,
             validated.scopes,
             validated.expires_in,
         ))
@@ -111,7 +128,7 @@ impl UserToken {
     pub async fn from_token<C>(
         http_client: &C,
         access_token: AccessToken,
-    ) -> Result<UserToken, ValidationError<<C as Client>::Error>>
+    ) -> Result<UserToken, CreationError<<C as Client>::Error>>
     where
         C: Client,
     {
@@ -134,10 +151,12 @@ impl UserToken {
         let client_secret: Option<ClientSecret> = client_secret.into();
         let (access_token, _, refresh_token) = refresh_token
             .refresh_token(http_client, &client_id, client_secret.as_ref())
-            .await?;
-        Self::from_existing(http_client, access_token, refresh_token, client_secret)
             .await
-            .map_err(Into::into)
+            .map_err(|error| RetrieveTokenError::RefreshTokenError {
+                error,
+                refresh_token,
+            })?;
+        Ok(Self::from_existing(http_client, access_token, refresh_token, client_secret).await?)
     }
 
     /// Create a [UserToken] from an existing active user token. Retrieves [`login`](TwitchToken::login) and [`scopes`](TwitchToken::scopes)
@@ -172,13 +191,17 @@ impl UserToken {
         access_token: AccessToken,
         refresh_token: impl Into<Option<RefreshToken>>,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<<C as Client>::Error>>
+    ) -> Result<UserToken, CreationError<<C as Client>::Error>>
     where
         C: Client,
     {
-        let validated = access_token.validate_token(http_client).await?;
+        let validation_result = access_token.validate_token(http_client).await;
+        let validated = match validation_result {
+            Ok(validated) => validated,
+            Err(e) => return Err(CreationError::from((access_token, refresh_token.into(), e))),
+        };
         Self::new(access_token, refresh_token.into(), validated, client_secret)
-            .map_err(|e| e.into_other())
+            .map_err(CreationError::into_other)
     }
 
     /// Create a [UserToken] from an existing active user token or refresh token if the access token is expired. Retrieves [`login`](TwitchToken::login), [`client_id`](TwitchToken::client_id) and [`scopes`](TwitchToken::scopes).
@@ -214,11 +237,15 @@ impl UserToken {
     {
         match access_token.validate_token(http_client).await {
             Ok(v) => Self::new(access_token, Some(refresh_token), v, client_secret)
-                .map_err(|e| e.into_other().into()),
+                .map_err(|error| error.into_other().into()),
             Err(ValidationError::NotAuthorized) => {
                 Self::from_refresh_token(http_client, refresh_token, client_id, client_secret).await
             }
-            Err(e) => return Err(e.into()),
+            Err(error) => Err(RetrieveTokenError::ValidationError {
+                error,
+                access_token,
+                refresh_token: Some(refresh_token),
+            }),
         }
     }
 
@@ -257,7 +284,7 @@ impl UserToken {
         response: crate::id::TwitchTokenResponse,
         validated: ValidatedToken,
         client_secret: impl Into<Option<ClientSecret>>,
-    ) -> Result<UserToken, ValidationError<std::convert::Infallible>> {
+    ) -> Result<UserToken, CreationError<std::convert::Infallible>> {
         Self::new(
             response.access_token,
             response.refresh_token,
@@ -339,14 +366,13 @@ impl UserToken {
             .map_err(UserTokenExchangeError::RequestError)?;
         let response = crate::id::TwitchTokenResponse::from_response(&resp)?;
 
-        UserToken::from_existing(
+        Ok(UserToken::from_existing(
             http_client,
             response.access_token,
             response.refresh_token,
             client_secret,
         )
-        .await
-        .map_err(Into::into)
+        .await?)
     }
 
     /// Set the client secret
@@ -447,11 +473,11 @@ impl TwitchToken for UserToken {
 /// 3. Have the user visit the generated URL. They will be asked to authorize your application if they haven't previously done so
 ///    or if you've set [`force_verify`](UserTokenBuilder::force_verify) to `true`.
 ///
-///      You can do this by providing the link in [a web page](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), have the user [be directed](https://developer.mozilla.org/en-US/docs/Web/API/Location/assign),
-///      the console, or by [opening it](https://docs.rs/webbrowser/0.8.10/webbrowser/) in a browser.
+///    You can do this by providing the link in [a web page](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), have the user [be directed](https://developer.mozilla.org/en-US/docs/Web/API/Location/assign),
+///    the console, or by [opening it](https://docs.rs/webbrowser/0.8.10/webbrowser/) in a browser.
 ///
-///      If this is a web server, you should store the [UserTokenBuilder] somewhere you can retrieve it later. A good place to store it is in a [`Cache`](https://docs.rs/retainer/0.3.0/retainer/cache/struct.Cache.html)
-///      or a [`HashMap`](std::collections::HashMap) with the CSRF token as the key.
+///    If this is a web server, you should store the [UserTokenBuilder] somewhere you can retrieve it later. A good place to store it is in a [`Cache`](https://docs.rs/retainer/0.3.0/retainer/cache/struct.Cache.html)
+///    or a [`HashMap`](std::collections::HashMap) with the CSRF token as the key.
 ///
 /// 4. When the user has been redirected to the redirect URL by twitch, extract the `state` and `code` query parameters from the URL.
 ///
@@ -661,9 +687,9 @@ impl UserTokenBuilder {
     ///
     /// On failure to authenticate due to wrong redirect url or other errors, twitch redirects the user to `<redirect_url or first defined url in dev console>?error=<error type>&error_description=<description of error>`
     #[cfg(feature = "client")]
-    pub async fn get_user_token<'a, C>(
+    pub async fn get_user_token<C>(
         self,
-        http_client: &'a C,
+        http_client: &C,
         state: &str,
         // TODO: Should be either str or AuthorizationCode
         code: &str,
@@ -686,7 +712,7 @@ impl UserTokenBuilder {
         let validated = response.access_token.validate_token(http_client).await?;
 
         UserToken::from_response(response, validated, self.client_secret)
-            .map_err(|v| v.into_other().into())
+            .map_err(|e| e.into_other().into())
     }
 }
 
@@ -866,9 +892,9 @@ impl ImplicitUserTokenBuilder {
     /// </html>
     /// ```
     #[cfg(feature = "client")]
-    pub async fn get_user_token<'a, C>(
+    pub async fn get_user_token<C>(
         self,
-        http_client: &'a C,
+        http_client: &C,
         state: Option<&str>,
         access_token: Option<&str>,
         error: Option<&str>,
@@ -889,7 +915,7 @@ impl ImplicitUserTokenBuilder {
                 None,
             )
             .await
-            .map_err(Into::into),
+            .map_err(From::from),
             (_, error, description) => {
                 let (error, description) = (
                     error.map(|s| s.to_string()),
@@ -982,9 +1008,9 @@ impl DeviceUserTokenBuilder {
     ///
     /// Use [`DeviceCodeResponse::verification_uri`](crate::id::DeviceCodeResponse::verification_uri) to get the URL the user needs to visit.
     #[cfg(feature = "client")]
-    pub async fn start<'a, 's, C>(
+    pub async fn start<'s, C>(
         &'s mut self,
-        http_client: &'a C,
+        http_client: &C,
     ) -> Result<&'s crate::id::DeviceCodeResponse, DeviceUserTokenExchangeError<C::Error>>
     where
         C: Client,
@@ -1046,9 +1072,9 @@ impl DeviceUserTokenBuilder {
     /// # };
     /// ```
     #[cfg(feature = "client")]
-    pub async fn wait_for_code<'a, C, Fut>(
+    pub async fn wait_for_code<C, Fut>(
         &mut self,
-        client: &'a C,
+        client: &C,
         wait_fn: impl Fn(std::time::Duration) -> Fut,
     ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
     where
@@ -1108,9 +1134,9 @@ impl DeviceUserTokenBuilder {
     /// # };
     /// ```
     #[cfg(feature = "client")]
-    pub async fn try_finish<'a, C>(
+    pub async fn try_finish<C>(
         &self,
-        http_client: &'a C,
+        http_client: &C,
     ) -> Result<UserToken, DeviceUserTokenExchangeError<C::Error>>
     where
         C: Client,

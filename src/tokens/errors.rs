@@ -1,5 +1,7 @@
 //! Errors
 
+use crate::{AccessToken, RefreshToken};
+
 /// General errors for talking with twitch, used in [`AppAccessToken::get_app_access_token`](crate::tokens::AppAccessToken::get_app_access_token)
 #[allow(missing_docs)]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
@@ -12,7 +14,7 @@ pub enum AppAccessTokenError<RE: std::error::Error + Send + Sync + 'static> {
     RequestParseError(#[from] crate::RequestParseError),
 }
 
-/// Errors for [AccessToken::validate_token][crate::AccessTokenRef::validate_token] and [UserToken::from_response][crate::tokens::UserToken::from_response]
+/// Errors for [AccessToken::validate_token][crate::AccessTokenRef::validate_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[non_exhaustive]
 pub enum ValidationError<RE: std::error::Error + Send + Sync + 'static> {
@@ -38,15 +40,91 @@ impl ValidationError<std::convert::Infallible> {
     }
 }
 
+/// Errors for [`UserToken::new`][crate::tokens::UserToken::new], [`UserToken::from_token`][crate::tokens::UserToken::from_token], [`UserToken::from_existing`][crate::tokens::UserToken::from_existing] and [`UserToken::from_response`][crate::tokens::UserToken::from_response]
+#[derive(thiserror::Error, Debug)]
+#[error("creation of token failed")]
+pub struct CreationError<RE: std::error::Error + Send + Sync + 'static> {
+    /// Access token passed to the function
+    pub access_token: AccessToken,
+    /// Refresh token passed to the function
+    pub refresh_token: Option<RefreshToken>,
+    /// Error validating the token
+    #[source]
+    pub error: ValidationError<RE>,
+}
+
+impl<RE: std::error::Error + Send + Sync + 'static>
+    From<(AccessToken, Option<RefreshToken>, ValidationError<RE>)> for CreationError<RE>
+{
+    fn from(
+        (access_token, refresh_token, error): (
+            AccessToken,
+            Option<RefreshToken>,
+            ValidationError<RE>,
+        ),
+    ) -> Self {
+        Self {
+            access_token,
+            refresh_token,
+            error,
+        }
+    }
+}
+
 /// Errors for [UserToken::from_refresh_token][crate::UserToken::from_refresh_token] and [UserToken::UserToken::from_existing_or_refresh_token][crate::UserToken::from_existing_or_refresh_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[non_exhaustive]
 #[cfg(feature = "client")]
 pub enum RetrieveTokenError<RE: std::error::Error + Send + Sync + 'static> {
     /// could not validate token
-    ValidationError(#[from] ValidationError<RE>),
+    ValidationError {
+        /// Error validating the token
+        #[source]
+        error: ValidationError<RE>,
+        /// Access token passed to the function
+        access_token: AccessToken,
+        /// Refresh token passed to the function
+        refresh_token: Option<RefreshToken>,
+    },
     /// could not refresh token
-    RefreshTokenError(#[from] RefreshTokenError<RE>),
+    RefreshTokenError {
+        /// Error refreshing the token
+        #[source]
+        error: RefreshTokenError<RE>,
+        /// Refresh token passed to the function
+        refresh_token: RefreshToken,
+    },
+}
+
+#[cfg(feature = "client")]
+impl<RE: std::error::Error + Send + Sync + 'static> From<CreationError<RE>>
+    for RetrieveTokenError<RE>
+{
+    fn from(
+        CreationError {
+            error,
+            access_token,
+            refresh_token,
+        }: CreationError<RE>,
+    ) -> Self {
+        RetrieveTokenError::ValidationError {
+            error,
+            access_token,
+            refresh_token,
+        }
+    }
+}
+
+#[cfg(feature = "client")]
+impl CreationError<std::convert::Infallible> {
+    /// Convert this error from a infallible to another
+    pub fn into_other<RE: std::error::Error + Send + Sync + 'static>(self) -> CreationError<RE> {
+        CreationError {
+            access_token: self.access_token,
+            refresh_token: self.refresh_token,
+            error: self.error.into_other(),
+        }
+    }
 }
 
 /// Errors for [AccessToken::revoke_token][crate::AccessTokenRef::revoke_token]
@@ -96,6 +174,15 @@ pub enum UserTokenExchangeError<RE: std::error::Error + Send + Sync + 'static> {
     ValidationError(#[from] ValidationError<RE>),
 }
 
+#[cfg(feature = "client")]
+impl<RE: std::error::Error + Send + Sync + 'static> From<CreationError<RE>>
+    for UserTokenExchangeError<RE>
+{
+    fn from(value: CreationError<RE>) -> Self {
+        UserTokenExchangeError::ValidationError(value.error)
+    }
+}
+
 /// Errors for [ImplicitUserTokenBuilder::get_user_token][crate::tokens::ImplicitUserTokenBuilder::get_user_token]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[non_exhaustive]
@@ -114,6 +201,16 @@ pub enum ImplicitUserTokenExchangeError<RE: std::error::Error + Send + Sync + 's
     /// could not get validation for token
     ValidationError(#[from] ValidationError<RE>),
 }
+
+#[cfg(feature = "client")]
+impl<RE: std::error::Error + Send + Sync + 'static> From<CreationError<RE>>
+    for ImplicitUserTokenExchangeError<RE>
+{
+    fn from(value: CreationError<RE>) -> Self {
+        ImplicitUserTokenExchangeError::ValidationError(value.error)
+    }
+}
+
 /// Errors for [`DeviceUserTokenBuilder`][crate::tokens::DeviceUserTokenBuilder]
 #[derive(thiserror::Error, Debug, displaydoc::Display)]
 #[non_exhaustive]
@@ -145,5 +242,14 @@ impl<RE: std::error::Error + Send + Sync + 'static> DeviceUserTokenExchangeError
                     ..
                 }),
             ) if message == "authorization_pending")
+    }
+}
+
+#[cfg(feature = "client")]
+impl<RE: std::error::Error + Send + Sync + 'static> From<CreationError<RE>>
+    for DeviceUserTokenExchangeError<RE>
+{
+    fn from(value: CreationError<RE>) -> Self {
+        DeviceUserTokenExchangeError::ValidationError(value.error)
     }
 }
