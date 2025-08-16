@@ -33,6 +33,9 @@ ignore = [
     # `instant` is unmaintained
     # Dependent on via surf (and http-types)
     "RUSTSEC-2024-0384",
+    # https://rustsec.org/advisories/RUSTSEC-2025-0036
+    # `surf` is unmaintained
+    "RUSTSEC-2025-0036",
 ]
 
 # This section is considered when running `cargo deny check licenses`
