@@ -13,13 +13,13 @@ pub type Validators = Cow<'static, [Validator]>;
 /// # Examples
 ///
 /// ```rust, no_run
-/// use twitch_oauth2::{validator, AppAccessToken, Scope, TwitchToken as _};
+/// use twitch_oauth2::{validator, Scope, TwitchToken as _, UserToken};
 ///
-/// let token: AppAccessToken = token();
+/// let token: UserToken = token();
 /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
 /// assert!(validator.matches(token.scopes()));
 ///
-/// # pub fn token() -> AppAccessToken { todo!() }
+/// # pub fn token() -> UserToken { todo!() }
 /// ```
 #[derive(Clone, PartialEq)]
 #[non_exhaustive]
@@ -269,13 +269,13 @@ impl From<Scope> for Validator {
 /// # Examples
 ///
 /// ```rust, no_run
-/// use twitch_oauth2::{validator, AppAccessToken, Scope, TwitchToken as _};
+/// use twitch_oauth2::{validator, Scope, TwitchToken as _, UserToken};
 ///
-/// let token: AppAccessToken = token();
+/// let token: UserToken = token();
 /// let validator = validator!(Scope::ChatEdit, Scope::ChatRead);
 /// assert!(validator.matches(token.scopes()));
 ///
-/// # pub fn token() -> AppAccessToken { todo!() }
+/// # pub fn token() -> UserToken { todo!() }
 /// ```
 ///
 /// ## Multiple scopes
