@@ -1210,7 +1210,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore]
-    #[cfg(feature = "surf")]
+    #[cfg(feature = "reqwest")]
     async fn get_token() {
         let mut t = UserTokenBuilder::new(
             ClientId::new(
@@ -1225,7 +1225,7 @@ mod tests {
         .force_verify(true);
         t.csrf = Some(crate::CsrfToken::from("random"));
         let token = t
-            .get_user_token(&surf::Client::new(), "random", "authcode")
+            .get_user_token(&reqwest::Client::new(), "random", "authcode")
             .await
             .unwrap();
         println!("token: {:?} - {}", token, token.access_token.secret());
@@ -1233,7 +1233,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore]
-    #[cfg(feature = "surf")]
+    #[cfg(feature = "reqwest")]
     async fn get_implicit_token() {
         let mut t = ImplicitUserTokenBuilder::new(
             ClientId::new(
@@ -1246,7 +1246,7 @@ mod tests {
         t.csrf = Some(crate::CsrfToken::from("random"));
         let token = t
             .get_user_token(
-                &surf::Client::new(),
+                &reqwest::Client::new(),
                 Some("random"),
                 Some("authcode"),
                 None,
