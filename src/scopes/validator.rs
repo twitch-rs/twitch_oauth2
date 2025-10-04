@@ -238,7 +238,7 @@ impl Validator {
     ///
     /// # Notes
     ///
-    /// This function doesn't do anything, but it powers the [validator!] macro
+    /// This function doesn't do anything, but it powers the [validator!][crate::validator] macro
     #[doc(hidden)]
     pub const fn to_validator(self) -> Self { self }
 }
@@ -390,7 +390,7 @@ macro_rules! validator {
     }};
 }
 
-/// Logical operators for the [validator!] macro.
+/// Logical operators for the [validator!][crate::validator] macro.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! validator_logic {
@@ -414,7 +414,7 @@ macro_rules! validator_logic {
     }
 }
 
-/// Accumulator for the [validator!] macro.
+/// Accumulator for the [validator!][crate::validator] macro.
 // Thanks to danielhenrymantilla, the macro wizard
 #[doc(hidden)]
 #[macro_export]
