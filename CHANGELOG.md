@@ -6,6 +6,10 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.15.2...Unreleased)
 
+### Breaking
+
+- Removed surf dependency and related feature flags
+
 ### Added
 
 - Added `Hash` derive to `Scopes`.
