@@ -4,6 +4,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Breaking
+
+- Updated `reqwest` from 0.12 to 0.13
+
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.16.0...Unreleased)
 
 ## [v0.16.0] - 2025-10-05
