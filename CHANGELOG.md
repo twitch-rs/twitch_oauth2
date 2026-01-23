@@ -7,6 +7,7 @@
 ### Breaking
 
 - Updated `reqwest` from 0.12 to 0.13
+- MSRV bumped to 1.85.0
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.16.0...Unreleased)
 
