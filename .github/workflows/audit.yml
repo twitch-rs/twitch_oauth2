@@ -1,6 +1,6 @@
 name: Audit
 env:
-  MSRV: 1.71.1
+  MSRV: 1.85.0
 
 on:
   pull_request:
