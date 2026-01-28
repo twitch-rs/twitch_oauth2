@@ -52,7 +52,6 @@ impl std::fmt::Debug for AppAccessToken {
     }
 }
 
-#[cfg_attr(feature = "client", async_trait::async_trait)]
 impl TwitchToken for AppAccessToken {
     fn token_type() -> super::BearerTokenType { super::BearerTokenType::AppAccessToken }
 
