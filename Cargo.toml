@@ -27,7 +27,7 @@ mock_api = []
 all = ["reqwest"]
 
 [dependencies]
-thiserror = "1.0.40"
+thiserror = "2.0.18"
 displaydoc = "0.2.5"
 serde = { version = "1.0.163" }
 serde_derive = { version = "1.0.163" }

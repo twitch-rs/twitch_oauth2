@@ -1804,7 +1804,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "thiserror 1.0.56",
+ "thiserror 2.0.18",
  "tokio",
  "twitch_types",
  "url",
