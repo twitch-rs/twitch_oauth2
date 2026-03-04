@@ -2,7 +2,6 @@
 
 // This module is heavily inspired (read: copied) by twitch_api2::client.
 
-use futures::future::Either;
 use std::error::Error;
 use std::future::Future;
 
@@ -48,6 +47,8 @@ impl Client for ReqwestClient {
         &self,
         request: http::Request<Vec<u8>>,
     ) -> impl Future<Output = Result<http::Response<Vec<u8>>, Self::Error>> + Send + use<> {
+        use futures::future::Either;
+
         // Reqwest plays really nice here and has a try_from on `http::Request` -> `reqwest::Request`
         let req = match reqwest::Request::try_from(request) {
             Ok(req) => req,
