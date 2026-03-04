@@ -38,7 +38,7 @@ once_cell = "1.19.0"
 aliri_braid = "0.4.0"
 url = "2.5.4"
 base64 = "0.22.0"
-rand = "0.8.5"
+rand = "0.10.0"
 twitch_types = { version = "0.4.3", features = ["serde"] }
 futures = { version = "0.3", optional = true, default-features = false }
 
