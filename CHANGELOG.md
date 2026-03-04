@@ -8,6 +8,7 @@
 
 - Updated `reqwest` from 0.12 to 0.13
 - MSRV bumped to 1.85.0
+- `Client` and `TwitchToken` no longer use `async_trait` but RPITIT for async functions
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.16.0...Unreleased)
 

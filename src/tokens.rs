@@ -4,6 +4,9 @@ mod app_access_token;
 pub mod errors;
 mod user_token;
 
+#[cfg(feature = "client")]
+use std::future::Future;
+
 pub use app_access_token::AppAccessToken;
 use twitch_types::{UserId, UserIdRef, UserName, UserNameRef};
 pub use user_token::{
@@ -34,7 +37,6 @@ pub enum BearerTokenType {
 }
 
 /// Trait for twitch tokens to get fields and generalize over [AppAccessToken] and [UserToken]
-#[cfg_attr(feature = "client", async_trait::async_trait)]
 pub trait TwitchToken {
     /// Get the type of token.
     fn token_type() -> BearerTokenType;
@@ -58,10 +60,10 @@ pub trait TwitchToken {
     fn user_id(&self) -> Option<&UserIdRef>;
     /// Refresh this token, changing the token to a newer one
     #[cfg(feature = "client")]
-    async fn refresh_token<'a, C>(
+    fn refresh_token<'a, C>(
         &mut self,
         http_client: &'a C,
-    ) -> Result<(), RefreshTokenError<<C as Client>::Error>>
+    ) -> impl Future<Output = Result<(), RefreshTokenError<<C as Client>::Error>>> + Send
     where
         Self: Sized,
         C: Client;
@@ -94,35 +96,36 @@ pub trait TwitchToken {
     ///
     /// This will not mutate any current data in the [TwitchToken]
     #[cfg(feature = "client")]
-    async fn validate_token<'a, C>(
+    fn validate_token<'a, C>(
         &self,
         http_client: &'a C,
-    ) -> Result<ValidatedToken, ValidationError<<C as Client>::Error>>
+    ) -> impl Future<Output = Result<ValidatedToken, ValidationError<<C as Client>::Error>>> + Send
     where
         Self: Sized,
         C: Client,
     {
         let token = &self.token();
-        token.validate_token(http_client).await
+        token.validate_token(http_client)
     }
 
     /// Revoke the token. See <https://dev.twitch.tv/docs/authentication/revoke-tokens>
     #[cfg(feature = "client")]
-    async fn revoke_token<'a, C>(
+    fn revoke_token<'a, C>(
         self,
         http_client: &'a C,
-    ) -> Result<(), RevokeTokenError<<C as Client>::Error>>
+    ) -> impl Future<Output = Result<(), RevokeTokenError<<C as Client>::Error>>> + Send
     where
-        Self: Sized,
+        Self: Sized + Send,
         C: Client,
     {
-        let token = self.token();
-        let client_id = self.client_id();
-        token.revoke_token(http_client, client_id).await
+        async move {
+            let token = self.token();
+            let client_id = self.client_id();
+            token.revoke_token(http_client, client_id).await
+        }
     }
 }
 
-#[cfg_attr(feature = "client", async_trait::async_trait)]
 impl<T: TwitchToken + Send> TwitchToken for Box<T> {
     fn token_type() -> BearerTokenType { T::token_type() }
 

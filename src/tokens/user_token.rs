@@ -379,7 +379,6 @@ impl UserToken {
     pub fn set_secret(&mut self, secret: Option<ClientSecret>) { self.client_secret = secret }
 }
 
-#[cfg_attr(feature = "client", async_trait::async_trait)]
 impl TwitchToken for UserToken {
     fn token_type() -> super::BearerTokenType { super::BearerTokenType::UserToken }
 
