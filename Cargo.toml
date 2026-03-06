@@ -1,12 +1,12 @@
 [package]
 name = "twitch_oauth2"
-version = "0.16.0"
+version = "0.17.0"
 edition = "2021"
 repository = "https://github.com/twitch-rs/twitch_oauth2"
 license = "MIT OR Apache-2.0"
 description = "Oauth2 for Twitch endpoints"
 keywords = ["oauth", "twitch", "async", "asynchronous"]
-documentation = "https://docs.rs/twitch_oauth2/0.16.0"
+documentation = "https://docs.rs/twitch_oauth2/0.17.0"
 readme = "README.md"
 include = [
     "src/*",
@@ -27,7 +27,7 @@ mock_api = []
 all = ["reqwest"]
 
 [dependencies]
-thiserror = "1.0.40"
+thiserror = "2.0.18"
 displaydoc = "0.2.5"
 serde = { version = "1.0.163" }
 serde_derive = { version = "1.0.163" }
@@ -38,7 +38,7 @@ once_cell = "1.19.0"
 aliri_braid = "0.4.0"
 url = "2.5.4"
 base64 = "0.22.0"
-rand = "0.8.5"
+rand = "0.10.0"
 twitch_types = { version = "0.4.3", features = ["serde"] }
 futures = { version = "0.3", optional = true, default-features = false }
 
