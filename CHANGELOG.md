@@ -6,6 +6,8 @@
 
 [Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.17.0...Unreleased)
 
+- Added `ChannelManageClips`, `EditorManageClips`, and `ModeratorManageSuspiciousUsers` to `Scopes`
+
 ## [v0.17.0] - 2026-03-04
 
 ### Breaking
