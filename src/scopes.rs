@@ -136,14 +136,21 @@ macro_rules! scope_impls {
         #[test]
         #[cfg(test)]
         fn sorted() {
+            // Deprecated items come at the end, ignore them.
+            let n_deprecated = [$(
+                $(stringify!($depr),)*
+            )*].len();
             let slice = [$(
                 $(#[cfg($cfg)])*
                 $rename,
             )*];
+            let n_scopes = slice.len();
+            let slice = &slice[..(n_scopes - n_deprecated)];
             let mut slice_sorted = [$(
                 $(#[cfg($cfg)])*
                 $rename,
             )*];
+            let slice_sorted = &mut slice_sorted[..(n_scopes - n_deprecated)];
             slice_sorted.sort();
             for (scope, sorted) in slice.iter().zip(slice_sorted.iter()) {
                 assert_eq!(scope, sorted);
@@ -153,14 +160,50 @@ macro_rules! scope_impls {
     };
 }
 
+/*
+Extract from the Twitch docs (https://dev.twitch.tv/docs/authentication/scopes/) by pasting in the DevTools:
+
+copy(
+  (() => {
+    let tbl = $$("tbody")
+      .map((tb) => [...tb.children])
+      .flat()
+      .map((tr) => [
+        tr.children[0].textContent,
+        tr.children[1].firstChild.textContent.trim(),
+      ])
+      .map(([name, desc]) => [
+        name
+          .split(/[:_-]/)
+          .map((x) => x[0].toUpperCase() + x.slice(1))
+          .join("") + ", ",
+        'scope: "' + name + '", ',
+        "doc: " + JSON.stringify(desc) + ";",
+      ])
+      .sort((a, b) => a[0] > b[0]);
+    let [l0, l1] = tbl.reduce(
+      (acc, cur) => [
+        Math.max(acc[0], cur[0].length),
+        Math.max(acc[1], cur[1].length),
+      ],
+      [0, 0],
+    );
+    return tbl
+      .map(([a, b, c]) => `    ${a.padRight(l0, " ")}${b.padRight(l1, " ")}${c}`)
+      .join("\n");
+  })(),
+);
+*/
+
 scope_impls!(
     AnalyticsReadExtensions,        scope: "analytics:read:extensions",         doc: "View analytics data for the Twitch Extensions owned by the authenticated account.";
     AnalyticsReadGames,             scope: "analytics:read:games",              doc: "View analytics data for the games owned by the authenticated account.";
     BitsRead,                       scope: "bits:read",                         doc: "View Bits information for a channel.";
-    ChannelBot,                     scope: "channel:bot",                       doc: "Allows the client’s bot users access to a channel.";
+    ChannelBot,                     scope: "channel:bot",                       doc: "Joins your channel’s chatroom as a bot user, and perform chat-related actions as that user.";
     ChannelEditCommercial,          scope: "channel:edit:commercial",           doc: "Run commercials on a channel.";
     ChannelManageAds,               scope: "channel:manage:ads",                doc: "Manage ads schedule on a channel.";
     ChannelManageBroadcast,         scope: "channel:manage:broadcast",          doc: "Manage a channel’s broadcast configuration, including updating channel configuration and managing stream markers and stream tags.";
+    ChannelManageClips,             scope: "channel:manage:clips",              doc: "Manage Clips for a channel.";
     ChannelManageExtensions,        scope: "channel:manage:extensions",         doc: "Manage a channel’s Extension configuration, including activating Extensions.";
     ChannelManageGuestStar,         scope: "channel:manage:guest_star",         doc: "Manage Guest Star for your channel.";
     ChannelManageModerators,        scope: "channel:manage:moderators",         doc: "Add or remove the moderator role from users in your channel.";
@@ -171,7 +214,7 @@ scope_impls!(
     ChannelManageSchedule,          scope: "channel:manage:schedule",           doc: "Manage a channel’s stream schedule.";
     ChannelManageVideos,            scope: "channel:manage:videos",             doc: "Manage a channel’s videos, including deleting videos.";
     ChannelManageVips,              scope: "channel:manage:vips",               doc: "Add or remove the VIP role from users in your channel.";
-    ChannelModerate,                scope: "channel:moderate",                  doc: "Perform moderation actions in a channel. The user requesting the scope must be a moderator in the channel.";
+    ChannelModerate,                scope: "channel:moderate",                  doc: "Perform moderation actions in a channel.";
     ChannelReadAds,                 scope: "channel:read:ads",                  doc: "Read the ads schedule and details on your channel.";
     ChannelReadCharity,             scope: "channel:read:charity",              doc: "Read charity campaign details and user donations on your channel.";
     ChannelReadEditors,             scope: "channel:read:editors",              doc: "View a list of users with the editor role for a channel.";
@@ -184,24 +227,24 @@ scope_impls!(
     ChannelReadStreamKey,           scope: "channel:read:stream_key",           doc: "View an authorized user’s stream key.";
     ChannelReadSubscriptions,       scope: "channel:read:subscriptions",        doc: "View a list of all subscribers to a channel and check if a user is subscribed to a channel.";
     ChannelReadVips,                scope: "channel:read:vips",                 doc: "Read the list of VIPs in your channel.";
-    #[deprecated(note = "Use `ChannelReadSubscriptions` (`channel:read:subscriptions`) instead")]
-    ChannelSubscriptions,           scope: "channel_subscriptions",             doc: "Read all subscribers to your channel.";
-    ChatEdit,                       scope: "chat:edit",                         doc: "Send live stream chat and rooms messages.";
-    ChatRead,                       scope: "chat:read",                         doc: "View live stream chat and rooms messages.";
+    ChatEdit,                       scope: "chat:edit",                         doc: "Send chat messages to a chatroom using an IRC connection.";
+    ChatRead,                       scope: "chat:read",                         doc: "View chat messages sent in a chatroom using an IRC connection.";
     ClipsEdit,                      scope: "clips:edit",                        doc: "Manage Clips for a channel.";
+    EditorManageClips,              scope: "editor:manage:clips",               doc: "Manage Clips as an editor.";
     ModerationRead,                 scope: "moderation:read",                   doc: "View a channel’s moderation data including Moderators, Bans, Timeouts, and Automod settings.";
     ModeratorManageAnnouncements,   scope: "moderator:manage:announcements",    doc: "Send announcements in channels where you have the moderator role.";
     ModeratorManageAutoMod,         scope: "moderator:manage:automod",          doc: "Manage messages held for review by AutoMod in channels where you are a moderator.";
-    ModeratorManageAutomodSettings, scope: "moderator:manage:automod_settings", doc: "Manage a broadcaster’s AutoMod settings";
+    ModeratorManageAutomodSettings, scope: "moderator:manage:automod_settings", doc: "Manage a broadcaster’s AutoMod settings.";
     ModeratorManageBannedUsers,     scope: "moderator:manage:banned_users",     doc: "Ban and unban users.";
     ModeratorManageBlockedTerms,    scope: "moderator:manage:blocked_terms",    doc: "Manage a broadcaster’s list of blocked terms.";
     ModeratorManageChatMessages,    scope: "moderator:manage:chat_messages",    doc: "Delete chat messages in channels where you have the moderator role";
-    ModeratorManageChatSettings,    scope: "moderator:manage:chat_settings",    doc: "View a broadcaster’s chat room settings.";
+    ModeratorManageChatSettings,    scope: "moderator:manage:chat_settings",    doc: "Manage a broadcaster’s chat room settings.";
     ModeratorManageGuestStar,       scope: "moderator:manage:guest_star",       doc: "Manage Guest Star for channels where you are a Guest Star moderator.";
     ModeratorManageShieldMode,      scope: "moderator:manage:shield_mode",      doc: "Manage a broadcaster’s Shield Mode status.";
     ModeratorManageShoutouts,       scope: "moderator:manage:shoutouts",        doc: "Manage a broadcaster’s shoutouts.";
+    ModeratorManageSuspiciousUsers, scope: "moderator:manage:suspicious_users", doc: "Manage suspicious user statuses in channels where the user has the moderator role.";
     ModeratorManageUnbanRequests,   scope: "moderator:manage:unban_requests",   doc: "Manage a broadcaster’s unban requests.";
-    ModeratorManageWarnings,        scope: "moderator:manage:warnings",         doc: "Manage a broadcaster’s chat warnings.";
+    ModeratorManageWarnings,        scope: "moderator:manage:warnings",         doc: "Warn users in channels where you have the moderator role.";
     ModeratorReadAutomodSettings,   scope: "moderator:read:automod_settings",   doc: "View a broadcaster’s AutoMod settings.";
     ModeratorReadBannedUsers,       scope: "moderator:read:banned_users",       doc: "Read the list of bans or unbans in channels where you have the moderator role.";
     ModeratorReadBlockedTerms,      scope: "moderator:read:blocked_terms",      doc: "View a broadcaster’s list of blocked terms.";
@@ -213,30 +256,36 @@ scope_impls!(
     ModeratorReadModerators,        scope: "moderator:read:moderators",         doc: "Read the list of moderators in channels where you have the moderator role.";
     ModeratorReadShieldMode,        scope: "moderator:read:shield_mode",        doc: "View a broadcaster’s Shield Mode status.";
     ModeratorReadShoutouts,         scope: "moderator:read:shoutouts",          doc: "View a broadcaster’s shoutouts.";
-    ModeratorReadSuspiciousUsers,   scope: "moderator:read:suspicious_users",   doc: "Read chat messages from suspicious users and see users flagged as suspicious in channels where you have the moderator role.";
+    ModeratorReadSuspiciousUsers,   scope: "moderator:read:suspicious_users",   doc: "Read chat messages from suspicious users and see users flagged as suspicious in channels where the user has the moderator role.";
     ModeratorReadUnbanRequests,     scope: "moderator:read:unban_requests",     doc: "View a broadcaster’s unban requests.";
     ModeratorReadVips,              scope: "moderator:read:vips",               doc: "Read the list of VIPs in channels where you have the moderator role.";
-    ModeratorReadWarnings,          scope: "moderator:read:warnings",           doc: "View a broadcaster’s chat warnings.";
-    UserBot,                        scope: "user:bot",                          doc: "Allows client’s bot to act as this user.";
+    ModeratorReadWarnings,          scope: "moderator:read:warnings",           doc: "Read warnings in channels where you have the moderator role.";
+    UserBot,                        scope: "user:bot",                          doc: "Join a specified chat channel as your user and appear as a bot, and perform chat-related actions as your user.";
     UserEdit,                       scope: "user:edit",                         doc: "Manage a user object.";
-    UserEditBroadcast,              scope: "user:edit:broadcast",               doc: "Edit your channel's broadcast configuration, including extension configuration. (This scope implies user:read:broadcast capability.)";
-    #[deprecated(note = "Not used anymore, see https://discuss.dev.twitch.tv/t/deprecation-of-create-and-delete-follows-api-endpoints/32351")]
-    UserEditFollows,                scope: "user:edit:follows",                 doc: "\\[DEPRECATED\\] Was previously used for “Create User Follows” and “Delete User Follows.";
+    UserEditBroadcast,              scope: "user:edit:broadcast",               doc: "View and edit a user’s broadcasting configuration, including Extension configurations.";
     UserManageBlockedUsers,         scope: "user:manage:blocked_users",         doc: "Manage the block list of a user.";
-    UserManageChatColor,            scope: "user:manage:chat_color",            doc: "Update the color used for the user’s name in chat.Update User Chat Color";
-    UserManageWhispers,             scope: "user:manage:whispers",              doc: "Read whispers that you send and receive, and send whispers on your behalf.";
+    UserManageChatColor,            scope: "user:manage:chat_color",            doc: "Update the color used for the user’s name in chat.";
+    UserManageWhispers,             scope: "user:manage:whispers",              doc: "Receive whispers sent to your user, and send whispers on your user’s behalf.";
     UserReadBlockedUsers,           scope: "user:read:blocked_users",           doc: "View the block list of a user.";
     UserReadBroadcast,              scope: "user:read:broadcast",               doc: "View a user’s broadcasting configuration, including Extension configurations.";
-    UserReadChat,                   scope: "user:read:chat",                    doc: "View live stream chat and room messages.";
+    UserReadChat,                   scope: "user:read:chat",                    doc: "Receive chatroom messages and informational notifications relating to a channel’s chatroom.";
     UserReadEmail,                  scope: "user:read:email",                   doc: "View a user’s email address.";
     UserReadEmotes,                 scope: "user:read:emotes",                  doc: "View emotes available to a user";
     UserReadFollows,                scope: "user:read:follows",                 doc: "View the list of channels a user follows.";
     UserReadModeratedChannels,      scope: "user:read:moderated_channels",      doc: "Read the list of channels you have moderator privileges in.";
     UserReadSubscriptions,          scope: "user:read:subscriptions",           doc: "View if an authorized user is subscribed to specific channels.";
     UserReadWhispers,               scope: "user:read:whispers",                doc: "Receive whispers sent to your user.";
-    UserWriteChat,                  scope: "user:write:chat",                   doc: "Send messages in a chat room.";
-    WhispersEdit,                   scope: "whispers:edit",                     doc: "Send whisper messages.";
-    WhispersRead,                   scope: "whispers:read",                     doc: "View your whisper messages.";
+    UserWriteChat,                  scope: "user:write:chat",                   doc: "Send chat messages to a chatroom.";
+    WhispersRead,                   scope: "whispers:read",                     doc: "Receive whisper messages for your user using PubSub.";
+
+    // Deprecated/removed scopes:
+
+    #[deprecated(note = "Use `ChannelReadSubscriptions` (`channel:read:subscriptions`) instead")]
+    ChannelSubscriptions,           scope: "channel_subscriptions",             doc: "Read all subscribers to your channel.";
+    #[deprecated(note = "Not used anymore, see https://discuss.dev.twitch.tv/t/deprecation-of-create-and-delete-follows-api-endpoints/32351")]
+    UserEditFollows,                scope: "user:edit:follows",                 doc: "\\[DEPRECATED\\] Was previously used for “Create User Follows” and “Delete User Follows.";
+    #[deprecated(note = "Use `UserManageWhispers` (`user:manage:whispers`) instead")]
+    WhispersEdit,                   scope: "whispers:edit",                     doc: "\\[DEPRECATED\\] Send whisper messages.";
 );
 
 impl Scope {
