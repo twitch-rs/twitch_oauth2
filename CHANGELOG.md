@@ -4,7 +4,11 @@
 
 ## [Unreleased] - ReleaseDate
 
-[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.17.0...Unreleased)
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.17.1...Unreleased)
+
+## [v0.17.1] - 2026-03-20
+
+[Commits](https://github.com/twitch-rs/twitch_oauth2/compare/v0.17.0...v0.17.1)
 
 - Added `ChannelManageClips`, `EditorManageClips`, and `ModeratorManageSuspiciousUsers` to `Scopes`
 
